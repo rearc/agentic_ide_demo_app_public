@@ -110,9 +110,9 @@
     // One event can carry MULTIPLE handlers of DIFFERENT types — here: command (x2, real) + http + prompt (illustrative).
     "PreToolUse": [
       { "matcher": "Bash",
-        "hooks": [ { "type": "command", "command": ".claude/hooks/rearc-workshop-demo-kit/scripts/hooks/guard-shell.sh" } ] },  // ✅REAL — blocks rm -rf / git reset --hard / DROP TABLE via exit 2
+        "hooks": [ { "type": "command", "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/rearc-workshop-demo-kit/scripts/hooks/guard-shell.sh\"" } ] },  // ✅REAL — blocks rm -rf / git reset --hard / DROP TABLE via exit 2
       { "matcher": ".*",
-        "hooks": [ { "type": "command", "command": ".claude/hooks/rearc-workshop-demo-kit/scripts/hooks/audit.sh" } ] },        // ✅REAL — logs EVERY tool call (observe); exit 0
+        "hooks": [ { "type": "command", "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/rearc-workshop-demo-kit/scripts/hooks/audit.sh\"" } ] },        // ✅REAL — logs EVERY tool call (observe); exit 0
       { "matcher": "Bash",                                                                                                       // ILLUSTRATIVE — "http" type: POST payload to a local policy service; its 2xx JSON is the decision
         "hooks": [ { "type": "http", "url": "http://localhost:8080/hooks/pre-tool-use", "timeout": 30,
                      "headers": { "Authorization": "Bearer $POLICY_TOKEN" }, "allowedEnvVars": ["POLICY_TOKEN"] } ] },
@@ -125,7 +125,7 @@
     // use: auto-format / lint after edits, inject validation of a tool's result
     "PostToolUse": [
       { "matcher": "Edit|Write|MultiEdit",
-        "hooks": [ { "type": "command", "command": ".claude/hooks/rearc-workshop-demo-kit/scripts/hooks/auto-lint.sh" } ] }      // ✅REAL — eslint/ruff --fix after edits (automate); exit 0, fail-open
+        "hooks": [ { "type": "command", "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/rearc-workshop-demo-kit/scripts/hooks/auto-lint.sh\"" } ] }      // ✅REAL — eslint/ruff --fix after edits (automate); exit 0, fail-open
     ],
 
     // matcher: NONE | exit2: BLOCKS the prompt (Claude never sees it) | ctrl: decision:block+reason, additionalContext (prepended to the prompt)
@@ -271,7 +271,7 @@
                                      //     Docs: https://code.claude.com/docs/en/fullscreen.md
   "statusLine": {                    // ✅ custom status line = the rearc/base toolkit METER
     "type": "command",               //     (context-window %, 5h/weekly rate-limit burn, session cost).
-    "command": ".claude/statusline.sh" //   Copy from ai-toolkit/packages/rearc-base/scripts/statusline.sh (needs jq).
+    "command": "\"${CLAUDE_PROJECT_DIR}/.claude/statusline.sh\"" //   Copy from ai-toolkit/packages/rearc-base/scripts/statusline.sh (needs jq).
   },
   "showThinkingSummaries": true,     // ✅ show Claude's thinking summaries (when extended thinking is on)
   "showTurnDuration": true,          // ✅ show elapsed time per turn

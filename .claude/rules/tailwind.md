@@ -1,7 +1,6 @@
 ---
 paths:
-  - "frontend/**/*.jsx"
-  - "frontend/**/*.tsx"
+  - "frontend/**/*.{jsx,tsx}"
 ---
 
 # Tailwind CSS Only

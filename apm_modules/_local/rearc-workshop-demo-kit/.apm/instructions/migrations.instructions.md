@@ -1,5 +1,6 @@
 ---
 description: Best practices for SQLAlchemy models and Alembic database migrations. Relevant when creating, modifying, or troubleshooting database models, schemas, or migration scripts.
+applyTo: "backend/{app/models,migrations}/**"
 ---
 
 # SQLAlchemy & Alembic Migration Best Practices

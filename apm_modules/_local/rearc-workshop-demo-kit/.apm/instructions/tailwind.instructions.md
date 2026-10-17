@@ -1,5 +1,6 @@
 ---
 description: Enforces Tailwind utility classes for all styling in React components in the workshop demo app.
+applyTo: "frontend/**/*.{jsx,tsx}"
 ---
 
 # Tailwind CSS Only

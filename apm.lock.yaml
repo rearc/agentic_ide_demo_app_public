@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-10-17T05:14:58.365890+00:00'
+generated_at: '2026-10-17T05:29:35.217262+00:00'
 apm_version: 0.33.0
 dependencies:
 - repo_url: _local/rearc-pocock-kit
@@ -84,9 +84,9 @@ dependencies:
     .claude/hooks/rearc-workshop-demo-kit/scripts/hooks/auto-lint.sh: sha256:89fac77d5fe8d2f16f76e5abafe1bcc739ea32c4f859f99df6fef24b6a96e10b
     .claude/hooks/rearc-workshop-demo-kit/scripts/hooks/guard-shell.sh: sha256:524560418087c07d287a7e341f93ac681fbb8d6c3dc0d92d384ce855d5070f2d
     .claude/rules/api-conventions.md: sha256:80e680013780417760b175e2f265b6eeda958b39115e665663855d3c5572f943
-    .claude/rules/migrations.md: sha256:faab1bed2a78e46b506a4b1b410d64350af451f33035aaa6337805e04e345594
+    .claude/rules/migrations.md: sha256:e79b9fe669f9fe01de5f9a60d4f47adc740ad8b8c3dcae88cf3387355d66453c
     .claude/rules/security-review.md: sha256:3d849f5416e4dc23d0b8ce0eab0b9b4edb9923725ca0a2035f4cc73ebcf05058
-    .claude/rules/tailwind.md: sha256:289b3d950d2c9cd46b1b67551d257cffd57fa62029a708d3eda812b1fcd1b1ba
+    .claude/rules/tailwind.md: sha256:dc061c0192831f8a20ca2b702b198500262f8deb20d555d1ce7f2985f08faafe
     .claude/skills/add-dashboard-card/SKILL.md: sha256:31f8f9074f82796fcc1e57fe8a647aa88c757c6193e0ffce0340cd8a9db4157e
     .claude/skills/add-dashboard-card/references/weather-card-example.md: sha256:d0d96d3fa255ef0272da2febd747f025308331a287434d9d76ae164b33ebf222
     .claude/skills/coin-flip-code/SKILL.md: sha256:77ced8c51b49c4d24a0201ab9ec3286514cbffa6c665a1f5b3d667f33f4a48da
@@ -1025,7 +1025,7 @@ deployments:
   owners:
   - ../ai-toolkit/packages/rearc-workshop-demo-kit
   active_owner: ../ai-toolkit/packages/rearc-workshop-demo-kit
-  content_hash: sha256:faab1bed2a78e46b506a4b1b410d64350af451f33035aaa6337805e04e345594
+  content_hash: sha256:e79b9fe669f9fe01de5f9a60d4f47adc740ad8b8c3dcae88cf3387355d66453c
 - kind: project-relative
   target: claude
   value: .claude/rules/security-review.md
@@ -1043,7 +1043,7 @@ deployments:
   owners:
   - ../ai-toolkit/packages/rearc-workshop-demo-kit
   active_owner: ../ai-toolkit/packages/rearc-workshop-demo-kit
-  content_hash: sha256:289b3d950d2c9cd46b1b67551d257cffd57fa62029a708d3eda812b1fcd1b1ba
+  content_hash: sha256:dc061c0192831f8a20ca2b702b198500262f8deb20d555d1ce7f2985f08faafe
 - kind: project-relative
   target: claude
   value: .claude/skills/add-dashboard-card

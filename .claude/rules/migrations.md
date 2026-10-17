@@ -1,7 +1,6 @@
 ---
 paths:
-  - "backend/app/models/**"
-  - "backend/migrations/**"
+  - "backend/{app/models,migrations}/**"
 ---
 
 # SQLAlchemy & Alembic Migration Best Practices
