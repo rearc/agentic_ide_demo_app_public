@@ -1,6 +1,6 @@
 # Agent instructions — agentic_ide_demo_app
 
-**Default guidance for any contributor** using an agent in this repo: how things are structured, how to run them, and where to make changes. Prefer the **source of truth in code** over narrative docs when they disagree (see [Known inconsistencies](#known-inconsistencies)).
+**Default guidance for any contributor** using an agent in this repo: how things are structured, how to run them, and where to make changes. Prefer the **source of truth in code** over narrative docs when they disagree.
 
 **Enforceable conventions live in `.claude/rules/`, not here** — API response shapes (`api-conventions`), styling (`tailwind`, path-scoped to `frontend/**`), DB migrations (`migrations`, path-scoped to `backend/**`), and the security checklist (`security-review`). This file is **orientation, setup, and non-obvious gotchas**; the rules are the authority for conventions, so this file points to them rather than restating them.
 
@@ -106,13 +106,9 @@ This repo connects to external services via the Model Context Protocol. Config l
 
 It defines two servers: Context7 (documentation lookup) and a project-local **`random-tools`** demo server (`coin_flip` + `roll_die`; stdio via `uv`).
 
-> **ClickUp is deprecated and removed.** It was a SolutionReach-engagement artifact and is not coming back. Do not re-add it, and do not propose it as an issue-tracker backend.
+### Project board
 
-### Project board + issue tracker
-
-**Issue tracker = GitHub Issues** on this repo (via the `gh` CLI). The engineering skills (`to-spec`, `to-tickets`, `triage`, `wayfinder`, `code-review`) read and write there; the configured details live in `docs/agents/issue-tracker.md`.
-
-The **GitHub Projects board** sits on top of those issues and is what the workshop's board demo drives. How an agent reads and updates it - moving cards, adding decomposed stories, the field model, draft vs real issues - is documented in **[`docs/board_interaction.md`](docs/board_interaction.md)**. Read it before touching the board.
+The **GitHub Projects board** sits on top of this repo's GitHub Issues (the issue tracker, see [Agent skills](#agent-skills)) and is what the workshop's board demo drives. How an agent reads and updates it - moving cards, adding decomposed stories, the field model, draft vs real issues - is documented in **[`docs/board_interaction.md`](docs/board_interaction.md)**. Read it before touching the board.
 
 ### Team standards documents
 
@@ -135,7 +131,3 @@ The five canonical roles, each label string equal to its name (`needs-triage`, `
 ### Domain docs
 
 Single-context — one root `CONTEXT.md` (lazily created) plus `docs/adr/`. See [`docs/agents/domain.md`](docs/agents/domain.md).
-
-## Known inconsistencies
-
-- **Port:** `README.md`, `backend/run.py`, and `frontend/vite.config.js` all agree on **5001**. (Earlier revisions of the README said 5000; that has been corrected.)

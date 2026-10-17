@@ -20,6 +20,6 @@ frontend/dist/
 # OS
 .DS_Store
 
-# APM dependencies are intentionally committed on this branch (claude-copilot-ready)
+# APM dependencies (apm_modules/) are intentionally committed
 # so workshop participants get a pre-installed, ready-to-demo experience.
 # Re-run `apm install` to regenerate from apm.yml + apm.lock.yaml if needed.
