@@ -67,7 +67,7 @@ npm run dev
 - **`NASA_API_KEY`** — optional; NASA APOD uses `DEMO_KEY` when unset (`backend/app/services/space.py`).
 - **`FLASK_SECRET_KEY`** — Flask secret; defaults to a dev value in config if unset.
 
-**Do not** commit real secrets. `.gitignore` and `.cursorignore` both exclude `.env`.
+**Do not** commit real secrets. `.gitignore` excludes `.env`.
 
 ## Backend architecture (orientation — non-obvious bits only)
 
@@ -102,12 +102,9 @@ Adding a card is a multi-step workflow — use the **`add-dashboard-card` skill*
 
 ## MCP servers
 
-This repo connects to external services via the Model Context Protocol. Config lives in **two** files, kept in sync (dual-harness):
+This repo connects to external services via the Model Context Protocol. Config lives in **`.mcp.json`** (repo root), read by Claude Code in both the CLI and the VS Code extension. Top-level key is **`mcpServers`**. First use triggers a one-time approval prompt (security gate).
 
-- **`.mcp.json`** (repo root) -- **read by Claude Code** (both the CLI and the VS Code extension; Claude Code does **not** read `.vscode/mcp.json`). Top-level key is **`mcpServers`**. First use triggers a one-time approval prompt (security gate).
-- **`.vscode/mcp.json`** -- read by **VS Code / GitHub Copilot** agent mode. Top-level key is **`servers`**.
-
-Both define the same servers: Context7 (documentation lookup) and a project-local **`random-tools`** demo server (`coin_flip` + `roll_die`; stdio via `uv`). **If you add or change a server, update both files.**
+It defines two servers: Context7 (documentation lookup) and a project-local **`random-tools`** demo server (`coin_flip` + `roll_die`; stdio via `uv`).
 
 > **ClickUp is deprecated and removed.** It was a SolutionReach-engagement artifact and is not coming back. Do not re-add it, and do not propose it as an issue-tracker backend.
 
@@ -115,7 +112,7 @@ Both define the same servers: Context7 (documentation lookup) and a project-loca
 
 **Issue tracker = GitHub Issues** on this repo (via the `gh` CLI). The engineering skills (`to-spec`, `to-tickets`, `triage`, `wayfinder`, `code-review`) read and write there; the configured details live in `docs/agents/issue-tracker.md`.
 
-The **GitHub Projects board** sits on top of those issues and is what the Day-4 (Section-4) demo drives. How an agent reads and updates it - moving cards, adding decomposed stories, the field model, draft vs real issues - is documented in **[`docs/board_interaction.md`](board_interaction.md)**. Read it before touching the board.
+The **GitHub Projects board** sits on top of those issues and is what the workshop's board demo drives. How an agent reads and updates it - moving cards, adding decomposed stories, the field model, draft vs real issues - is documented in **[`docs/board_interaction.md`](docs/board_interaction.md)**. Read it before touching the board.
 
 ### Team standards documents
 
@@ -129,15 +126,15 @@ Per-repo configuration the engineering skills (`to-spec`, `to-tickets`, `triage`
 
 ### Issue tracker
 
-GitHub Issues on `rearc/agentic_ide_demo_app`, via the `gh` CLI. See [`docs/agents/issue-tracker.md`](agents/issue-tracker.md).
+GitHub Issues on `rearc/agentic_ide_demo_app`, via the `gh` CLI. See [`docs/agents/issue-tracker.md`](docs/agents/issue-tracker.md).
 
 ### Triage labels
 
-The five canonical roles, each label string equal to its name (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See [`docs/agents/triage-labels.md`](agents/triage-labels.md).
+The five canonical roles, each label string equal to its name (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See [`docs/agents/triage-labels.md`](docs/agents/triage-labels.md).
 
 ### Domain docs
 
-Single-context — one root `CONTEXT.md` (lazily created) plus `docs/adr/`. See [`docs/agents/domain.md`](agents/domain.md).
+Single-context — one root `CONTEXT.md` (lazily created) plus `docs/adr/`. See [`docs/agents/domain.md`](docs/agents/domain.md).
 
 ## Known inconsistencies
 

@@ -116,7 +116,7 @@ recorded in ADR-016 and flips to a failure if the bug is ever fixed.
 
 A minimal [FastMCP](https://github.com/modelcontextprotocol/python-sdk) server exposing two random-number tools: `coin_flip` (returns heads/tails) and `roll_die` (rolls an N-sided die — takes a `sides` parameter, default 6). Its source lives in `mcp-servers/random-tools-mcp/server.py`.
 
-The server is configured in `.mcp.json` (read by Claude Code) and `.vscode/mcp.json` (read by VS Code / Copilot), kept in sync, and launched automatically via stdio with `uv`:
+The server is configured in `.mcp.json` (read by Claude Code) and launched automatically via stdio with `uv`:
 
 ```json
 "random-tools": {

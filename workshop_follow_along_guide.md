@@ -1,5 +1,7 @@
 # Cursor Primitives - Participant Reference Guide
 
+> **Being rewritten for Claude Code.** This guide still describes the Cursor version of the walkthrough (`.cursor/` paths, `.cursorignore`, Cursor hook events). For this repo's primitives, see `.claude/`, `AGENTS.md` and `CLAUDE.md`.
+
 > **What this is:** A concise reference for everything covered in the Cursor primitives walkthrough. This repo ships with all primitives already built - we'll explore each one together. Use this guide to follow along and as a cheat sheet afterward.
 
 ---
