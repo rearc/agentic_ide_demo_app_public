@@ -188,7 +188,12 @@ Layout notes:
 - `h: 4` is a good default height. Image-heavy cards (like space) use `h: 6`.
 - Position cards to avoid overlaps: check existing `x, y` values.
 
-Then re-seed: `cd backend && python seed.py`
+Then seed the new card: `cd backend && python seed.py`
+
+`seed.py` is **additive** (per the demo app's ADR-017): it inserts only the cards that are
+missing and leaves existing cards and their data untouched, so it is safe to run against a
+board you care about. Use `python seed.py --reset` **only** when you deliberately want to
+wipe and rebuild the whole board.
 
 **Verify:** `curl http://127.0.0.1:5001/api/cards` — your new card should appear in the list.
 
@@ -213,4 +218,4 @@ Then re-seed: `cd backend && python seed.py`
 | 4 | `frontend/src/components/cards/{PascalName}Card.jsx` | Create display component |
 | 5 | `frontend/src/components/Card.jsx` | Import component, add to `CARD_REGISTRY` |
 | 6 | `frontend/src/index.css` | Add `--color-card-{slug}` in `@theme` |
-| 7 | `backend/seed.py` | Add `Card(...)` entry, re-seed |
+| 7 | `backend/seed.py` | Add `Card(...)` entry, run `python seed.py` (additive insert) |

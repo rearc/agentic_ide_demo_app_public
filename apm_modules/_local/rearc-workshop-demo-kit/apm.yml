@@ -25,11 +25,13 @@ description: |
 
   APM-native shape (per ADR-0016). All Rearc-authored content lives under
   .apm/; four upstream skills (frontend-design, grill-me, react-best-practices,
-  to-prd) are pulled in at per-skill subpath granularity (per ADR-0015) to
-  replace the demo app's legacy skills-lock.json installer. Two of the
-  upstream skill names have drifted since the lockfile was last refreshed —
-  vercel-react-best-practices is now react-best-practices upstream, and
-  write-a-prd is now to-prd. We follow upstream naming.
+  to-spec) are pulled in at per-skill subpath granularity (per ADR-0015) to
+  replace the demo app's legacy skills-lock.json installer. Upstream skill names
+  have drifted repeatedly, and we follow upstream naming: vercel-react-best-practices
+  became react-best-practices, write-a-prd became to-prd, and to-prd became
+  to-spec in Pocock's v1.1 reshape. Because these are unpinned subpath refs, an
+  upstream rename breaks `apm install` outright (the stale path 404s), so re-verify
+  these four paths whenever upstream moves.
 
   No substrate companion is recommended. The demo app needs to execute code
   (npm, flask, python), but the kit's own audit/safety/lint hooks cover the

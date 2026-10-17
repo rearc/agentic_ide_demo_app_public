@@ -1,20 +1,4 @@
 {
-  "servers": {
-    "context7": {
-      "type": "http",
-      "url": "https://mcp.context7.com/mcp",
-      "headers": {}
-    },
-    "random-tools": {
-      "type": "stdio",
-      "command": "uv",
-      "args": [
-        "run",
-        "--with",
-        "mcp[cli]",
-        "mcp-servers/random-tools-mcp/server.py"
-      ]
-    }
-  },
+  "servers": {},
   "inputs": []
 }
