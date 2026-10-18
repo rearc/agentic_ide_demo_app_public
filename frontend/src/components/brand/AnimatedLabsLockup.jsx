@@ -17,7 +17,7 @@ import { useEffect, useId, useMemo, useRef } from 'react'
 
 const MONO_FONT = "'Space Mono', SFMono-Regular, Menlo, monospace"
 const WORDMARK_FONT =
-  'var(--font-general-sans), var(--font-display), Arial, sans-serif'
+  'var(--font-general-sans), var(--font-brand), Arial, sans-serif'
 const GOLD = '#F2C729'
 const TONE_FG = { navy: '#FFFFFF', cream: '#081229' }
 

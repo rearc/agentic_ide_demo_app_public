@@ -107,7 +107,7 @@ export default function TodoCard({ card }) {
 
   return (
     <div className="flex flex-col gap-3 min-h-0">
-      {error && <p className="text-xs text-red-400/90 shrink-0">{error}</p>}
+      {error && <p className="text-xs text-danger shrink-0">{error}</p>}
       <form onSubmit={handleAdd} className="flex gap-2 shrink-0">
         <input
           type="text"
@@ -115,11 +115,11 @@ export default function TodoCard({ card }) {
           onChange={(e) => setNewText(e.target.value)}
           placeholder="Add a task…"
           maxLength={500}
-          className="flex-1 min-w-0 rounded-sm border border-border-subtle bg-surface px-2.5 py-1.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-card-todo/50"
+          className="flex-1 min-w-0 border border-hairline-strong bg-surface px-2.5 py-1.5 min-h-9 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-text-secondary"
         />
         <button
           type="submit"
-          className="shrink-0 rounded-sm px-4 py-1.5 text-xs font-bold text-surface bg-gradient-to-r from-card-todo to-card-todo-2 hover:opacity-90 transition-opacity"
+          className="shrink-0 px-4 min-h-9 text-[13px] font-semibold text-surface bg-text-primary hover:bg-text-primary/90 transition-colors"
         >
           Add
         </button>
@@ -131,7 +131,7 @@ export default function TodoCard({ card }) {
           items.map((todo) => (
             <li
               key={todo.id}
-              className="flex items-start gap-2 rounded-sm border border-transparent px-1 py-0.5 hover:border-border-subtle/80 hover:bg-surface/50"
+              className="flex items-start gap-2 px-1 py-0.5 hover:bg-surface/60"
             >
               <button
                 type="button"
@@ -141,8 +141,8 @@ export default function TodoCard({ card }) {
                 onClick={() => toggleDone(todo.id)}
                 className={`mt-0.5 h-4 w-4 shrink-0 rounded border text-[10px] leading-none flex items-center justify-center transition-colors ${
                   todo.done
-                    ? 'border-card-todo bg-card-todo/30 text-card-todo'
-                    : 'border-border-subtle text-transparent hover:border-text-muted'
+                    ? 'border-live bg-live text-surface'
+                    : 'border-text-muted text-transparent hover:border-text-secondary'
                 }`}
               >
                 {todo.done ? '✓' : ''}
@@ -163,7 +163,7 @@ export default function TodoCard({ card }) {
                   aria-label={`Edit "${todo.text}"`}
                   maxLength={500}
                   autoFocus
-                  className="flex-1 min-w-0 rounded border border-border-subtle bg-surface px-2 py-0.5 text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-card-todo/50"
+                  className="flex-1 min-w-0 border border-hairline-strong bg-surface px-2 py-0.5 text-sm text-text-primary focus:outline-none focus:border-text-secondary"
                 />
               ) : (
                 <button
@@ -185,7 +185,7 @@ export default function TodoCard({ card }) {
                 // and surfacing a 404 for an action the user never took.
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => remove(todo.id)}
-                className="shrink-0 p-1 text-text-muted hover:text-red-400/90 text-xs"
+                className="shrink-0 p-1 text-text-muted hover:text-danger text-xs"
                 title="Delete"
                 aria-label={`Delete "${todo.text}"`}
               >

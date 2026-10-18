@@ -6,6 +6,8 @@ Two of these fixtures are autouse and exist to keep the suite deterministic:
 """
 
 import itertools
+import re
+from pathlib import Path
 
 import pytest
 import responses as responses_lib
@@ -106,7 +108,7 @@ def make_card(app):
             'slug': f'card-{next(slugs)}',
             'title': 'Weather',
             'description': 'Current conditions at a glance',
-            'icon': '☀️',
+            'icon': 'cloud-sun',
             'source': 'weather',
             'config': {'city': 'San Francisco'},
             'layout': {'x': 0, 'y': 0, 'w': 4, 'h': 4},
@@ -145,3 +147,21 @@ def make_todo(app):
         return todo
 
     return _make
+
+
+ICON_TABLE = Path(__file__).resolve().parents[2] / 'frontend/src/components/Icon.jsx'
+
+
+@pytest.fixture(scope='session')
+def frontend_icon_names():
+    """The icon names the frontend can draw: the keys of ICONS in Icon.jsx.
+
+    Icon names cross the stack as plain strings (a card's `icon`, the weather
+    service's condition icon), so these tests are what catch a name the
+    frontend does not know, which would otherwise render as no icon at all.
+    """
+    source = ICON_TABLE.read_text()
+    table = source[source.index('export const ICONS = {'):]
+    table = table[: table.index('\n}')]
+    return set(re.findall(r"^\s*'?([a-z][\w-]*)'?:\s*\w+Icon,", table, re.MULTILINE))
+

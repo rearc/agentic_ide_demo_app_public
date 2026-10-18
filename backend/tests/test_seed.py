@@ -75,6 +75,14 @@ class TestSeedContents:
         for card in all_cards():
             assert set(card.layout) == {'x', 'y', 'w', 'h'}, card.slug
 
+    def test_every_card_icon_is_empty_or_one_the_frontend_draws(
+        self, app, frontend_icon_names
+    ):
+        seed(app)
+
+        for card in all_cards():
+            assert card.icon == '' or card.icon in frontend_icon_names, card.slug
+
     def test_every_seeded_source_has_a_service(self, app):
         """A seeded card whose source is not in SERVICES renders as a
         placeholder, which would silently break a demo card."""

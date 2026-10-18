@@ -1,4 +1,9 @@
 import { useState, useEffect } from 'react'
+import {
+  IconContext,
+  LockSimpleIcon,
+  SquaresFourIcon,
+} from '@phosphor-icons/react'
 import Dashboard from './components/Dashboard'
 import AnimatedLabsLockup from './components/brand/AnimatedLabsLockup'
 
@@ -22,56 +27,69 @@ function Clock() {
 
   return (
     <div className="text-right hidden sm:block">
-      <p className="font-display text-2xl font-bold tracking-tight text-text-primary tabular-nums leading-none">
+      <p className="font-mono text-lg font-medium leading-none tabular-nums">
         {time}
       </p>
-      <p className="text-text-muted text-xs mt-1.5">{date}</p>
+      <p className="text-text-secondary text-xs mt-1.5">{date}</p>
     </div>
   )
 }
+
+// Every Phosphor icon in the app takes this weight unless it sets its own.
+const ICON_STYLE = { weight: 'light' }
 
 export default function App() {
   const [locked, setLocked] = useState(true)
 
   return (
-    <div className="min-h-screen">
-      <header className="sticky top-0 z-10 border-b border-border-subtle/70 bg-surface/60 backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <AnimatedLabsLockup
-              markSize={34}
-              wordSize={27}
-              tone="navy"
-              title="Rearc AI Labs"
-            />
-            <span className="hidden sm:block h-7 w-px bg-border-subtle" />
-            <h1 className="hidden sm:block font-display text-lg font-semibold tracking-tight text-text-secondary">
-              Control Center
-            </h1>
+    <IconContext.Provider value={ICON_STYLE}>
+      <div className="min-h-screen">
+        <header className="sticky top-0 z-10 border-b border-hairline bg-surface/90 backdrop-blur">
+          <div className="max-w-[1600px] mx-auto px-5 py-3.5 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4 min-w-0">
+              <AnimatedLabsLockup
+                markSize={34}
+                wordSize={27}
+                tone="navy"
+                title="Rearc AI Labs"
+              />
+              <span className="hidden sm:block h-7 w-px bg-hairline-strong" />
+              <h1 className="hidden sm:block text-[15px] font-medium text-text-secondary">
+                Control Center
+              </h1>
+            </div>
+            <div className="flex items-center gap-3 shrink-0">
+              {!locked && (
+                <span className="hidden lg:inline text-xs text-text-secondary">
+                  Drag a card by its header, resize from its corner; changes
+                  save automatically
+                </span>
+              )}
+              {/* Hidden where the dashboard stacks its cards (STACK_BELOW in
+                  Dashboard.jsx): a stacked board has no layout to customize. */}
+              <button
+                onClick={() => setLocked((l) => !l)}
+                className={`hidden md:inline-flex items-center gap-2 min-h-9 px-3.5 text-[13px] font-medium border transition-colors ${
+                  locked
+                    ? 'bg-panel border-hairline-strong text-text-primary hover:border-text-muted'
+                    : 'bg-text-primary border-text-primary text-surface hover:bg-text-primary/90'
+                }`}
+              >
+                {locked ? (
+                  <SquaresFourIcon size={16} aria-hidden />
+                ) : (
+                  <LockSimpleIcon size={16} aria-hidden />
+                )}
+                {locked ? 'Customize layout' : 'Lock layout'}
+              </button>
+              <Clock />
+            </div>
           </div>
-          <div className="flex items-center gap-3 shrink-0">
-            {!locked && (
-              <span className="hidden md:inline-flex items-center text-xs text-text-secondary bg-surface-raised/80 border border-border-subtle rounded-sm px-3 py-1.5">
-                Drag &amp; resize — changes save automatically
-              </span>
-            )}
-            <button
-              onClick={() => setLocked((l) => !l)}
-              className={`text-sm font-medium rounded-sm px-3.5 py-2 border transition-colors ${
-                locked
-                  ? 'border-border-subtle text-text-secondary hover:text-text-primary hover:border-text-muted'
-                  : 'border-card-placeholder/60 text-card-placeholder hover:bg-card-placeholder/10'
-              }`}
-            >
-              {locked ? 'Customize layout' : 'Lock layout'}
-            </button>
-            <Clock />
-          </div>
-        </div>
-      </header>
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        <Dashboard locked={locked} />
-      </main>
-    </div>
+        </header>
+        <main className="max-w-[1600px] mx-auto px-5 py-5">
+          <Dashboard locked={locked} />
+        </main>
+      </div>
+    </IconContext.Provider>
   )
 }

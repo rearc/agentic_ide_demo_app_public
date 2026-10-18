@@ -44,7 +44,7 @@ export function cardRecord(overrides = {}) {
     slug: 'placeholder',
     title: 'Coming Soon',
     description: 'Your next widget goes here',
-    icon: '✨',
+    icon: '',
     source: 'placeholder',
     config: {},
     layout: { x: 0, y: 0, w: 4, h: 4 },

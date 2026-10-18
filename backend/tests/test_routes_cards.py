@@ -108,7 +108,7 @@ class TestCreateCard:
 UPDATES = [
     ('title', 'Renamed'),
     ('description', 'Rewritten'),
-    ('icon', '🌦️'),
+    ('icon', 'rain'),
     ('source', 'quote'),
     ('config', {'city': 'Boston', 'units': 'metric'}),
     ('layout', {'x': 2, 'y': 3, 'w': 6, 'h': 5}),

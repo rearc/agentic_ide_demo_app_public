@@ -18,14 +18,16 @@ WEATHER_CODE_DESCRIPTIONS = {
     95: 'Thunderstorm', 96: 'Thunderstorm with slight hail', 99: 'Thunderstorm with heavy hail',
 }
 
+# Icon names, not images: the frontend maps each to an icon (ICONS in
+# frontend/src/components/Icon.jsx), so a name used here must be listed there.
 WEATHER_CODE_ICONS = {
-    0: '☀️', 1: '🌤️', 2: '⛅', 3: '☁️',
-    45: '🌫️', 48: '🌫️',
-    51: '🌦️', 53: '🌧️', 55: '🌧️',
-    61: '🌦️', 63: '🌧️', 65: '🌧️',
-    71: '🌨️', 73: '🌨️', 75: '❄️',
-    80: '🌦️', 81: '🌧️', 82: '🌧️',
-    95: '⛈️', 96: '⛈️', 99: '⛈️',
+    0: 'sun', 1: 'sun', 2: 'cloud-sun', 3: 'cloud',
+    45: 'fog', 48: 'fog',
+    51: 'rain', 53: 'rain', 55: 'rain',
+    61: 'rain', 63: 'rain', 65: 'rain',
+    71: 'snow', 73: 'snow', 75: 'snow',
+    80: 'rain', 81: 'rain', 82: 'rain',
+    95: 'storm', 96: 'storm', 99: 'storm',
 }
 
 
@@ -35,7 +37,7 @@ def _fallback(city, description):
         'city': city,
         'temp': '--',
         'description': description,
-        'icon_emoji': '❓',
+        'icon': 'question',
         'humidity': None,
     }
 
@@ -79,7 +81,7 @@ def fetch(city='San Francisco', **_kwargs):
             'city': name,
             'temp': current['temperature_2m'],
             'description': WEATHER_CODE_DESCRIPTIONS.get(code, 'Unknown'),
-            'icon_emoji': WEATHER_CODE_ICONS.get(code, '🌡️'),
+            'icon': WEATHER_CODE_ICONS.get(code, 'thermometer'),
             'humidity': current['relative_humidity_2m'],
         }
     except Exception:

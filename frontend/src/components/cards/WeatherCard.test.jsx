@@ -8,7 +8,7 @@ const WEATHER = {
   city: 'San Francisco',
   temp: 18.3,
   description: 'Overcast',
-  icon_emoji: '☁️',
+  icon: 'cloud',
   humidity: 72,
 }
 
@@ -50,24 +50,43 @@ describe('WeatherCard', () => {
     expect(container).toBeEmptyDOMElement()
   })
 
-  it('renders the conditions, city and icon', () => {
-    render(<WeatherCard data={WEATHER} />)
+  it('renders the conditions, city and condition icon', () => {
+    const { container } = render(<WeatherCard data={WEATHER} />)
 
     expect(screen.getByText('Overcast')).toBeInTheDocument()
     expect(screen.getByText('San Francisco')).toBeInTheDocument()
-    expect(screen.getByText('☁️')).toBeInTheDocument()
+    expect(container.querySelector('[data-icon="cloud"]')).toBeInTheDocument()
+  })
+
+  it('marks the chosen unit as pressed', async () => {
+    const user = userEvent.setup()
+    render(<WeatherCard data={WEATHER} />)
+
+    expect(screen.getByRole('button', { name: '°F' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    await user.click(screen.getByRole('button', { name: '°C' }))
+    expect(screen.getByRole('button', { name: '°C' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(screen.getByRole('button', { name: '°F' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    )
   })
 
   it('omits humidity when the API did not supply it', () => {
     render(<WeatherCard data={{ ...WEATHER, humidity: null }} />)
 
-    expect(screen.queryByText(/humidity/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/humidity/i)).not.toBeInTheDocument()
   })
 
   it('renders zero humidity rather than treating it as absent', () => {
     render(<WeatherCard data={{ ...WEATHER, humidity: 0 }} />)
 
-    expect(screen.getByText('💧 0% humidity')).toBeInTheDocument()
+    expect(screen.getByText('0%')).toBeInTheDocument()
   })
 
   describe('fallback state (ADR-009)', () => {
@@ -76,7 +95,7 @@ describe('WeatherCard', () => {
       city: 'San Francisco',
       temp: '--',
       description: 'Weather data unavailable',
-      icon_emoji: '❓',
+      icon: 'question',
       humidity: null,
     }
 

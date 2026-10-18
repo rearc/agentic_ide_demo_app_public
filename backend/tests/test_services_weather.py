@@ -9,7 +9,7 @@ import pytest
 import requests
 
 from app.services import weather
-from app.services.weather import FORECAST_URL, GEOCODE_URL
+from app.services.weather import FORECAST_URL, GEOCODE_URL, WEATHER_CODE_ICONS
 
 
 def register_geocode(http_mock, results):
@@ -65,7 +65,7 @@ class TestHappyPath:
             'city': 'San Francisco',
             'temp': 18.3,
             'description': 'Overcast',
-            'icon_emoji': '☁️',
+            'icon': 'cloud',
             'humidity': 72,
         }
 
@@ -76,7 +76,7 @@ class TestHappyPath:
         result = weather.fetch(city='San Francisco')
 
         assert result['description'] == 'Unknown'
-        assert result['icon_emoji'] == '🌡️'
+        assert result['icon'] == 'thermometer'
 
     def test_uses_the_geocoders_canonical_city_name(self, http_mock):
         """The card is configured with 'sf'; the display name comes from the API."""
@@ -158,3 +158,23 @@ class TestGeocodeCaching:
 
         geocode_calls = [c for c in http_mock.calls if c.request.url.startswith(GEOCODE_URL)]
         assert len(geocode_calls) == 1
+
+
+class TestIconNames:
+    """The condition icon is a name the frontend looks up (Icon.jsx)."""
+
+    def test_every_condition_icon_is_one_the_frontend_draws(self, frontend_icon_names):
+        assert set(WEATHER_CODE_ICONS.values()) <= frontend_icon_names
+
+    def test_an_unknown_code_gets_an_icon_the_frontend_draws(
+        self, http_mock, frontend_icon_names
+    ):
+        register_geocode(http_mock, SF_RESULT)
+        register_forecast(http_mock, weather_code=1234)
+
+        assert weather.fetch(city='San Francisco')['icon'] in frontend_icon_names
+
+    def test_the_fallback_icon_is_one_the_frontend_draws(
+        self, fallback_payload, frontend_icon_names
+    ):
+        assert fallback_payload['icon'] in frontend_icon_names

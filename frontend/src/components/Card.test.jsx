@@ -12,7 +12,7 @@ function weatherCard(overrides = {}) {
   return cardRecord({
     title: 'Weather',
     description: 'Current conditions at a glance',
-    icon: '☀️',
+    icon: 'cloud-sun',
     source: 'weather',
     ...overrides,
   })
@@ -22,7 +22,7 @@ const WEATHER_DATA = {
   city: 'San Francisco',
   temp: 18.3,
   description: 'Overcast',
-  icon_emoji: '☁️',
+  icon: 'cloud',
   humidity: 72,
 }
 
@@ -33,16 +33,25 @@ beforeEach(() => {
 })
 
 describe('chrome', () => {
-  it('renders the card title, description and icon', async () => {
-    render(<Card card={weatherCard()} locked />)
+  it('renders the card title, its icon, and its description on hover', async () => {
+    const { container } = render(<Card card={weatherCard()} locked />)
 
+    const heading = await screen.findByRole('heading', { name: 'Weather' })
+    expect(heading).toHaveAttribute('title', 'Current conditions at a glance')
     expect(
-      await screen.findByRole('heading', { name: 'Weather' }),
+      container.querySelector('[data-icon="cloud-sun"]'),
     ).toBeInTheDocument()
-    expect(
-      screen.getByText('Current conditions at a glance'),
-    ).toBeInTheDocument()
-    expect(screen.getByText('☀️')).toBeInTheDocument()
+  })
+
+  it('draws no icon for a card with an empty or unknown icon name', async () => {
+    const { rerender } = render(
+      <Card card={cardRecord({ icon: '☀️' })} locked />,
+    )
+    const header = (await screen.findByRole('heading')).parentElement
+    expect(header.querySelector('[data-icon]')).toBeNull()
+
+    rerender(<Card card={cardRecord({ icon: '' })} locked />)
+    expect(header.querySelector('[data-icon]')).toBeNull()
   })
 
   it('shows a drag affordance only when the dashboard is unlocked', async () => {
@@ -59,7 +68,7 @@ describe('chrome', () => {
 
 describe('registry dispatch (ADR-008)', () => {
   it.each([
-    ['weather', WEATHER_DATA, '💧 72% humidity'],
+    ['weather', WEATHER_DATA, 'Overcast'],
     ['quote', { text: 'A quote.', author: 'Someone' }, 'A quote.'],
     [
       'space',
@@ -144,6 +153,49 @@ describe('data fetching', () => {
       expect(screen.getByTitle('Drag to move')).toBeInTheDocument(),
     )
     expect(fetchCardData).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('status in the header', () => {
+  it('marks live data with the time it arrived', async () => {
+    render(<Card card={weatherCard()} locked />)
+
+    expect(await screen.findByText('Live')).toBeInTheDocument()
+    expect(screen.getByText(/^\d{2}:\d{2}$/)).toBeInTheDocument()
+  })
+
+  it('marks fallback data as a fallback, saying why on hover', async () => {
+    fetchCardData.mockResolvedValue({ ...WEATHER_DATA, fallback: true })
+
+    render(<Card card={weatherCard()} locked />)
+
+    expect(await screen.findByText('Fallback')).toHaveAttribute(
+      'title',
+      'The service did not answer: showing fallback data',
+    )
+    expect(screen.queryByText('Live')).not.toBeInTheDocument()
+  })
+
+  it('marks a failed fetch as an error', async () => {
+    fetchCardData.mockRejectedValue(new Error('upstream boom'))
+
+    render(<Card card={weatherCard()} locked />)
+
+    expect(await screen.findByText('Error')).toBeInTheDocument()
+  })
+
+  it('shows no status while loading, or on a card without data', async () => {
+    const pending = deferred()
+    fetchCardData.mockReturnValue(pending.promise)
+    const { rerender } = render(<Card card={weatherCard()} locked />)
+
+    expect(screen.queryByText('Live')).not.toBeInTheDocument()
+
+    rerender(<Card card={cardRecord()} locked />)
+    await screen.findByText('What should we build here?')
+    expect(
+      screen.queryByText(/^(Live|Fallback|Error)$/),
+    ).not.toBeInTheDocument()
   })
 })
 
