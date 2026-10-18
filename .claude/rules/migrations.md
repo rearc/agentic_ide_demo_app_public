@@ -1,7 +1,6 @@
 ---
 paths:
-  - "backend/app/models/**"
-  - "backend/migrations/**"
+  - "backend/{app/models,migrations}/**"
 ---
 
 # SQLAlchemy & Alembic Migration Best Practices
@@ -14,7 +13,7 @@ paths:
 
 ## Writing Migrations
 
-- Auto-generate first, then review: `flask db migrate -m "descriptive message"`.
+- Auto-generate first, then review: `flask --app run.py db migrate -m "descriptive message"` (run from `backend/`).
 - Always inspect the generated migration — auto-detect misses renames, data migrations, and some constraint changes.
 - Every migration must have a working `downgrade()`. Test both directions.
 - Keep migrations small and focused — one logical change per migration file.
@@ -29,8 +28,9 @@ paths:
 ## Commands Reference
 
 ```bash
-flask db migrate -m "add widgets table"   # generate
-flask db upgrade                          # apply
-flask db downgrade                        # rollback one
-flask db history                          # view chain
+# from backend/, with the venv active
+flask --app run.py db migrate -m "add widgets table"   # generate
+flask --app run.py db upgrade                          # apply
+flask --app run.py db downgrade                        # rollback one
+flask --app run.py db history                          # view chain
 ```

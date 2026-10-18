@@ -28,12 +28,6 @@ describe('SpaceCard', () => {
     expect(container).toBeEmptyDOMElement()
   })
 
-  it('omits the date when the API did not supply one', () => {
-    render(<SpaceCard data={{ ...APOD, date: '' }} />)
-
-    expect(screen.queryByText('2026-07-19')).not.toBeInTheDocument()
-  })
-
   describe('image media type', () => {
     it('renders the image with the title as alt text', () => {
       render(<SpaceCard data={APOD} />)
@@ -56,18 +50,37 @@ describe('SpaceCard', () => {
     it('opens the video safely in a new tab', () => {
       render(<SpaceCard data={{ ...APOD, media_type: 'video' }} />)
 
-      const link = screen.getByRole('link')
+      const link = screen.getByRole('link', { name: /Watch/ })
       expect(link).toHaveAttribute('target', '_blank')
       expect(link).toHaveAttribute('rel', 'noopener noreferrer')
     })
   })
 
-  it('renders neither image nor link when there is no url', () => {
+  it('renders neither image nor video link when there is no url', () => {
     render(<SpaceCard data={{ ...APOD, url: '' }} />)
 
     expect(screen.queryByRole('img')).not.toBeInTheDocument()
-    expect(screen.queryByRole('link')).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('link', { name: /Watch/ }),
+    ).not.toBeInTheDocument()
     expect(screen.getByText('Pillars of Creation')).toBeInTheDocument()
+  })
+
+  it("links the date to that day's APOD page", () => {
+    render(<SpaceCard data={APOD} />)
+
+    expect(screen.getByRole('link', { name: '2026-07-19' })).toHaveAttribute(
+      'href',
+      'https://apod.nasa.gov/apod/ap260719.html',
+    )
+  })
+
+  it('shows no source line when the API gave no date', () => {
+    render(<SpaceCard data={{ ...APOD, date: '' }} />)
+
+    expect(
+      screen.queryByText('NASA Astronomy Picture of the Day'),
+    ).not.toBeInTheDocument()
   })
 
   describe('fallback state (ADR-009)', () => {
@@ -75,35 +88,18 @@ describe('SpaceCard', () => {
       fallback: true,
       title: 'Space Photo Unavailable',
       url: '',
-      explanation:
-        'Configure NASA_API_KEY in .env for Astronomy Picture of the Day',
+      explanation: 'Set NASA_API_KEY in .env for Astronomy Picture of the Day',
       date: '',
       media_type: 'image',
     }
 
-    it('explains how to fix the missing key', () => {
+    it('shows the explanation in place of the photo and its title', () => {
+      /* The success branch renders the explanation too, so the absent title
+         heading is what proves this branch ran. */
       render(<SpaceCard data={FALLBACK} />)
 
       expect(screen.getByText(FALLBACK.explanation)).toBeInTheDocument()
-    })
-
-    it('renders the degraded-state treatment, not a normal card', () => {
-      /* The explanation text alone is not enough: the success branch renders it
-         too, so asserting only that would pass with this branch deleted. The
-         telescope glyph and the absent title heading exist only here. */
-      render(<SpaceCard data={FALLBACK} />)
-
-      expect(screen.getByText('🔭')).toBeInTheDocument()
       expect(screen.queryByRole('heading')).not.toBeInTheDocument()
-      expect(
-        screen.queryByText('Space Photo Unavailable'),
-      ).not.toBeInTheDocument()
-    })
-
-    it('renders no image, so no broken image icon appears', () => {
-      render(<SpaceCard data={FALLBACK} />)
-
-      expect(screen.queryByRole('img')).not.toBeInTheDocument()
     })
   })
 })

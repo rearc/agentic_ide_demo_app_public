@@ -1,34 +1,34 @@
 ---
 paths:
-  - "frontend/**/*.jsx"
-  - "frontend/**/*.tsx"
+  - "frontend/src/**/*.jsx"
 ---
 
-# Tailwind CSS Only
+# Tailwind CSS first
 
-All styling in React components must use Tailwind CSS utility classes. No other styling approaches are permitted.
+Style React components with Tailwind utility classes in `className`. One styling system keeps components consistent, and a reviewer can see a component's whole look in its markup.
 
 ## Rules
 
-- Use Tailwind utility classes directly on elements via `className`.
-- Never use inline `style={{}}` attributes.
-- Never create or import custom CSS/SCSS files for component styling.
-- Never use CSS-in-JS libraries (styled-components, emotion, etc.).
-- Use Tailwind's responsive prefixes (`sm:`, `md:`, `lg:`) for breakpoints.
-- Use Tailwind's state variants (`hover:`, `focus:`, `disabled:`) instead of custom pseudo-class CSS.
-- When multiple classes get long, extract them into a variable or use `clsx`/`cn` for conditional composition — not into a CSS file.
+- Put static styling in `className`: layout, spacing, colour, typography, borders, plus Tailwind's responsive prefixes (`sm:`, `md:`, `lg:`) and state variants (`hover:`, `focus:`, `disabled:`).
+- Use `style={{}}` only for values Tailwind cannot know at build time: a card's colour, read from its registry entry as `var(--color-card-<slug>)`, or a computed value such as a staggered `animationDelay`.
+- Take colours from the tokens in `frontend/src/index.css`, never hex values in components. A card's colour is `--color-card-<slug>`, which points at a named palette colour (`--color-rally-*`), so a colour changes in one place.
+- Keep keyframes, global utility classes and third-party overrides (react-grid-layout) in `frontend/src/index.css`. Components do not import CSS files of their own, and the app uses no CSS-in-JS library.
+- When a class list gets long, move it into a variable in the component rather than into a CSS class.
 
 ## Examples
 
 ```jsx
-// GOOD
+// GOOD: static styling as utilities
 <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
   Save
 </button>
 
-// BAD — inline style
-<button style={{ backgroundColor: 'blue', color: 'white' }}>Save</button>
+// GOOD: an inline style for a value computed at runtime
+<div className="animate-card-enter" style={{ animationDelay: `${i * 0.2}s` }} />
 
-// BAD — custom CSS class
+// BAD: a static value as an inline style (use className="block shrink-0")
+<svg style={{ display: 'block', flexShrink: 0 }} />
+
+// BAD: a custom CSS class for component styling
 <button className="save-button">Save</button>
 ```

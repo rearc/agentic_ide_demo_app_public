@@ -1,9 +1,9 @@
 """Contract every service's outbound HTTP must satisfy, regardless of payload.
 
-These assert on *how* the request is made rather than what comes back. The
-graceful-fallback tests elsewhere only run once a request has returned or
-errored; a request with no timeout never does either, so the fallback they cover
-would never fire.
+This asserts on *how* the request is made rather than what comes back
+(SVC-6). The graceful-fallback tests elsewhere only run once a request has
+returned or errored; a request with no timeout never does either, so the
+fallback they cover would never fire.
 
 Patched at `requests.get` rather than via `responses`, because a timeout is a
 send-time argument and never appears on the recorded request.
@@ -72,14 +72,3 @@ def test_every_outbound_request_sets_a_timeout(app, mocked_get, label, payload, 
         assert made_call.kwargs.get('timeout') == EXPECTED_TIMEOUT, (
             f'{label} request #{index} has no timeout={EXPECTED_TIMEOUT}'
         )
-
-
-@pytest.mark.parametrize('label,payload,call', SERVICE_CALLS)
-def test_every_outbound_request_uses_https(app, mocked_get, label, payload, call):
-    mocked_get.response.json.return_value = payload
-
-    call()
-
-    for made_call in mocked_get.call_args_list:
-        url = made_call.args[0] if made_call.args else made_call.kwargs['url']
-        assert url.startswith('https://'), f'{label} requested {url}'

@@ -2,6 +2,7 @@
 name: code-reviewer
 description: Delegate to this agent for code review — it reads code and returns findings on quality, security, bugs, and consistency with project conventions. Cannot modify files.
 tools: Read, Grep, Glob
+skills: [security-checklist]   # preloaded: the checklist's full text is in this agent's context from the start
 ---
 
 # Code Reviewer
@@ -14,18 +15,12 @@ When given code to review, evaluate it against these dimensions in order of prio
 
 ### 1. Security issues
 
-Apply the project's security checklist (see the `security-review` instructions deployed in this project):
-
-- No raw SQL or f-string interpolation in queries — use SQLAlchemy ORM or parameterized queries
-- No `dangerouslySetInnerHTML` in React components
-- No hardcoded secrets, API keys, or passwords in source code — secrets come from `.env` via `backend/config.py`
-- CORS not set to `*` in production
-- All user input validated and type-checked at the route level
+Apply the `security-checklist` skill, which is preloaded into your context. It lists what applies to this app, what is accepted for local development, and what does not apply (there is no authentication, by decision).
 
 ### 2. Bugs and correctness
 
 - Missing error handling — backend services must catch exceptions and return fallback dicts with `'fallback': True`
-- Unhandled null/undefined — frontend components must handle `data?.fallback` before rendering normal content
+- Unhandled null/undefined — card components return `null` when `data` is absent and handle `data.fallback` before rendering normal content
 - Incorrect HTTP status codes or missing validation on required fields in route handlers
 - Stale or missing useEffect dependencies in React components
 
@@ -36,10 +31,10 @@ Apply the project's security checklist (see the `security-review` instructions d
 - Services export a `fetch(**_kwargs)` function with keyword args for config params
 - Services return flat dicts (no nested objects), with a consistent key set for both success and fallback
 
-**Frontend (enforced on `.jsx`/`.tsx` — see the `tailwind` instructions):**
-- All styling via Tailwind utility classes — no inline `style={{}}`, no custom CSS files for components, no CSS-in-JS
+**Frontend (on `frontend/src/**/*.jsx` — see the `tailwind` rule):**
+- Static styling via Tailwind utility classes; `style={{}}` only for values computed at runtime (a card's colour variable, staggered delays); no component CSS files, no CSS-in-JS
 - New card components wired into `CARD_REGISTRY` in `Card.jsx` with `component`, `accent`, and `needsData`
-- Accent colors defined as `--color-card-{slug}` in `frontend/src/index.css` under `@theme`
+- A card's colour defined as `--color-card-{slug}` pointing at a palette colour (`var(--color-rally-*)`) in `frontend/src/index.css` under `@theme static`; its `icon` a name listed in `ICONS` (`frontend/src/components/Icon.jsx`), not an emoji
 
 **Database (see the `migrations` instructions):**
 - Model changes require Alembic migrations — never rely on `create_all()`

@@ -33,6 +33,57 @@ export function stubFetch(response) {
 }
 
 /**
+ * A card record as `GET /api/cards` returns it.
+ *
+ * Defaults to a placeholder card, which fetches no data, so a test only
+ * stubs the data call when it overrides `source` with a card that needs one.
+ */
+export function cardRecord(overrides = {}) {
+  return {
+    id: 1,
+    slug: 'placeholder',
+    title: 'Coming Soon',
+    description: 'Your next widget goes here',
+    icon: '',
+    source: 'placeholder',
+    config: {},
+    position: 1,
+    created_at: '2026-10-18T09:00:00+00:00',
+    ...overrides,
+  }
+}
+
+/** One card's place on a board, as the API sends it. */
+export function boardEntry(overrides = {}) {
+  return { x: 0, y: 0, w: 4, h: 4, hidden: false, ...overrides }
+}
+
+/** A profile record as `GET /api/profiles` returns it. */
+export function profileRecord(overrides = {}) {
+  return {
+    id: 1,
+    name: 'Default',
+    board: {},
+    created_at: '2026-10-18T09:00:00+00:00',
+    ...overrides,
+  }
+}
+
+/** A `matchMedia` result for `query` (jsdom has no matchMedia of its own). */
+export function mediaQueryList(query, matches = false) {
+  return {
+    matches,
+    media: query,
+    onchange: null,
+    addListener: () => {},
+    removeListener: () => {},
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => false,
+  }
+}
+
+/**
  * A promise whose settlement the test controls.
  *
  * Use this to observe a component mid-flight, between the moment it fires a

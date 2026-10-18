@@ -1,4 +1,5 @@
 import os
+
 from dotenv import load_dotenv
 
 load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '.env'))
@@ -22,3 +23,16 @@ class TestConfig(Config):
     SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
     SECRET_KEY = 'test-secret-key'
     NASA_API_KEY = 'test-nasa-key'
+
+
+class E2EConfig(Config):
+    """Config for the Playwright suite: a throwaway file DB, no dependence on the ambient env.
+
+    The relative path lands in backend/instance/ (gitignored), next to but never
+    inside the presenter's app.db. The start script deletes and rebuilds it per run.
+    """
+
+    TESTING = True
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///e2e.db'
+    SECRET_KEY = 'e2e-secret-key'
+    NASA_API_KEY = 'e2e-nasa-key'

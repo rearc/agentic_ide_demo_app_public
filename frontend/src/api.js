@@ -16,63 +16,94 @@ async function readErrorMessage(res, fallback) {
   }
 }
 
+/**
+ * Fetch `url` and return the response, throwing on a non-2xx status.
+ *
+ * The thrown message is the server's `error` text, else `fallback`, else the
+ * status text. `body`, when given, is sent as JSON.
+ */
+async function request(url, { method = 'GET', body, fallback } = {}) {
+  const options = { method }
+  if (body !== undefined) {
+    options.headers = { 'Content-Type': 'application/json' }
+    options.body = JSON.stringify(body)
+  }
+  const res = await fetch(url, options)
+  if (!res.ok) throw new Error(await readErrorMessage(res, fallback))
+  return res
+}
+
 export async function fetchCards() {
-  const res = await fetch(`${API_BASE}/cards`)
-  if (!res.ok)
-    throw new Error(await readErrorMessage(res, 'Failed to fetch cards'))
+  const res = await request(`${API_BASE}/cards`, {
+    fallback: 'Failed to fetch cards',
+  })
   return res.json()
 }
 
-export async function updateCard(id, fields) {
-  const res = await fetch(`${API_BASE}/cards/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(fields),
+export async function fetchProfiles() {
+  const res = await request(`${API_BASE}/profiles`, {
+    fallback: 'Failed to fetch profiles',
   })
-  if (!res.ok)
-    throw new Error(await readErrorMessage(res, 'Failed to update card'))
   return res.json()
+}
+
+export async function createProfile(name, board) {
+  const res = await request(`${API_BASE}/profiles`, {
+    method: 'POST',
+    body: { name, board },
+    fallback: 'Failed to create profile',
+  })
+  return res.json()
+}
+
+/** Change a profile's `name` and/or `board`; a board replaces the whole board. */
+export async function updateProfile(id, fields) {
+  const res = await request(`${API_BASE}/profiles/${id}`, {
+    method: 'PATCH',
+    body: fields,
+    fallback: 'Failed to update profile',
+  })
+  return res.json()
+}
+
+export async function deleteProfile(id) {
+  await request(`${API_BASE}/profiles/${id}`, {
+    method: 'DELETE',
+    fallback: 'Failed to delete profile',
+  })
 }
 
 export async function fetchCardData(source, config = {}) {
   const params = new URLSearchParams(config)
   const query = params.toString()
   const url = `${API_BASE}/data/${source}${query ? `?${query}` : ''}`
-  const res = await fetch(url)
-  if (!res.ok)
-    throw new Error(
-      await readErrorMessage(res, `Failed to fetch data for ${source}`),
-    )
+  const res = await request(url, {
+    fallback: `Failed to fetch data for ${source}`,
+  })
   return res.json()
 }
 
 export async function fetchTodos(cardId) {
-  const res = await fetch(`${API_BASE}/todos?card_id=${cardId}`)
-  if (!res.ok) throw new Error(await readErrorMessage(res))
+  const res = await request(`${API_BASE}/todos?card_id=${cardId}`)
   return res.json()
 }
 
 export async function createTodo(cardId, text) {
-  const res = await fetch(`${API_BASE}/todos`, {
+  const res = await request(`${API_BASE}/todos`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ card_id: cardId, text }),
+    body: { card_id: cardId, text },
   })
-  if (!res.ok) throw new Error(await readErrorMessage(res))
   return res.json()
 }
 
 export async function updateTodo(todoId, fields) {
-  const res = await fetch(`${API_BASE}/todos/${todoId}`, {
+  const res = await request(`${API_BASE}/todos/${todoId}`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(fields),
+    body: fields,
   })
-  if (!res.ok) throw new Error(await readErrorMessage(res))
   return res.json()
 }
 
 export async function deleteTodo(todoId) {
-  const res = await fetch(`${API_BASE}/todos/${todoId}`, { method: 'DELETE' })
-  if (!res.ok) throw new Error(await readErrorMessage(res))
+  await request(`${API_BASE}/todos/${todoId}`, { method: 'DELETE' })
 }

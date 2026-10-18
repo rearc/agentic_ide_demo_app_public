@@ -1,25 +1,21 @@
 import { useState } from 'react'
 
-const gradientText = {
-  backgroundImage: 'linear-gradient(135deg, var(--a), var(--b))',
-  WebkitBackgroundClip: 'text',
-  backgroundClip: 'text',
-  color: 'transparent',
-}
+import Icon from '../Icon'
 
-/** Minimal °C / °F segmented toggle — shows the widget isn't static. */
+/** °C / °F segmented toggle: the widget is not static. */
 function UnitToggle({ unit, setUnit }) {
   return (
-    <div className="inline-flex items-center rounded-sm border border-border-subtle overflow-hidden text-[10px] font-bold">
+    <div className="inline-flex shrink-0 border border-hairline-strong">
       {['C', 'F'].map((u) => (
         <button
           key={u}
           type="button"
+          aria-pressed={unit === u}
           onClick={() => setUnit(u)}
-          className={`px-1.5 py-0.5 transition-colors ${
+          className={`min-h-8 min-w-10 px-2 text-[13px] font-medium transition-colors ${
             unit === u
-              ? 'bg-surface-hover text-text-primary'
-              : 'text-text-muted hover:text-text-secondary'
+              ? 'bg-text-primary text-surface'
+              : 'text-text-secondary hover:text-text-primary'
           }`}
         >
           °{u}
@@ -36,9 +32,9 @@ export default function WeatherCard({ data }) {
 
   if (data.fallback) {
     return (
-      <div className="h-full flex flex-col items-center justify-center text-center">
-        <p className="text-4xl mb-2">🌤️</p>
-        <p className="text-sm text-text-muted">{data.description}</p>
+      <div className="h-full flex flex-col items-center justify-center gap-2 text-center">
+        <Icon name={data.icon} size={32} className="text-text-secondary" />
+        <p className="text-sm text-text-secondary">{data.description}</p>
       </div>
     )
   }
@@ -48,31 +44,31 @@ export default function WeatherCard({ data }) {
     unit === 'C' ? Math.round(data.temp) : Math.round((data.temp * 9) / 5 + 32)
 
   return (
-    <div className="h-full flex flex-col justify-center gap-4">
-      <div className="flex items-start justify-between gap-2">
+    <div className="h-full flex flex-col justify-between gap-3">
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-6xl font-light leading-none tracking-tight tabular-nums">
+          {temp}°
+        </p>
+        <UnitToggle unit={unit} setUnit={setUnit} />
+      </div>
+      <div className="flex items-end justify-between gap-3">
         <div className="min-w-0">
-          <p
-            className="text-5xl font-extrabold tracking-tight leading-[1.15] pr-1"
-            style={gradientText}
-          >
-            {temp}°
-          </p>
-          <p className="text-sm text-text-secondary capitalize mt-2">
+          <p className="text-[15px] first-letter:uppercase">
             {data.description}
           </p>
+          <p className="mt-1 flex flex-wrap gap-x-4 text-[13px] text-text-secondary">
+            <span>{data.city}</span>
+            {data.humidity != null && (
+              <span>
+                Humidity{' '}
+                <span className="font-mono text-text-primary">
+                  {data.humidity}%
+                </span>
+              </span>
+            )}
+          </p>
         </div>
-        <div className="flex flex-col items-end gap-2 shrink-0">
-          {data.icon_emoji && (
-            <span className="text-5xl leading-none drop-shadow-lg">
-              {data.icon_emoji}
-            </span>
-          )}
-          <UnitToggle unit={unit} setUnit={setUnit} />
-        </div>
-      </div>
-      <div className="flex items-center gap-4 text-xs text-text-muted">
-        <span className="font-semibold text-text-secondary">{data.city}</span>
-        {data.humidity != null && <span>💧 {data.humidity}% humidity</span>}
+        <Icon name={data.icon} size={44} className="shrink-0" />
       </div>
     </div>
   )

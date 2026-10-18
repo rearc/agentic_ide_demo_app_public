@@ -1,30 +1,26 @@
+import CardFooter from '../CardFooter'
+
 export default function QuoteCard({ data }) {
   if (!data) return null
   return (
-    <div className="h-full flex flex-col justify-between">
-      <blockquote className="relative text-lg italic text-text-primary/90 leading-relaxed font-light pl-1">
-        <span
-          aria-hidden
-          className="absolute -left-1 -top-6 text-6xl leading-none font-serif opacity-40 select-none"
-          style={{
-            backgroundImage: 'linear-gradient(135deg, var(--a), var(--b))',
-            WebkitBackgroundClip: 'text',
-            backgroundClip: 'text',
-            color: 'transparent',
-          }}
-        >
-          &ldquo;
-        </span>
-        <span className="relative">{data.text}</span>
-      </blockquote>
-      <p className="mt-4 pt-3 border-t border-border-subtle/60 text-xs text-text-muted tracking-wide uppercase">
-        {data.author}
-        {data.fallback && (
-          <span className="ml-2 normal-case tracking-normal opacity-50">
-            (offline)
-          </span>
+    <div className="h-full flex flex-col gap-3">
+      <blockquote className="text-lg leading-relaxed">{data.text}</blockquote>
+      <p className="text-[13px] text-text-secondary">{data.author}</p>
+      <CardFooter>
+        {data.fallback ? (
+          <span>ZenQuotes did not answer: showing a built-in quote</span>
+        ) : (
+          // ZenQuotes' free tier requires a link back to it.
+          <a
+            href="https://zenquotes.io/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-text-primary transition-colors"
+          >
+            via ZenQuotes
+          </a>
         )}
-      </p>
+      </CardFooter>
     </div>
   )
 }

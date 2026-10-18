@@ -4,70 +4,103 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import App from './App'
 
-// Dashboard and the brand lockup have their own tests; stubbing them keeps this
-// file about App's own job: the clock, and the lock toggle it owns.
+// Dashboard and useBoard have their own tests; stubbing them keeps this file
+// about App's own job: the clock, and the edit and library controls it owns.
+const dashboardRender = vi.fn()
 vi.mock('./components/Dashboard', () => ({
-  default: ({ locked }) => (
-    <div data-testid="dashboard" data-locked={String(locked)} />
-  ),
+  default: ({ locked }) => {
+    dashboardRender()
+    return <div data-testid="dashboard" data-locked={String(locked)} />
+  },
 }))
+
+vi.mock('./useBoard', async () => {
+  const { cardRecord, profileRecord } = await import('./test/helpers')
+  const noop = () => {}
+  const profile = profileRecord()
+  return {
+    default: () => ({
+      cards: [cardRecord({ title: 'Weather' })],
+      profiles: [profile],
+      profile,
+      board: profile.board,
+      loading: false,
+      error: null,
+      draggingCardId: null,
+      setDraggingCardId: noop,
+      selectProfile: noop,
+      stepProfile: noop,
+      saveLayout: noop,
+      hideCard: noop,
+      showCard: noop,
+      createProfile: noop,
+      renameProfile: noop,
+      deleteProfile: noop,
+    }),
+  }
+})
 
 function dashboardLocked() {
   return screen.getByTestId('dashboard').dataset.locked
 }
 
-describe('chrome', () => {
-  it('renders the brand lockup and product name', () => {
-    render(<App />)
+describe('edit mode', () => {
+  function library() {
+    return screen.queryByRole('region', { name: 'Card library' })
+  }
 
-    expect(
-      screen.getByRole('img', { name: 'Rearc AI Labs' }),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole('heading', { name: 'Control Center' }),
-    ).toBeInTheDocument()
-  })
+  function libraryButton() {
+    return screen.queryByRole('button', { name: 'Library' })
+  }
 
-  it('renders the dashboard', () => {
-    render(<App />)
-
-    expect(screen.getByTestId('dashboard')).toBeInTheDocument()
-  })
-})
-
-describe('lock toggle', () => {
-  it('starts locked', () => {
+  it('starts locked, with the library closed and no Library button', () => {
     render(<App />)
 
     expect(dashboardLocked()).toBe('true')
-    expect(
-      screen.getByRole('button', { name: 'Customize layout' }),
-    ).toBeInTheDocument()
+    expect(library()).not.toBeInTheDocument()
+    expect(libraryButton()).not.toBeInTheDocument()
   })
 
-  it('unlocks the dashboard when clicked', async () => {
+  it('unlocks the dashboard and opens the library with Edit board', async () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.click(screen.getByRole('button', { name: 'Customize layout' }))
+    await user.click(screen.getByRole('button', { name: 'Edit board' }))
 
     expect(dashboardLocked()).toBe('false')
-    expect(
-      screen.getByRole('button', { name: 'Lock layout' }),
-    ).toBeInTheDocument()
+    expect(library()).toBeInTheDocument()
+    expect(libraryButton()).toHaveAttribute('aria-expanded', 'true')
   })
 
-  it('locks it again on a second click', async () => {
+  it('folds the library away and back while staying in edit mode', async () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.click(screen.getByRole('button', { name: 'Customize layout' }))
-    await user.click(screen.getByRole('button', { name: 'Lock layout' }))
+    await user.click(screen.getByRole('button', { name: 'Edit board' }))
+    await user.click(libraryButton())
 
-    expect(dashboardLocked()).toBe('true')
+    expect(library()).not.toBeInTheDocument()
+    expect(dashboardLocked()).toBe('false')
+    expect(libraryButton()).toHaveAttribute('aria-expanded', 'false')
+
+    await user.click(libraryButton())
+
+    expect(library()).toBeInTheDocument()
   })
 
-  it('shows the drag hint only while unlocked', async () => {
+  it('locks the board and closes the library with Done', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: 'Edit board' }))
+    await user.click(screen.getByRole('button', { name: 'Done' }))
+
+    expect(dashboardLocked()).toBe('true')
+    expect(library()).not.toBeInTheDocument()
+    expect(libraryButton()).not.toBeInTheDocument()
+  })
+
+  it('shows the drag hint only while editing', async () => {
     const user = userEvent.setup()
     render(<App />)
 
@@ -75,7 +108,7 @@ describe('lock toggle', () => {
       screen.queryByText(/changes save automatically/),
     ).not.toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'Customize layout' }))
+    await user.click(screen.getByRole('button', { name: 'Edit board' }))
 
     expect(screen.getByText(/changes save automatically/)).toBeInTheDocument()
   })
@@ -102,25 +135,31 @@ describe('clock', () => {
     expect(screen.getByText(/\b19\b/)).toBeInTheDocument()
   })
 
-  it('advances as time passes', () => {
+  it('shows the next minute within a second of it starting', () => {
+    /* Starting one second before the minute turns: an interval any slower
+       than a second would leave the old minute on screen. */
+    vi.setSystemTime(new Date('2026-07-19T14:30:59'))
     render(<App />)
     const before = screen.getByText(/\d{1,2}:\d{2}/).textContent
 
     act(() => {
-      vi.advanceTimersByTime(60_000)
+      vi.advanceTimersByTime(1_000)
     })
 
     expect(screen.getByText(/\d{1,2}:\d{2}/).textContent).not.toBe(before)
   })
 
-  it('ticks every second, not on some slower cadence', () => {
-    /* Advancing a full minute would pass for any interval up to 60s. One
-       second is the actual contract. */
-    const setIntervalSpy = vi.spyOn(globalThis, 'setInterval')
-
+  it('does not re-render the dashboard on a tick', () => {
+    /* The tick state lives in the clock alone; if it moved back into App, the
+       whole grid would re-render every second. */
     render(<App />)
+    dashboardRender.mockClear()
 
-    expect(setIntervalSpy).toHaveBeenCalledWith(expect.any(Function), 1000)
+    act(() => {
+      vi.advanceTimersByTime(5_000)
+    })
+
+    expect(dashboardRender).not.toHaveBeenCalled()
   })
 
   it('clears its own interval on unmount', () => {

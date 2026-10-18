@@ -10,7 +10,7 @@
       "args": [
         "run",
         "--with",
-        "mcp[cli]",
+        "mcp[cli]>=2,<3",
         "mcp-servers/random-tools-mcp/server.py"
       ]
     }

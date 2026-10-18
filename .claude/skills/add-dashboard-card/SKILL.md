@@ -1,6 +1,6 @@
 ---
 name: add-dashboard-card
-description: Step-by-step workflow for adding a new dashboard card to this Flask + React app, covering backend service, route wiring, database seeding, frontend component, card registry, and accent color.
+description: Step-by-step workflow for adding a new dashboard card to this Flask + React app, covering backend service, route wiring, frontend component, card registry, card colour and icon, database seeding, and tests.
 when_to_use: "Use when the user wants to add a new card, widget, or tile to the dashboard, or wire a new data source into the app."
 argument-hint: "[slug] [source]"
 arguments: [slug, source]
@@ -9,13 +9,13 @@ effort: high
 
 # Add a Dashboard Card
 
-This skill walks through adding a new card type to this dashboard app. Work through the stages in order — each has a verification step so you catch problems early.
+This skill walks through adding a new card type to this dashboard app. Work through the stages in order — each has a verification step so you catch problems early. `docs/coding_standards.md` is the authority for the rules cited here by ID (`SVC-1`, `FE-4`, `TEST-2`).
 
 ## Arguments (if invoked with them)
 
 If this skill was invoked with arguments, use `$slug` as the card slug and `$source` as its data source, and skip the matching questions in **Before you start**. Full argument text: $ARGUMENTS. If no arguments were passed, gather the details below as normal.
 
-See `references/weather-card-example.md` for a complete, annotated example of an existing card's full file set.
+See `references/weather-card-example.md` for where each file of an existing card lives and what to copy from it.
 
 ## Card archetypes — decide this first
 
@@ -23,11 +23,11 @@ Every card is **one row in the `cards` table + one entry in `CARD_REGISTRY`**. C
 
 | Archetype | `needsData` | Data source | Extra backend work |
 |-----------|-------------|-------------|--------------------|
-| **Data card** (weather, quote, space) | `true` | live fetch from `/api/data/<source>` via a backend service | Stages 1–2 (+3 if the API needs a key) |
-| **Static card** (placeholder; a client-only timer, calculator, clock) | `false` | none — rendered entirely in the component | none (skip stages 1–3) |
+| **Data card** (weather, quote, space, daylight, iss) | `true` | live fetch from `/api/data/<source>` via a backend service | Stages 1–2 (+3 if the API needs a key) |
+| **Static card** (timer, moon, placeholder; the moon card is the simplest model to copy) | `false` | none — rendered entirely in the component | none (skip stages 1–3) |
 | **Stateful card** (todo) | `false` | its **own** model, routes, and table — it talks to its own endpoint, **not** `/api/data` | a new SQLAlchemy model + routes blueprint + **an Alembic migration** (skip stages 1–3) |
 
-**All three** still do the frontend + seed stages (4 component, 5 `CARD_REGISTRY`, 6 accent color, 7 seed row). The difference is only what happens on the backend.
+**All three** still do the frontend, seed and test stages (4 component, 5 `CARD_REGISTRY`, 6 colour and icon, 7 seed row, 8 tests). The difference is only what happens on the backend.
 
 Cost, cheapest → most work: **static → data → stateful.** Only a **stateful** card requires a **database migration** — that's the difficulty cliff, so prefer static or data cards unless the widget genuinely must persist its own data. The built-in `todo` card is the reference implementation of the stateful pattern (see `backend/app/models/todo.py`, `backend/app/routes/todos.py`, and its migration).
 
@@ -44,11 +44,12 @@ Gather these from the user:
 
 **Create** `backend/app/services/{slug}.py`
 
-Rules:
+Rules (`SVC-1` to `SVC-7`):
 - Export a function called `fetch` that accepts config params as keyword args plus `**_kwargs`
 - Return a flat dict (no nested objects) with the card's data fields
 - Wrap all external API calls in try/except; on failure return a fallback dict with `'fallback': True` and the same keys as the success response
 - Use `requests` with `timeout=5` for HTTP calls
+- Put the API URL in a module-level constant, so the tests in Stage 8 can mock exactly that URL
 - Use `logging.getLogger(__name__)` and `logger.exception()` for errors
 - If an API key is needed, read it via `from flask import current_app` then `current_app.config.get('YOUR_KEY')`
 
@@ -58,9 +59,11 @@ import requests
 
 logger = logging.getLogger(__name__)
 
+EXAMPLE_URL = 'https://api.example.com/data'
+
 def fetch(param='default', **_kwargs):
     try:
-        resp = requests.get('https://api.example.com/data', params={'q': param}, timeout=5)
+        resp = requests.get(EXAMPLE_URL, params={'q': param}, timeout=5)
         resp.raise_for_status()
         data = resp.json()
         return {
@@ -105,17 +108,20 @@ Skip this stage if the API is free/keyless.
 
 Rules:
 - Default export a function component that receives `{ data, card }` props
-- Handle `data?.fallback` first — render a centered fallback message
+- Return `null` when there is no data yet (`FE-4`), then handle `data.fallback` — render a fallback message
 - Use Tailwind classes from the project theme: `text-text-primary`, `text-text-secondary`, `text-text-muted`, `text-xs`, `text-sm`, etc.
-- No local state needed — the parent `Card.jsx` handles data fetching, loading, and error states
+- The parent `Card.jsx` draws the frame (title, icon, colour, and a Live or Fallback status for data cards) and handles data fetching, loading, and error states. Most cards need no local state (`QuoteCard`, `SpaceCard`); add `useState` only for UI the card owns, as `WeatherCard` does for its °C/°F toggle
+- Optional: `CardFooter` (`frontend/src/components/CardFooter.jsx`) adds a strip along the card's bottom for a short note, such as where the data comes from or why it is a fallback (`QuoteCard`, `SpaceCard`). Most cards have none
 - Keep it simple: render the data fields from your service
 
 ```jsx
 export default function ExampleCard({ data }) {
-  if (data?.fallback) {
+  if (!data) return null
+
+  if (data.fallback) {
     return (
-      <div className="text-center py-4">
-        <p className="text-sm text-text-muted">{data.field_b}</p>
+      <div className="h-full flex items-center justify-center text-center">
+        <p className="text-sm text-text-secondary">{data.field_b}</p>
       </div>
     )
   }
@@ -145,63 +151,86 @@ export default function ExampleCard({ data }) {
 
    Set `needsData: false` only if the card renders static content with no backend data fetch.
 
-## Stage 6: Add the Accent Color
+## Stage 6: Choose the Card's Colour and Icon
 
-**Edit** `frontend/src/index.css`
-
-Add a new color variable inside the `@theme { }` block, alongside the existing card colors:
+**Colour.** **Edit** `frontend/src/index.css`. Card colours come in two layers inside the `@theme static { }` block: a palette of named colours (`--color-rally-gold`, `-orange`, `-red`, `-raspberry`, `-navy`, `-sand`, `-silver`, `-ice`), and one colour per card that points at a palette colour. Add your card's:
 
 ```css
---color-card-{slug}: #hexvalue;
+--color-card-{slug}: var(--color-rally-navy);
 ```
 
-Pick a color that is visually distinct from the existing ones:
-- weather: `#f59e0b` (amber)
-- quote: `#f472b6` (pink)
-- space: `#22d3ee` (cyan)
-- placeholder: `#818cf8` (indigo)
+Any colour works: for one the palette lacks, add it to the palette first (`--color-rally-teal: #2bb3a3;`) and point at that. Components never use a palette colour or a hex value directly; the registry's `accent: 'card-{slug}'` (Stage 5) names your card colour, and `Card.jsx` shows it as a tab beside the header and on the icon. `static` keeps Tailwind from dropping variables that are only used through `var()`.
 
-Good options for new cards: emerald (`#10b981`), red (`#ef4444`), violet (`#8b5cf6`), lime (`#84cc16`), sky (`#0ea5e9`).
+**Icon.** Icons are names, not emoji: the card's `icon` (Stage 7) is a key of `ICONS` in `frontend/src/components/Icon.jsx`, which maps each name to a [Phosphor](https://phosphoricons.com) icon. Use an existing name, or add one: import the icon (`import { RocketIcon } from '@phosphor-icons/react'`) and add `rocket: RocketIcon` to `ICONS`. Keep the name to 10 characters (the `icon` column's size). An empty icon is allowed and shows none. A backend test (`test_seed.py`) fails on a seeded icon name `ICONS` does not list.
 
 ## Stage 7: Seed the Card into the Database
 
 **Edit** `backend/seed.py`
 
-Add a new `Card(...)` entry to the `cards` list:
+Add a new `Card(...)` entry to the list `default_cards()` returns:
 
 ```python
 Card(
     slug='{slug}',
     title='{Title}',
     description='{Short description}',
-    icon='{emoji}',
+    icon='{icon-name}',  # a key of ICONS in frontend/src/components/Icon.jsx, or ''
     source='{slug}',
-    config={},          # or {'param': 'default_value'} if your service takes params
-    layout={'x': ?, 'y': ?, 'w': 6, 'h': 4},
+    config={'param': 'default_value'},  # only if your service takes params; omit otherwise
     position={next_number},
-    is_active=True,
 ),
 ```
 
+Then give it a place on the "Default" profile's board: add an entry to `DEFAULT_BOARD` in the same file, keyed by the slug:
+
+```python
+'{slug}': {'x': ?, 'y': ?, 'w': 8, 'h': 8},
+```
+
+A card's place belongs to a profile, not to the card (the demo app's ADR-019): the seed puts a new default card on "Default" only, and every card is also in the Library, where it can be added to any other profile.
+
 Layout notes:
-- Grid is 12 columns wide. Cards are typically `w: 6` (half width) or `w: 12` (full width).
-- `h: 4` is a good default height. Image-heavy cards (like space) use `h: 6`.
-- Position cards to avoid overlaps: check existing `x, y` values.
+- Grid is 24 columns wide, in fine steps. `w: 8` (a third) is a good default width; use `w: 12` for half width or `w: 24` for full width.
+- `h: 8` is a good default height (208 px). Image-heavy cards (like space) use `h: 14`.
+- Position cards to avoid overlaps: the simplest free place is `x: 0` with `y` at the bottom of the lowest visible card (its `y + h`).
+- `'hidden': True` in the entry starts the card in the Library instead of on the board, as Daily Quote and Space Photo do.
 
-Then re-seed: `cd backend && python seed.py`
+Then seed the new card: `cd backend && python seed.py`
 
-**Verify:** `curl http://127.0.0.1:5001/api/cards` — your new card should appear in the list.
+`seed.py` is **additive** (per the demo app's ADR-017): it inserts only the cards that are
+missing and leaves existing cards and their data untouched, so it is safe to run against a
+board you care about. Use `python seed.py --reset` **only** when you deliberately want to
+wipe and rebuild the whole board.
 
-## Stage 8: End-to-End Verification
+**Verify:** `curl http://127.0.0.1:5001/api/cards` lists your new card, and `curl http://127.0.0.1:5001/api/profiles` shows it on the "Default" board (if no profile is named "Default" any more, the card is in the library only).
+
+## Stage 8: Tests
+
+New behavior ships with tests (`TEST-1`), and tests never touch the network (`TEST-2`): both suites block any unmocked call.
+
+**Backend:** create `backend/tests/test_services_{slug}.py`, following `test_services_quotes.py`. Use the `http_mock` fixture (the `responses` library) to register the service's URL constant, and cover both paths (`TEST-6`):
+- the success response, with the exact fields the service returns;
+- the fallback when the upstream fails (for example `status=500`): `'fallback': True` and the same keys as success (`SVC-5`).
+
+**Data cards also:** add the new source to `backend/tests/test_routes_data.py`: a `DISPATCH_CASES` entry (a key and value only its healthy response carries) and its URL in the `healthy_upstreams` fixture. That file's dispatch test runs for every source in `SERVICES`, so it fails for the new source until the case exists.
+
+**Static and stateful cards also:** add the new source to `SOURCES_WITHOUT_A_SERVICE` in `backend/tests/test_seed.py`. That test checks every seeded card has a data service unless it is listed there, which is what catches a data card whose service was never registered.
+
+**Frontend:** create `frontend/src/components/cards/{PascalName}Card.test.jsx`, following `QuoteCard.test.jsx`. Render the component with Testing Library and assert what a user sees (`TEST-7`): the data fields, the fallback message, and nothing rendered when `data` is null.
+
+**Verify:** `cd backend && pytest tests/test_services_{slug}.py` and `cd frontend && npm run test:run -- {PascalName}Card` both pass, then the full suites (`pytest`, `npm run test:run`) stay green (`TEST-10`).
+
+## Stage 9: End-to-End Verification
 
 1. Backend is running: `cd backend && python run.py`
 2. Frontend is running: `cd frontend && npm run dev`
 3. Open `http://localhost:5173` in a browser
 4. Confirm the new card appears in the grid with:
-   - Correct title, icon, and description in the header
-   - Data loaded from your service (not a loading spinner or error)
-   - Accent color visible on hover (left edge bar and glow)
-5. Unlock the layout and drag the card — confirm it saves position
+   - Correct title and icon in the header (the description shows when hovering the title)
+   - Data loaded from your service (not a loading spinner or error), and `Live` in the header for a data card
+   - The card's colour in the tab beside the header and on its icon
+5. Choose "Edit board" and drag the card: confirm it keeps its position after a reload. The library that opens lists the card, marked "On board"
+6. Check the new card at phone, tablet and desktop widths with the `check-ui` skill (the card must be on the board): no line may report the page scrolling sideways, and the contact sheet shows the card's title and content readable at each width
 
 ## Quick Checklist
 
@@ -212,5 +241,6 @@ Then re-seed: `cd backend && python seed.py`
 | 3 | `.env` + `backend/config.py` | Add API key (if needed) |
 | 4 | `frontend/src/components/cards/{PascalName}Card.jsx` | Create display component |
 | 5 | `frontend/src/components/Card.jsx` | Import component, add to `CARD_REGISTRY` |
-| 6 | `frontend/src/index.css` | Add `--color-card-{slug}` in `@theme` |
-| 7 | `backend/seed.py` | Add `Card(...)` entry, re-seed |
+| 6 | `frontend/src/index.css` (+ `frontend/src/components/Icon.jsx` for a new icon) | Add `--color-card-{slug}` pointing at a palette colour; pick or add an icon name |
+| 7 | `backend/seed.py` | Add a `Card(...)` entry and its place in `DEFAULT_BOARD`, run `python seed.py` (additive insert) |
+| 8 | `backend/tests/test_services_{slug}.py` + `frontend/src/components/cards/{PascalName}Card.test.jsx` (+ a dispatch case in `test_routes_data.py` for a data card, or `SOURCES_WITHOUT_A_SERVICE` in `test_seed.py` for a static or stateful one) | Success and fallback paths, network mocked |

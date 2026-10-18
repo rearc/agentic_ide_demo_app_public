@@ -1,8 +1,10 @@
-# Test-only dependencies. Install with:
+# Test and lint dependencies. Install with:
 #   pip install -r requirements-dev.txt
 # This pulls in the runtime deps too, so it is the only install a contributor
-# running the test suite needs.
+# running the tests or the linter needs.
 -r requirements.txt
 
+pyright==1.1.408
 pytest==8.4.1
 responses==0.25.7
+ruff==0.17.1

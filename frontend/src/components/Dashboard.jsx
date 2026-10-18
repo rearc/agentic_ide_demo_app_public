@@ -1,142 +1,304 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
 import { GridLayout, useContainerWidth } from 'react-grid-layout'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
-import { fetchCards, updateCard } from '../api'
-import Card, { DRAG_HANDLE_CLASS } from './Card'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { DROPPING_ID, makeCompactor, settleBoard } from '../boardLayout'
+import { placedSize } from '../useBoard'
+import Card, { DRAG_HANDLE_CLASS, cardAccent } from './Card'
+import LoadingDots from './LoadingDots'
 
-function buildLayout(cards) {
-  return cards.map((card, i) => ({
-    i: String(card.id),
-    x: card.layout?.x ?? (i % 2) * 6,
-    y: card.layout?.y ?? Math.floor(i / 2) * 4,
-    w: card.layout?.w ?? 6,
-    h: card.layout?.h ?? 4,
-    minW: 2,
-    minH: 2,
-  }))
+// 24 columns and short rows, so cards move and resize in fine steps: a card
+// 8 by 8 is a third of the width and 208 px tall.
+const COLS = 24
+const ROW_HEIGHT = 19
+// Cards sit MARGIN px apart. Each draws a 1 px outline just outside its box
+// (Card.jsx), so the grid keeps OUTLINE px clear around its edge for it.
+const MARGIN = 8
+const OUTLINE = 1
+
+// Below this container width the grid's columns get too narrow to read, so
+// the cards stack in one column instead, in grid order, without dragging.
+// It matches Tailwind's `md` breakpoint less the page padding (App.jsx), where
+// the header hides the customize button.
+export const STACK_BELOW = 728
+
+/** Shown in place of the cards when the board shows none. */
+function EmptyBoard() {
+  return (
+    <p className="text-center text-sm text-text-secondary py-10">
+      No cards on this board. Choose Edit board to add some from the library.
+    </p>
+  )
 }
 
-export default function Dashboard({ locked }) {
-  const [cards, setCards] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const saveTimer = useRef(null)
-  const { width, containerRef, mounted } = useContainerWidth()
-
-  useEffect(() => {
-    fetchCards()
-      .then(setCards)
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false))
-  }, [])
-
-  // The debounced save is a pending write to the API. Without this, unmounting
-  // inside the window still fires it and then sets state on a dead component.
-  useEffect(() => () => clearTimeout(saveTimer.current), [])
-
-  const handleLayoutChange = useCallback(
-    (newLayout) => {
-      // Layout events the grid emits on its own (mount-time compaction,
-      // resize) are persisted too. That keeps storage matching what is on
-      // screen; the unchanged-layout check below keeps it to a no-op when
-      // compaction changes nothing.
-      if (locked) return
-
-      clearTimeout(saveTimer.current)
-      saveTimer.current = setTimeout(() => {
-        newLayout.forEach((item) => {
-          const card = cards.find((c) => String(c.id) === item.i)
-          if (!card) return
-          const prev = card.layout || {}
-          if (
-            prev.x === item.x &&
-            prev.y === item.y &&
-            prev.w === item.w &&
-            prev.h === item.h
-          )
-            return
-          updateCard(card.id, {
-            layout: { x: item.x, y: item.y, w: item.w, h: item.h },
-          }).catch((err) => {
-            // Not fatal: the board still shows the new arrangement, it just
-            // did not persist. Surfaced rather than swallowed (LOG-3).
-            console.error('Failed to save card layout', err)
-          })
-        })
-        setCards((prev) =>
-          prev.map((card) => {
-            const item = newLayout.find((l) => l.i === String(card.id))
-            if (!item) return card
-            return {
-              ...card,
-              layout: { x: item.x, y: item.y, w: item.w, h: item.h },
-            }
-          }),
-        )
-      }, 500)
-    },
-    [locked, cards],
+/**
+ * The grid's cells, drawn faintly behind the cards while editing so it shows
+ * where a card will land and how big it can be. One SVG pattern repeats a
+ * pair of cells across the board (the second fainter, so 24 columns do not
+ * look busy), with the grid's own padding, gaps and column width.
+ */
+function GridGuides({ shown, width }) {
+  const patternId = useId()
+  const cell = (width - 2 * OUTLINE - (COLS - 1) * MARGIN) / COLS
+  return (
+    <svg
+      aria-hidden
+      data-grid-guides={shown}
+      className={`absolute inset-0 size-full pointer-events-none transition-opacity duration-300 ${shown ? 'opacity-100' : 'opacity-0'}`}
+    >
+      <defs>
+        <pattern
+          id={patternId}
+          x={OUTLINE}
+          y={OUTLINE}
+          width={2 * (cell + MARGIN)}
+          height={ROW_HEIGHT + MARGIN}
+          patternUnits="userSpaceOnUse"
+        >
+          <rect
+            width={cell}
+            height={ROW_HEIGHT}
+            className="fill-text-primary"
+            fillOpacity="0.035"
+          />
+          <rect
+            x={cell + MARGIN}
+            width={cell}
+            height={ROW_HEIGHT}
+            className="fill-text-primary"
+            fillOpacity="0.02"
+          />
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill={`url(#${patternId})`} />
+    </svg>
   )
+}
 
-  if (loading) {
-    return (
-      <div
-        className="flex items-center justify-center py-24"
-        role="status"
-        aria-label="Loading dashboard"
-      >
-        <div className="flex gap-1.5">
-          {[0, 1, 2].map((i) => (
-            <div
-              key={i}
-              className="w-2 h-2 rounded-full bg-text-muted animate-subtle-pulse"
-              style={{ animationDelay: `${i * 0.2}s` }}
-            />
-          ))}
-        </div>
-      </div>
+/** A card's stacked height: the height its grid rows would give it. */
+function stackedHeight(h) {
+  return h * ROW_HEIGHT + (h - 1) * MARGIN
+}
+
+/** The grid items for the cards `board` shows, in library order. */
+function buildLayout(cards, board) {
+  return cards
+    .filter((card) => board[card.id] && !board[card.id].hidden)
+    .map((card) => {
+      const { x, y, w, h } = board[card.id]
+      return { i: String(card.id), x, y, w, h, minW: 4, minH: 4 }
+    })
+}
+
+/**
+ * The shown profile's board. It owns no state: `useBoard` hands it the cards,
+ * the board and the actions that change them. Every finished move, resize,
+ * removal and drop is saved at once.
+ */
+export default function Dashboard({
+  cards,
+  board,
+  profileId,
+  turn,
+  locked,
+  libraryOpen = false,
+  loading,
+  error,
+  draggingCardId,
+  saveLayout,
+  hideCard,
+  showCard,
+}) {
+  const { width, containerRef, mounted } = useContainerWidth()
+  // The card being moved or resized on the grid, for the preview's colour.
+  const [movingId, setMovingId] = useState(null)
+  // The move in progress, for the layout rules in boardLayout.js: the card
+  // and the board as it was when the move began.
+  const moveRef = useRef(null)
+  const compactor = useMemo(() => makeCompactor(moveRef), [])
+  const pageRef = useRef(null)
+
+  // A page turn: the board slides in from the side the arrow points to.
+  // Animated in place rather than remounting the board, so the cards both
+  // profiles show keep their data instead of fetching it again.
+  useEffect(() => {
+    const page = pageRef.current
+    if (!turn || !page?.animate) return
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+    const from = turn === 'next' ? 48 : -48
+    page.getAnimations().forEach((a) => a.cancel())
+    page.animate(
+      [
+        { opacity: 0, transform: `translateX(${from}px)` },
+        { opacity: 1, transform: 'none' },
+      ],
+      {
+        duration: 420,
+        easing:
+          getComputedStyle(page).getPropertyValue('--ease-sheet') || 'ease-out',
+      },
     )
+  }, [profileId, turn])
+
+  const layout = buildLayout(cards, board)
+
+  // A card dragged in from the library starts a move too: the grid reports
+  // no move start for it, so the board as it is when the drag begins is
+  // kept here, and the move ends with the drag.
+  useEffect(() => {
+    moveRef.current =
+      draggingCardId === null ? null : { id: DROPPING_ID, start: layout }
+    // Only when a library drag starts or ends; `layout` is read as it is then.
+  }, [draggingCardId])
+
+  const cardsById = new Map(cards.map((card) => [String(card.id), card]))
+  const stacked = width < STACK_BELOW
+  const previewCard = cardsById.get(String(movingId ?? draggingCardId))
+
+  // While a library tile is dragged over the grid, the placeholder takes the
+  // size the card will land at. Anything else dragged in is refused.
+  function sizeDropping() {
+    if (draggingCardId === null) return false
+    return placedSize(board, draggingCardId)
   }
 
-  if (error) {
-    return (
+  // The grid's items include its drop placeholder (DROPPING_ID), which marks
+  // where the card was dropped; the card itself is the one being dragged.
+  // They are settled once more, because a drop straight onto the cell where
+  // the card entered the grid arrives before the grid has made room
+  // (boardLayout.js).
+  function handleDrop(gridItems) {
+    const move = moveRef.current
+    moveRef.current = null
+    if (draggingCardId === null) return
+    const settled = settleBoard(gridItems, COLS, move)
+    const dropped = settled.find((l) => l.i === DROPPING_ID)
+    if (!dropped) return
+    showCard(draggingCardId, { x: dropped.x, y: dropped.y }, settled)
+  }
+
+  function startMove(layout, item) {
+    moveRef.current = { id: item.i, start: layout.map((l) => ({ ...l })) }
+    setMovingId(item.i)
+  }
+
+  function finishMove(gridItems) {
+    moveRef.current = null
+    setMovingId(null)
+    saveLayout(gridItems)
+  }
+
+  let content
+  if (loading) {
+    content = (
+      <LoadingDots label="Loading dashboard" size="md" className="py-24" />
+    )
+  } else if (error) {
+    content = (
       <div className="text-center py-24">
-        <p className="text-text-secondary text-lg">Unable to load dashboard</p>
-        <p className="text-text-muted text-sm mt-2">{error}</p>
-        <p className="text-text-muted text-sm mt-1">
+        <p className="text-text-primary text-lg">Unable to load dashboard</p>
+        <p className="text-text-secondary text-sm mt-2">{error}</p>
+        <p className="text-text-secondary text-sm mt-1">
           Make sure the backend is running on port 5001
         </p>
       </div>
     )
+  } else if (stacked) {
+    const inGridOrder = [...layout].sort((a, b) => a.y - b.y || a.x - b.x)
+    content = (
+      <>
+        {layout.length === 0 && <EmptyBoard />}
+        <div
+          className="flex flex-col"
+          style={{ gap: MARGIN, padding: OUTLINE }}
+        >
+          {inGridOrder.map((item) => {
+            const card = cardsById.get(item.i)
+            return (
+              <div key={item.i} style={{ height: stackedHeight(item.h) }}>
+                <Card
+                  card={card}
+                  locked={locked}
+                  movable={false}
+                  onRemove={() => hideCard(card.id)}
+                />
+              </div>
+            )
+          })}
+        </div>
+      </>
+    )
+  } else if (mounted) {
+    content = (
+      <div className="relative">
+        {layout.length === 0 && <EmptyBoard />}
+        <GridGuides shown={!locked} width={width} />
+        <GridLayout
+          // An empty board still needs room to drop a card onto.
+          className="min-h-64"
+          width={width}
+          layout={layout}
+          compactor={compactor}
+          onDragStart={startMove}
+          onResizeStart={startMove}
+          onDragStop={finishMove}
+          onResizeStop={finishMove}
+          onDropDragOver={sizeDropping}
+          onDrop={handleDrop}
+          gridConfig={{
+            cols: COLS,
+            rowHeight: ROW_HEIGHT,
+            margin: [MARGIN, MARGIN],
+            containerPadding: [OUTLINE, OUTLINE],
+          }}
+          // `cancel`: pressing a header button (the remove ×) never starts a drag.
+          dragConfig={{
+            enabled: !locked,
+            handle: `.${DRAG_HANDLE_CLASS}`,
+            cancel: 'button',
+          }}
+          resizeConfig={{ enabled: !locked }}
+          dropConfig={{ enabled: !locked }}
+        >
+          {layout.map((item, i) => {
+            const card = cardsById.get(item.i)
+            // On a page turn the board slides in whole, without the cards'
+            // own staggered entrance.
+            return (
+              <div
+                key={item.i}
+                className={turn ? undefined : 'animate-card-enter'}
+                style={turn ? undefined : { animationDelay: `${i * 0.06}s` }}
+              >
+                <Card
+                  card={card}
+                  locked={locked}
+                  onRemove={() => hideCard(card.id)}
+                />
+              </div>
+            )
+          })}
+        </GridLayout>
+      </div>
+    )
   }
 
-  const layout = buildLayout(cards)
-
+  // The container is rendered from the first paint, loading included:
+  // useContainerWidth measures it once, on mount, and a container that
+  // appeared only after loading was never measured (the grid kept the hook's
+  // 1280 px default and overflowed narrower windows).
+  //
+  // While the library is open, the board recedes (index.css), except during
+  // a drag in from it, when it must be at full size to drop onto. With the
+  // library folded away it stays at full size, to be sized as it is seen.
   return (
-    <div>
-      <div ref={containerRef}>
-        {mounted && (
-          <GridLayout
-            width={width}
-            layout={layout}
-            onLayoutChange={handleLayoutChange}
-            gridConfig={{ cols: 12, rowHeight: 40, margin: [16, 16] }}
-            dragConfig={{ enabled: !locked, handle: `.${DRAG_HANDLE_CLASS}` }}
-            resizeConfig={{ enabled: !locked }}
-          >
-            {cards.map((card, i) => (
-              <div
-                key={String(card.id)}
-                className="animate-card-enter"
-                style={{ animationDelay: `${i * 0.08}s` }}
-              >
-                <Card card={card} locked={locked} />
-              </div>
-            ))}
-          </GridLayout>
-        )}
-      </div>
+    <div
+      ref={containerRef}
+      className="board-recede"
+      data-recede={libraryOpen && !stacked && draggingCardId === null}
+      style={{ '--drop-color': cardAccent(previewCard?.source) }}
+    >
+      <div ref={pageRef}>{content}</div>
     </div>
   )
 }

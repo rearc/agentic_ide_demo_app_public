@@ -1,10 +1,17 @@
-import { useState, useEffect } from 'react'
+import { Component, useState, useEffect } from 'react'
+import { DotsSixVerticalIcon, XIcon } from '@phosphor-icons/react'
 import { fetchCardData } from '../api'
+import Icon from './Icon'
 import WeatherCard from './cards/WeatherCard'
 import QuoteCard from './cards/QuoteCard'
 import SpaceCard from './cards/SpaceCard'
 import PlaceholderCard from './cards/PlaceholderCard'
 import TodoCard from './cards/TodoCard'
+import TimerCard from './cards/TimerCard'
+import MoonCard from './cards/MoonCard'
+import DaylightCard from './cards/DaylightCard'
+import IssCard from './cards/IssCard'
+import LoadingDots from './LoadingDots'
 
 /**
  * Class marking the drag target within a card.
@@ -25,14 +32,138 @@ const CARD_REGISTRY = {
     needsData: false,
   },
   todo: { component: TodoCard, accent: 'card-todo', needsData: false },
+  timer: { component: TimerCard, accent: 'card-timer', needsData: false },
+  moon: { component: MoonCard, accent: 'card-moon', needsData: false },
+  daylight: {
+    component: DaylightCard,
+    accent: 'card-daylight',
+    needsData: true,
+  },
+  iss: { component: IssCard, accent: 'card-iss', needsData: true },
 }
 
-export default function Card({ card, locked }) {
+/**
+ * Shown for a card whose `source` has no entry in CARD_REGISTRY.
+ *
+ * This registry and the backend's SERVICES agree only through the source
+ * string (ADR-008), so when they drift the card says which source is missing
+ * rather than passing for the "build something here" placeholder.
+ */
+function UnregisteredCard({ card }) {
+  return (
+    <div className="h-full flex flex-col items-center justify-center text-center">
+      <p className="text-sm text-text-secondary">
+        No component is registered for source &ldquo;{card.source}&rdquo;.
+      </p>
+      <p className="text-xs text-text-muted mt-2">
+        Add it to CARD_REGISTRY in Card.jsx.
+      </p>
+    </div>
+  )
+}
+
+const UNREGISTERED = { component: UnregisteredCard, needsData: false }
+
+/**
+ * The colour of the card with this `source`, as a CSS value, or undefined for
+ * an unregistered source. Everything drawn in a card's colour (the card, its
+ * library tile) reads it here.
+ */
+export function cardAccent(source) {
+  // `accent` names a colour token in index.css (--color-<accent>).
+  const accent = CARD_REGISTRY[source]?.accent
+  return accent && `var(--color-${accent})`
+}
+
+/**
+ * Catches an error thrown while drawing a card's content, so one broken card
+ * says so in its own body instead of taking the whole board down with it.
+ * It sits inside the loaded branch below, so a fresh fetch starts it clean.
+ */
+class CardErrorBoundary extends Component {
+  state = { failed: false }
+
+  static getDerivedStateFromError() {
+    return { failed: true }
+  }
+
+  componentDidCatch(error) {
+    console.error(`The "${this.props.title}" card failed to render`, error)
+  }
+
+  render() {
+    if (!this.state.failed) return this.props.children
+    return (
+      <div role="alert" className="text-sm">
+        <p className="text-danger">This card could not be shown.</p>
+        <p className="text-xs text-text-muted mt-2">
+          The error is in the browser console.
+        </p>
+      </div>
+    )
+  }
+}
+
+const STATUS = {
+  live: { label: 'Live', className: 'text-live' },
+  fallback: {
+    label: 'Fallback',
+    className: 'text-fallback',
+    title: 'The service did not answer: showing fallback data',
+  },
+  error: { label: 'Error', className: 'text-danger' },
+}
+
+/** Clock time as 24-hour HH:MM, the same width at every hour. */
+function hhmm(date) {
+  return date.toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  })
+}
+
+/**
+ * A data card's state in its header: live (with when) or why it is not.
+ * While editing, a narrow card drops the time, leaving its title the room
+ * the drag handle and × take.
+ */
+function CardStatus({ status, fetchedAt, editing }) {
+  const { label, className, title } = STATUS[status]
+  return (
+    <>
+      {status === 'live' && fetchedAt && (
+        <span
+          className={`font-mono text-[11px] text-text-muted tabular-nums ${editing ? 'hidden @[18rem]:inline' : ''}`}
+        >
+          {hhmm(fetchedAt)}
+        </span>
+      )}
+      <span
+        className={`inline-flex items-center gap-1.5 text-xs font-medium ${className}`}
+        title={title}
+      >
+        <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-current" />
+        {label}
+      </span>
+    </>
+  )
+}
+
+/**
+ * One card on the board. While editing (`locked` false) it offers an ×
+ * that calls `onRemove`, and, when `movable`, its header becomes the drag
+ * handle; the stacked board passes `movable={false}` since it cannot drag.
+ */
+export default function Card({ card, locked, movable = true, onRemove }) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [fetchedAt, setFetchedAt] = useState(null)
+  // A short note a card's content may put in the header (the todo count).
+  const [note, setNote] = useState(null)
 
-  const entry = CARD_REGISTRY[card.source] || CARD_REGISTRY.placeholder
+  const entry = CARD_REGISTRY[card.source] ?? UNREGISTERED
   const configKey = JSON.stringify(card.config || {})
 
   useEffect(() => {
@@ -51,7 +182,10 @@ export default function Card({ card, locked }) {
     let current = true
     fetchCardData(card.source, card.config || {})
       .then((result) => {
-        if (current) setData(result)
+        if (current) {
+          setData(result)
+          setFetchedAt(new Date())
+        }
       })
       .catch((err) => {
         if (current) setError(err.message)
@@ -65,94 +199,79 @@ export default function Card({ card, locked }) {
   }, [card.source, entry.needsData, configKey])
 
   const CardContent = entry.component
-  const accent = `var(--color-${entry.accent})`
-  const accent2 = `var(--color-${entry.accent}-2, ${accent})`
+  const accent = cardAccent(card.source)
+  const draggable = !locked && movable
+  const removable = !locked && Boolean(onRemove)
+  let status = null
+  if (entry.needsData && !loading) {
+    if (error) status = 'error'
+    else status = data?.fallback ? 'fallback' : 'live'
+  }
 
   return (
-    <div
-      className="group relative h-full rounded-sm bg-surface-raised/90 border border-border-subtle overflow-hidden transition-all duration-300 hover:border-transparent hover:-translate-y-0.5"
-      style={{
-        '--a': accent,
-        '--b': accent2,
-        boxShadow: '0 1px 0 0 rgba(255,255,255,0.03) inset',
-      }}
-    >
-      {/* Top accent bar */}
+    // The hairline is an outline just outside the box, so the colour tab
+    // sits flush with the card's left edge.
+    <div className="relative h-full flex flex-col bg-panel shadow-[0_0_0_1px_var(--color-hairline)]">
+      {accent && (
+        <span
+          aria-hidden
+          data-card-tab
+          className="absolute left-0 top-0 h-11 w-1.5"
+          style={{ background: accent }}
+        />
+      )}
       <div
-        className="absolute inset-x-0 top-0 h-[3px] opacity-80 transition-opacity duration-300 group-hover:opacity-100"
-        style={{ background: 'linear-gradient(90deg, var(--a), var(--b))' }}
-      />
-      {/* Corner glow, intensifies on hover */}
-      <div
-        className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full blur-3xl opacity-15 transition-opacity duration-300 group-hover:opacity-35"
-        style={{
-          background: 'radial-gradient(circle, var(--b), transparent 70%)',
-        }}
-      />
-      {/* Hover ring glow */}
-      <div
-        className="pointer-events-none absolute inset-0 rounded-sm opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-        style={{
-          boxShadow:
-            '0 0 0 1px color-mix(in oklab, var(--a) 40%, transparent), 0 18px 40px -20px color-mix(in oklab, var(--b) 55%, transparent)',
-        }}
-      />
-
-      <div className="relative p-5 h-full flex flex-col">
-        <div
-          className={`flex items-center gap-3 mb-4 ${!locked ? `${DRAG_HANDLE_CLASS} cursor-grab active:cursor-grabbing` : ''}`}
+        className={`@container flex items-center gap-2.5 h-11 shrink-0 pl-4 border-b border-hairline ${removable ? 'pr-2' : 'pr-4'} ${draggable ? `${DRAG_HANDLE_CLASS} cursor-grab active:cursor-grabbing` : ''}`}
+      >
+        <Icon
+          name={card.icon}
+          className="shrink-0 text-text-secondary"
+          style={{ color: accent }}
+        />
+        <h2
+          className="min-w-0 truncate text-sm font-semibold"
+          title={card.description || undefined}
         >
-          <span
-            className="grid place-items-center h-9 w-9 shrink-0 rounded-sm text-lg ring-1"
-            style={{
-              background:
-                'linear-gradient(135deg, color-mix(in oklab, var(--a) 22%, transparent), color-mix(in oklab, var(--b) 14%, transparent))',
-              '--tw-ring-color':
-                'color-mix(in oklab, var(--a) 30%, transparent)',
-            }}
-          >
-            {card.icon}
+          {card.title}
+        </h2>
+        <span className="flex-1" />
+        {status && (
+          <CardStatus
+            status={status}
+            fetchedAt={fetchedAt}
+            editing={draggable || removable}
+          />
+        )}
+        {note && <span className="text-xs text-text-secondary">{note}</span>}
+        {draggable && (
+          <span className="text-text-muted" title="Drag to move">
+            <DotsSixVerticalIcon size={16} aria-hidden />
           </span>
-          <div className="flex-1 min-w-0">
-            <h2 className="text-[15px] font-bold text-text-primary leading-tight truncate">
-              {card.title}
-            </h2>
-            <p className="text-xs text-text-muted mt-0.5 truncate">
-              {card.description}
-            </p>
-          </div>
-          {!locked && (
-            <span
-              className="text-text-muted text-xs select-none"
-              title="Drag to move"
-            >
-              ⠿
-            </span>
-          )}
-        </div>
-        <div className="flex-1 min-h-0 overflow-auto card-scroll">
-          {loading ? (
-            <div
-              className="flex justify-center py-8"
-              role="status"
-              aria-label="Loading card data"
-            >
-              <div className="flex gap-1.5">
-                {[0, 1, 2].map((i) => (
-                  <div
-                    key={i}
-                    className="w-1.5 h-1.5 rounded-full bg-text-muted animate-subtle-pulse"
-                    style={{ animationDelay: `${i * 0.2}s` }}
-                  />
-                ))}
-              </div>
-            </div>
-          ) : error ? (
-            <p className="text-sm text-red-400/80 py-4">{error}</p>
-          ) : (
-            <CardContent data={data} card={card} />
-          )}
-        </div>
+        )}
+        {/* The button's own inset keeps the × on the 16 px edge the header's
+            padding gives everything else. */}
+        {removable && (
+          <button
+            type="button"
+            onClick={onRemove}
+            aria-label={`Remove "${card.title}"`}
+            title="Remove from this board"
+            className="inline-flex items-center justify-center h-8 w-8 shrink-0 text-text-muted hover:text-text-primary hover:bg-hairline transition-colors"
+          >
+            <XIcon size={16} aria-hidden />
+          </button>
+        )}
+      </div>
+      <div className="flex-1 min-h-0 overflow-auto card-scroll p-4">
+        {loading ? (
+          <LoadingDots label="Loading card data" className="py-8" />
+        ) : error ? (
+          <p className="text-sm text-danger">{error}</p>
+        ) : (
+          <CardErrorBoundary title={card.title}>
+            <CardContent data={data} card={card} onNote={setNote} />
+          </CardErrorBoundary>
+        )}
       </div>
     </div>
   )

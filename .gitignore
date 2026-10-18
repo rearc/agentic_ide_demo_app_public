@@ -9,18 +9,23 @@ backend/instance/
 # Node
 frontend/node_modules/
 frontend/dist/
+frontend/test-results/
+frontend/playwright-report/
 
 # Environment
 .env
 
+# Claude Code local state: the audit hook's log, worktree sessions (claude -w)
+.claude/audit.log
+.claude/worktrees/
+
 # IDE
 .vscode/*
-!.vscode/mcp.json
 .idea/
 
 # OS
 .DS_Store
 
-# APM dependencies are intentionally committed on this branch (claude-copilot-ready)
-# so workshop participants get a pre-installed, ready-to-demo experience.
-# Re-run `apm install` to regenerate from apm.yml + apm.lock.yaml if needed.
+# APM's working copies of the kits. Participants never run `apm install`: the
+# deployed primitives in .claude/ are committed, and `apm install` rebuilds this.
+apm_modules/

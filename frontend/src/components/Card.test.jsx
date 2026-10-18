@@ -1,38 +1,29 @@
 import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import Card from './Card'
 import { fetchCardData, fetchTodos } from '../api'
-import { deferred } from '../test/helpers'
+import { cardRecord, deferred } from '../test/helpers'
 
-// Derived from the real module rather than listed by hand, so adding an export
-// to api.js cannot silently arrive here as undefined.
-vi.mock('../api', async (importOriginal) => {
-  const actual = await importOriginal()
-  return Object.fromEntries(Object.keys(actual).map((name) => [name, vi.fn()]))
-})
+vi.mock('../api')
 
-function cardRecord(overrides = {}) {
-  return {
-    id: 1,
-    slug: 'weather',
+/** Most tests here need a card that fetches data; weather is that card. */
+function weatherCard(overrides = {}) {
+  return cardRecord({
     title: 'Weather',
     description: 'Current conditions at a glance',
-    icon: '☀️',
+    icon: 'cloud-sun',
     source: 'weather',
-    config: {},
-    layout: {},
-    position: 1,
-    is_active: true,
     ...overrides,
-  }
+  })
 }
 
 const WEATHER_DATA = {
   city: 'San Francisco',
   temp: 18.3,
   description: 'Overcast',
-  icon_emoji: '☁️',
+  icon: 'cloud',
   humidity: 72,
 }
 
@@ -43,103 +34,138 @@ beforeEach(() => {
 })
 
 describe('chrome', () => {
-  it('renders the card title, description and icon', async () => {
-    render(<Card card={cardRecord()} locked />)
+  it('renders the card title, its icon, and its description on hover', async () => {
+    const { container } = render(<Card card={weatherCard()} locked />)
 
+    const heading = await screen.findByRole('heading', { name: 'Weather' })
+    expect(heading).toHaveAttribute('title', 'Current conditions at a glance')
     expect(
-      await screen.findByRole('heading', { name: 'Weather' }),
+      container.querySelector('[data-icon="cloud-sun"]'),
     ).toBeInTheDocument()
-    expect(
-      screen.getByText('Current conditions at a glance'),
-    ).toBeInTheDocument()
-    expect(screen.getByText('☀️')).toBeInTheDocument()
+  })
+
+  it('marks the header with the colour its registry entry names', async () => {
+    const { container } = render(<Card card={weatherCard()} locked />)
+    await screen.findByRole('heading', { name: 'Weather' })
+
+    expect(container.querySelector('[data-card-tab]').style.background).toBe(
+      'var(--color-card-weather)',
+    )
+    expect(container.querySelector('[data-icon="cloud-sun"]').style.color).toBe(
+      'var(--color-card-weather)',
+    )
+  })
+
+  it('shows a note its content sends up, such as the todo count', async () => {
+    fetchTodos.mockResolvedValue([
+      { id: 1, card_id: 1, text: 'One', done: true },
+      { id: 2, card_id: 1, text: 'Two', done: false },
+    ])
+
+    render(<Card card={cardRecord({ source: 'todo' })} locked />)
+
+    expect(await screen.findByText('1 of 2 done')).toBeInTheDocument()
+  })
+
+  it('gives an unregistered card no colour', async () => {
+    const { container } = render(
+      <Card card={cardRecord({ source: 'not-a-real-source' })} locked />,
+    )
+    await screen.findByText(/no component is registered/i)
+
+    expect(container.querySelector('[data-card-tab]')).toBeNull()
+  })
+
+  it('draws no icon for a card with an empty or unknown icon name', async () => {
+    const { rerender } = render(
+      <Card card={cardRecord({ icon: '☀️' })} locked />,
+    )
+    const header = (await screen.findByRole('heading')).parentElement
+    expect(header.querySelector('[data-icon]')).toBeNull()
+
+    rerender(<Card card={cardRecord({ icon: '' })} locked />)
+    expect(header.querySelector('[data-icon]')).toBeNull()
   })
 
   it('shows a drag affordance only when the dashboard is unlocked', async () => {
-    const { rerender } = render(<Card card={cardRecord()} locked />)
+    const { rerender } = render(<Card card={weatherCard()} locked />)
     await screen.findByRole('heading', { name: 'Weather' })
 
     expect(screen.queryByTitle('Drag to move')).not.toBeInTheDocument()
 
-    rerender(<Card card={cardRecord()} locked={false} />)
+    rerender(<Card card={weatherCard()} locked={false} />)
 
     expect(screen.getByTitle('Drag to move')).toBeInTheDocument()
   })
 })
 
+describe('removing a card (only while editing)', () => {
+  it('offers an × only while editing', async () => {
+    const { rerender } = render(
+      <Card card={weatherCard()} locked onRemove={() => {}} />,
+    )
+    await screen.findByRole('heading', { name: 'Weather' })
+
+    expect(
+      screen.queryByRole('button', { name: 'Remove "Weather"' }),
+    ).not.toBeInTheDocument()
+
+    rerender(<Card card={weatherCard()} locked={false} onRemove={() => {}} />)
+
+    expect(
+      screen.getByRole('button', { name: 'Remove "Weather"' }),
+    ).toBeInTheDocument()
+  })
+
+  it('calls onRemove when the × is pressed', async () => {
+    const user = userEvent.setup()
+    const onRemove = vi.fn()
+    render(<Card card={weatherCard()} locked={false} onRemove={onRemove} />)
+
+    await user.click(
+      await screen.findByRole('button', { name: 'Remove "Weather"' }),
+    )
+
+    expect(onRemove).toHaveBeenCalledTimes(1)
+  })
+})
+
 describe('registry dispatch (ADR-008)', () => {
-  it('renders the weather widget for a weather source', async () => {
-    render(<Card card={cardRecord({ source: 'weather' })} locked />)
+  it.each([
+    ['weather', WEATHER_DATA, 'Overcast'],
+    ['quote', { text: 'A quote.', author: 'Someone' }, 'A quote.'],
+    [
+      'space',
+      { title: 'Pillars of Creation', explanation: 'A nebula.' },
+      'A nebula.',
+    ],
+    ['placeholder', null, 'What should we build here?'],
+    ['todo', null, 'No tasks yet.'],
+  ])('renders the %s widget for its source', async (source, data, shows) => {
+    fetchCardData.mockResolvedValue(data)
 
-    expect(await screen.findByText('Overcast')).toBeInTheDocument()
-    expect(screen.getByText('💧 72% humidity')).toBeInTheDocument()
+    render(<Card card={cardRecord({ source })} locked />)
+
+    expect(await screen.findByText(shows)).toBeInTheDocument()
   })
 
-  it('renders the quote widget for a quote source', async () => {
-    fetchCardData.mockResolvedValue({ text: 'A quote.', author: 'Someone' })
-
-    render(<Card card={cardRecord({ source: 'quote' })} locked />)
-
-    expect(await screen.findByText('A quote.')).toBeInTheDocument()
-  })
-
-  it('renders the space widget for a space source', async () => {
-    fetchCardData.mockResolvedValue({
-      title: 'Pillars of Creation',
-      url: 'https://example.test/pillars.jpg',
-      explanation: 'A nebula.',
-      date: '2026-07-19',
-      media_type: 'image',
-    })
-
-    render(<Card card={cardRecord({ source: 'space' })} locked />)
-
-    expect(await screen.findByText('Pillars of Creation')).toBeInTheDocument()
-  })
-
-  it('renders the placeholder widget for a placeholder source', async () => {
-    render(<Card card={cardRecord({ source: 'placeholder' })} locked />)
-
-    expect(
-      await screen.findByText('What should we build here?'),
-    ).toBeInTheDocument()
-  })
-
-  it('renders the todo widget for a todo source', async () => {
-    render(<Card card={cardRecord({ source: 'todo' })} locked />)
-
-    expect(
-      await screen.findByPlaceholderText('Add a task…'),
-    ).toBeInTheDocument()
-  })
-
-  it('falls back to the placeholder for an unregistered source', async () => {
+  it('names the missing source for an unregistered source', async () => {
     render(<Card card={cardRecord({ source: 'not-a-real-source' })} locked />)
 
     expect(
-      await screen.findByText('What should we build here?'),
+      await screen.findByText(
+        /no component is registered for source .not-a-real-source./i,
+      ),
     ).toBeInTheDocument()
-  })
-
-  it('does not fetch data for an unregistered source', async () => {
-    render(<Card card={cardRecord({ source: 'not-a-real-source' })} locked />)
-
-    await screen.findByText('What should we build here?')
-    expect(fetchCardData).not.toHaveBeenCalled()
+    expect(
+      screen.queryByText('What should we build here?'),
+    ).not.toBeInTheDocument()
   })
 })
 
 describe('data fetching', () => {
-  it('fetches data for a source that needs it', async () => {
-    render(<Card card={cardRecord({ source: 'weather' })} locked />)
-
-    await waitFor(() =>
-      expect(fetchCardData).toHaveBeenCalledWith('weather', {}),
-    )
-  })
-
   it('forwards the card config to the API', async () => {
-    render(<Card card={cardRecord({ config: { city: 'Boston' } })} locked />)
+    render(<Card card={weatherCard({ config: { city: 'Boston' } })} locked />)
 
     await waitFor(() =>
       expect(fetchCardData).toHaveBeenCalledWith('weather', { city: 'Boston' }),
@@ -147,27 +173,33 @@ describe('data fetching', () => {
   })
 
   it('tolerates a card with no config', async () => {
-    render(<Card card={cardRecord({ config: null })} locked />)
+    render(<Card card={weatherCard({ config: null })} locked />)
 
     await waitFor(() =>
       expect(fetchCardData).toHaveBeenCalledWith('weather', {}),
     )
   })
 
-  it('does not fetch for sources that manage their own data', async () => {
-    render(<Card card={cardRecord({ source: 'todo' })} locked />)
+  it.each([
+    ['todo', 'No tasks yet.'],
+    ['placeholder', 'What should we build here?'],
+    ['not-a-real-source', /no component is registered/i],
+  ])('does not fetch card data for a %s card', async (source, shows) => {
+    /* The backend has no data service for these, so a request would 404 and
+       replace the card's content with an error. */
+    render(<Card card={cardRecord({ source })} locked />)
 
-    await screen.findByPlaceholderText('Add a task…')
+    await screen.findByText(shows)
     expect(fetchCardData).not.toHaveBeenCalled()
   })
 
   it('refetches when the card config changes', async () => {
     const { rerender } = render(
-      <Card card={cardRecord({ config: { city: 'Boston' } })} locked />,
+      <Card card={weatherCard({ config: { city: 'Boston' } })} locked />,
     )
     await waitFor(() => expect(fetchCardData).toHaveBeenCalledTimes(1))
 
-    rerender(<Card card={cardRecord({ config: { city: 'Denver' } })} locked />)
+    rerender(<Card card={weatherCard({ config: { city: 'Denver' } })} locked />)
 
     await waitFor(() => expect(fetchCardData).toHaveBeenCalledTimes(2))
     expect(fetchCardData).toHaveBeenLastCalledWith('weather', {
@@ -176,10 +208,10 @@ describe('data fetching', () => {
   })
 
   it('does not refetch when an unrelated prop changes', async () => {
-    const { rerender } = render(<Card card={cardRecord()} locked />)
+    const { rerender } = render(<Card card={weatherCard()} locked />)
     await waitFor(() => expect(fetchCardData).toHaveBeenCalledTimes(1))
 
-    rerender(<Card card={cardRecord()} locked={false} />)
+    rerender(<Card card={weatherCard()} locked={false} />)
 
     await waitFor(() =>
       expect(screen.getByTitle('Drag to move')).toBeInTheDocument(),
@@ -188,12 +220,55 @@ describe('data fetching', () => {
   })
 })
 
+describe('status in the header', () => {
+  it('marks live data with the time it arrived', async () => {
+    render(<Card card={weatherCard()} locked />)
+
+    expect(await screen.findByText('Live')).toBeInTheDocument()
+    expect(screen.getByText(/^\d{2}:\d{2}$/)).toBeInTheDocument()
+  })
+
+  it('marks fallback data as a fallback, saying why on hover', async () => {
+    fetchCardData.mockResolvedValue({ ...WEATHER_DATA, fallback: true })
+
+    render(<Card card={weatherCard()} locked />)
+
+    expect(await screen.findByText('Fallback')).toHaveAttribute(
+      'title',
+      'The service did not answer: showing fallback data',
+    )
+    expect(screen.queryByText('Live')).not.toBeInTheDocument()
+  })
+
+  it('marks a failed fetch as an error', async () => {
+    fetchCardData.mockRejectedValue(new Error('upstream boom'))
+
+    render(<Card card={weatherCard()} locked />)
+
+    expect(await screen.findByText('Error')).toBeInTheDocument()
+  })
+
+  it('shows no status while loading, or on a card without data', async () => {
+    const pending = deferred()
+    fetchCardData.mockReturnValue(pending.promise)
+    const { rerender } = render(<Card card={weatherCard()} locked />)
+
+    expect(screen.queryByText('Live')).not.toBeInTheDocument()
+
+    rerender(<Card card={cardRecord()} locked />)
+    await screen.findByText('What should we build here?')
+    expect(
+      screen.queryByText(/^(Live|Fallback|Error)$/),
+    ).not.toBeInTheDocument()
+  })
+})
+
 describe('load and error states', () => {
   it('shows a loading indicator until the fetch settles', async () => {
     const pending = deferred()
     fetchCardData.mockReturnValue(pending.promise)
 
-    render(<Card card={cardRecord()} locked />)
+    render(<Card card={weatherCard()} locked />)
 
     expect(
       screen.getByRole('status', { name: 'Loading card data' }),
@@ -205,24 +280,16 @@ describe('load and error states', () => {
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
   })
 
-  it('shows the error message when the fetch fails', async () => {
+  it('shows the error message inside the card when the fetch fails', async () => {
     fetchCardData.mockRejectedValue(
       new Error('Failed to fetch data for weather'),
     )
 
-    render(<Card card={cardRecord()} locked />)
+    render(<Card card={weatherCard()} locked />)
 
     expect(
       await screen.findByText('Failed to fetch data for weather'),
     ).toBeInTheDocument()
-  })
-
-  it('keeps the card chrome visible when the fetch fails', async () => {
-    fetchCardData.mockRejectedValue(new Error('boom'))
-
-    render(<Card card={cardRecord()} locked />)
-
-    await screen.findByText('boom')
     expect(screen.getByRole('heading', { name: 'Weather' })).toBeInTheDocument()
   })
 
@@ -231,12 +298,12 @@ describe('load and error states', () => {
        that stale message forever, even after a later fetch succeeds. */
     fetchCardData.mockRejectedValueOnce(new Error('upstream boom'))
     const { rerender } = render(
-      <Card card={cardRecord({ config: { city: 'Boston' } })} locked />,
+      <Card card={weatherCard({ config: { city: 'Boston' } })} locked />,
     )
     await screen.findByText('upstream boom')
 
     fetchCardData.mockResolvedValueOnce(WEATHER_DATA)
-    rerender(<Card card={cardRecord({ config: { city: 'Denver' } })} locked />)
+    rerender(<Card card={weatherCard({ config: { city: 'Denver' } })} locked />)
 
     expect(await screen.findByText('Overcast')).toBeInTheDocument()
     expect(screen.queryByText('upstream boom')).not.toBeInTheDocument()
@@ -244,13 +311,13 @@ describe('load and error states', () => {
 
   it('shows loading again while a refetch is in flight', async () => {
     const { rerender } = render(
-      <Card card={cardRecord({ config: { city: 'Boston' } })} locked />,
+      <Card card={weatherCard({ config: { city: 'Boston' } })} locked />,
     )
     await screen.findByText('Overcast')
 
     const pending = deferred()
     fetchCardData.mockReturnValue(pending.promise)
-    rerender(<Card card={cardRecord({ config: { city: 'Denver' } })} locked />)
+    rerender(<Card card={weatherCard({ config: { city: 'Denver' } })} locked />)
 
     expect(
       await screen.findByRole('status', { name: 'Loading card data' }),
@@ -269,9 +336,9 @@ describe('load and error states', () => {
     fetchCardData.mockReturnValueOnce(second.promise)
 
     const { rerender } = render(
-      <Card card={cardRecord({ config: { city: 'Boston' } })} locked />,
+      <Card card={weatherCard({ config: { city: 'Boston' } })} locked />,
     )
-    rerender(<Card card={cardRecord({ config: { city: 'Denver' } })} locked />)
+    rerender(<Card card={weatherCard({ config: { city: 'Denver' } })} locked />)
 
     second.resolve({
       ...WEATHER_DATA,
@@ -287,5 +354,75 @@ describe('load and error states', () => {
       expect(screen.getByText('Clear sky')).toBeInTheDocument(),
     )
     expect(screen.queryByText('Overcast')).not.toBeInTheDocument()
+  })
+})
+
+describe('a card whose content fails to render', () => {
+  /* Daylight given an empty answer is a real case: its content reads fields
+     that are not there and throws. Without a boundary that blanks the app. */
+  function daylightCard(overrides = {}) {
+    return cardRecord({ title: 'Daylight', source: 'daylight', ...overrides })
+  }
+
+  beforeEach(() => {
+    // React, jsdom and the boundary all report the error; keep the run quiet.
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    const quiet = (event) => event.preventDefault()
+    window.addEventListener('error', quiet)
+    return () => window.removeEventListener('error', quiet)
+  })
+
+  it('says so in its own body and keeps its header', async () => {
+    fetchCardData.mockResolvedValue({})
+
+    render(<Card card={daylightCard()} locked />)
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'This card could not be shown.',
+    )
+    expect(
+      screen.getByRole('heading', { name: 'Daylight' }),
+    ).toBeInTheDocument()
+    expect(console.error).toHaveBeenCalledWith(
+      'The "Daylight" card failed to render',
+      expect.any(Error),
+    )
+  })
+
+  it('leaves the cards beside it working', async () => {
+    fetchCardData.mockImplementation((source) =>
+      Promise.resolve(source === 'daylight' ? {} : WEATHER_DATA),
+    )
+
+    render(
+      <>
+        <Card card={daylightCard()} locked />
+        <Card card={weatherCard({ id: 2 })} locked />
+      </>,
+    )
+
+    expect(await screen.findByRole('alert')).toBeInTheDocument()
+    expect(await screen.findByText('Overcast')).toBeInTheDocument()
+  })
+
+  it('tries again when the card fetches anew', async () => {
+    fetchCardData.mockResolvedValueOnce({})
+    const { rerender } = render(
+      <Card card={daylightCard({ config: { city: 'Boston' } })} locked />,
+    )
+    await screen.findByRole('alert')
+
+    fetchCardData.mockResolvedValueOnce({
+      fallback: true,
+      description: 'Daylight times are unavailable',
+    })
+    rerender(
+      <Card card={daylightCard({ config: { city: 'Denver' } })} locked />,
+    )
+
+    expect(
+      await screen.findByText('Daylight times are unavailable'),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 })

@@ -1,6 +1,6 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, abort, jsonify, request
 
-from app.services import weather, quotes, space
+from app.services import daylight, iss, quotes, space, weather
 
 data_bp = Blueprint('data', __name__)
 
@@ -8,7 +8,8 @@ SERVICES = {
     'weather': weather.fetch,
     'quote': quotes.fetch,
     'space': space.fetch,
-    'placeholder': lambda **_kw: {'message': 'Nothing here yet!'},
+    'daylight': daylight.fetch,
+    'iss': iss.fetch,
 }
 
 
@@ -16,7 +17,7 @@ SERVICES = {
 def get_data(source):
     handler = SERVICES.get(source)
     if not handler:
-        return jsonify({'error': f'Unknown source: {source}'}), 404
+        abort(404, f'Unknown source: {source}')
 
     config = request.args.to_dict()
     result = handler(**config)

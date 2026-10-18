@@ -1,18 +1,18 @@
 {
   "permissions": {
     "deny": [
-      "Read(./secrets/**)",
-      "Read(./docs/reference/claude_md_examples/**)"
+      "Read(.env)",
+      "Read(./secrets/**)"
     ]
   },
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": ".*",
+        "matcher": "*",
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/rearc-workshop-demo-kit/scripts/hooks/audit.sh"
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/rearc-workshop-demo-kit/scripts/hooks/audit.sh\""
           }
         ]
       },
@@ -21,18 +21,18 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/rearc-workshop-demo-kit/scripts/hooks/guard-shell.sh"
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/rearc-workshop-demo-kit/scripts/hooks/guard-shell.sh\""
           }
         ]
       }
     ],
     "PostToolUse": [
       {
-        "matcher": "Edit|Write|MultiEdit",
+        "matcher": "Edit|Write",
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/rearc-workshop-demo-kit/scripts/hooks/auto-lint.sh"
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/rearc-workshop-demo-kit/scripts/hooks/auto-lint.sh\""
           }
         ]
       }
@@ -40,6 +40,8 @@
   },
   "statusLine": {
     "type": "command",
-    "command": ".claude/statusline.sh"
-  }
+    "command": "\"${CLAUDE_PROJECT_DIR}/.claude/statusline.sh\""
+  },
+  "plansDirectory": "./plans",
+  "showClearContextOnPlanAccept": true
 }

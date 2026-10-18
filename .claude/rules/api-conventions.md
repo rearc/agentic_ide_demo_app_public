@@ -37,7 +37,7 @@ def get_widget(widget_id):
 # Collection
 @app.route("/api/widgets")
 def list_widgets():
-    widgets = Widget.query.all()
+    widgets = db.session.scalars(db.select(Widget)).all()
     return jsonify([w.to_dict() for w in widgets])
 
 # Create

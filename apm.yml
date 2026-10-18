@@ -5,9 +5,9 @@ description: |
   Agentic primitives (agents, instructions, skills, hooks, MCP servers) are
   provided by rearc/workshop-demo-kit, deployed via `apm install`.
 
-  This branch (claude-copilot-ready) replaces the cursor-specific .cursor/
-  layer that lives on main with APM-deployed primitives that work for
-  Claude Code, GitHub Copilot, and Cursor uniformly.
+# The workshop teaches Claude Code only, so primitives deploy to .claude/ only.
+targets:
+  - claude
 
 dependencies:
   apm:

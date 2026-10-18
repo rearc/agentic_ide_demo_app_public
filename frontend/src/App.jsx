@@ -1,19 +1,22 @@
 import { useState, useEffect } from 'react'
+import { IconContext } from '@phosphor-icons/react'
 import Dashboard from './components/Dashboard'
+import EditButton from './components/EditButton'
+import LibraryButton from './components/LibraryButton'
+import LibraryDrawer from './components/LibraryDrawer'
+import ProfileMenu from './components/ProfileMenu'
+import ProfilePager from './components/ProfilePager'
 import AnimatedLabsLockup from './components/brand/AnimatedLabsLockup'
+import useBoard from './useBoard'
 
-function useNow() {
+/** Header clock. Owns the one-second tick so only it re-renders, not the app. */
+function Clock() {
   const [now, setNow] = useState(() => new Date())
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000)
     return () => clearInterval(id)
   }, [])
-  return now
-}
 
-export default function App() {
-  const now = useNow()
-  const [locked, setLocked] = useState(true)
   const time = now.toLocaleTimeString([], {
     hour: 'numeric',
     minute: '2-digit',
@@ -25,49 +28,120 @@ export default function App() {
   })
 
   return (
-    <div className="min-h-screen">
-      <header className="sticky top-0 z-10 border-b border-border-subtle/70 bg-surface/60 backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
+    // nowrap: a wrapped date would make the header taller while editing,
+    // when the Library button takes room, and move the board. Below `md`
+    // there is room for the time only.
+    <div className="text-right whitespace-nowrap hidden sm:block">
+      <p className="font-mono text-lg font-medium leading-none tabular-nums">
+        {time}
+      </p>
+      <p className="hidden md:block text-text-secondary text-xs mt-1.5">
+        {date}
+      </p>
+    </div>
+  )
+}
+
+// Every Phosphor icon in the app takes this weight unless it sets its own.
+const ICON_STYLE = { weight: 'light' }
+
+const LIBRARY_ID = 'card-library'
+
+export default function App() {
+  const board = useBoard()
+  // 'view': the board is locked. 'library': editing, with the library open
+  // to add and remove cards. 'arrange': editing with the library folded
+  // away, so the board sits where it will when viewed. Edit board opens
+  // 'library', the Library button switches between the two editing modes,
+  // and Done returns to 'view'.
+  const [mode, setMode] = useState('view')
+  const editing = mode !== 'view'
+  const libraryOpen = mode === 'library'
+  // Which way the last profile change went: 'next' or 'prev' from the
+  // arrows, null from the menu. The board slides in from that side.
+  const [turn, setTurn] = useState(null)
+
+  function stepProfile(step) {
+    setTurn(step > 0 ? 'next' : 'prev')
+    board.stepProfile(step)
+  }
+
+  function selectProfile(id) {
+    setTurn(null)
+    board.selectProfile(id)
+  }
+
+  return (
+    <IconContext.Provider value={ICON_STYLE}>
+      <div className="min-h-screen">
+        <header className="sticky top-0 z-10 border-b-[3px] border-text-primary bg-surface/90 backdrop-blur">
+          <div className="max-w-[1600px] mx-auto px-5 py-3.5 flex items-center gap-4">
             <AnimatedLabsLockup
               markSize={34}
               wordSize={27}
               tone="navy"
               title="Rearc AI Labs"
             />
-            <span className="hidden sm:block h-7 w-px bg-border-subtle" />
-            <h1 className="hidden sm:block font-display text-lg font-semibold tracking-tight text-text-secondary">
-              Control Center
-            </h1>
-          </div>
-          <div className="flex items-center gap-3 shrink-0">
-            {!locked && (
-              <span className="hidden md:inline-flex items-center text-xs text-text-secondary bg-surface-raised/80 border border-border-subtle rounded-sm px-3 py-1.5">
-                Drag &amp; resize — changes save automatically
-              </span>
-            )}
-            <button
-              onClick={() => setLocked((l) => !l)}
-              className={`text-sm font-medium rounded-sm px-3.5 py-2 border transition-colors ${
-                locked
-                  ? 'border-border-subtle text-text-secondary hover:text-text-primary hover:border-text-muted'
-                  : 'border-card-placeholder/60 text-card-placeholder hover:bg-card-placeholder/10'
-              }`}
-            >
-              {locked ? 'Customize layout' : 'Lock layout'}
-            </button>
-            <div className="text-right hidden sm:block">
-              <p className="font-display text-2xl font-bold tracking-tight text-text-primary tabular-nums leading-none">
-                {time}
-              </p>
-              <p className="text-text-muted text-xs mt-1.5">{date}</p>
+            <span className="h-7 w-px shrink-0 bg-hairline-strong" />
+            <ProfilePager count={board.profiles.length} onStep={stepProfile}>
+              <ProfileMenu
+                profiles={board.profiles}
+                profile={board.profile}
+                onSelect={selectProfile}
+                onCreate={board.createProfile}
+                onRename={board.renameProfile}
+                onDelete={board.deleteProfile}
+              />
+            </ProfilePager>
+            <div className="ml-auto flex items-center gap-3">
+              {editing && (
+                <span className="hidden 2xl:inline text-xs text-text-secondary">
+                  Drag a card by its header, resize from its corner; changes
+                  save automatically
+                </span>
+              )}
+              {editing && (
+                <LibraryButton
+                  open={libraryOpen}
+                  onToggle={() => setMode(libraryOpen ? 'arrange' : 'library')}
+                  controls={LIBRARY_ID}
+                />
+              )}
+              <EditButton
+                editing={editing}
+                onToggle={() => setMode(editing ? 'view' : 'library')}
+              />
+              <Clock />
             </div>
           </div>
-        </div>
-      </header>
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        <Dashboard locked={locked} />
-      </main>
-    </div>
+          <LibraryDrawer
+            id={LIBRARY_ID}
+            open={libraryOpen}
+            cards={board.cards}
+            board={board.board}
+            onAdd={board.showCard}
+            onRemove={board.hideCard}
+            onDragStart={board.setDraggingCardId}
+            onDragEnd={() => board.setDraggingCardId(null)}
+          />
+        </header>
+        <main className="max-w-[1600px] mx-auto px-5 py-5">
+          <Dashboard
+            cards={board.cards}
+            board={board.board}
+            profileId={board.profile?.id}
+            turn={turn}
+            locked={!editing}
+            libraryOpen={libraryOpen}
+            loading={board.loading}
+            error={board.error}
+            draggingCardId={board.draggingCardId}
+            saveLayout={board.saveLayout}
+            hideCard={board.hideCard}
+            showCard={board.showCard}
+          />
+        </main>
+      </div>
+    </IconContext.Provider>
   )
 }

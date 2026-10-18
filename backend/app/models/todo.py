@@ -5,10 +5,10 @@ from datetime import UTC, datetime
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app import db
+from app.models.base import Base, isoformat_utc
 
 
-class Todo(db.Model):
+class Todo(Base):
     __tablename__ = 'todos'
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -35,6 +35,6 @@ class Todo(db.Model):
             'card_id': self.card_id,
             'text': self.text,
             'done': self.done,
-            'created_at': self.created_at.isoformat() if self.created_at else None,
-            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+            'created_at': isoformat_utc(self.created_at),
+            'updated_at': isoformat_utc(self.updated_at),
         }

@@ -1,144 +1,47 @@
-# Agent instructions — agentic_ide_demo_app
+# Agent instructions: agentic_ide_demo_app
 
-**Default guidance for any contributor** using an agent in this repo: how things are structured, how to run them, and where to make changes. Prefer the **source of truth in code** over narrative docs when they disagree (see [Known inconsistencies](#known-inconsistencies)).
+A personal dashboard of cards: a React SPA in `frontend/` over a Flask API in `backend/`, with SQLite. Setup, the API table and the project layout are in `README.md`; the architecture is drawn in `docs/architecture.drawio.png`. When this file and the code disagree, the code wins: say so.
 
-**Enforceable conventions live in `.claude/rules/`, not here** — API response shapes (`api-conventions`), styling (`tailwind`, path-scoped to `frontend/**`), DB migrations (`migrations`, path-scoped to `backend/**`), and the security checklist (`security-review`). This file is **orientation, setup, and non-obvious gotchas**; the rules are the authority for conventions, so this file points to them rather than restating them.
+## Commands
 
-## What this project is
+Run the ones that cover what you changed, and show their output before you call a task done.
 
-A **multi-card dashboard**: a React SPA lists **cards** from the backend; each card loads **live JSON** from `/api/data/<source>`. The UI uses **react-grid-layout**; when the user unlocks the layout, **position and size** are persisted on each card’s `layout` field via `PUT /api/cards/:id`.
+| Check | From | Command |
+|---|---|---|
+| Backend tests | `backend/`, venv active (`source venv/bin/activate`) | `pytest` |
+| Backend lint | `backend/`, venv active | `ruff check .` |
+| Type check | repo root, venv active | `pyright` (must report 0 errors) |
+| Frontend tests | `frontend/` | `npm run test:run` |
+| Frontend formatting | `frontend/` | `npm run lint` |
+| End-to-end | `frontend/` | `npm run test:e2e` |
 
-## Repository layout
+- Your shell may not have the right versions: the backend needs the venv's Python (3.11+), the frontend Node 22 (`nvm use` in `frontend/`). If the frontend suite stops on its Node check, switch Node; it is not a test failure.
+- Dev servers: `python run.py` (port 5001) and `npm run dev` (port 5173, proxies `/api` to 5001). The end-to-end suite starts its own on other ports, with its own database.
 
-| Area | Role |
-|------|------|
-| `backend/` | Flask app factory, SQLAlchemy models, REST blueprints, external API “services” |
-| `backend/migrations/` | Alembic revisions |
-| `backend/run.py` | App entry; runs the dev server when executed |
-| `backend/seed.py` | Inserts missing default cards (additive); `--reset` wipes and re-seeds |
-| `frontend/` | Vite + React; `src/` holds UI |
-| `frontend/src/api.js` | Fetch helpers for `/api/cards` and `/api/data/...` |
-| `frontend/src/components/Card.jsx` | Maps `card.source` → widget component + fetches data |
-| `frontend/src/components/Dashboard.jsx` | Grid layout, lock/unlock, debounced layout saves |
-| `frontend/src/index.css` | Tailwind v4 `@theme` tokens and a few global/keyframe/grid overrides |
-| `.env` (repo root, gitignored) | Loaded by `backend/config.py` via `python-dotenv` |
-| `.env.example` | Documents `NASA_API_KEY` and `FLASK_SECRET_KEY` |
+## How the app fits together
 
-## Tech stack (verified)
+- **Adding a card:** use the `add-dashboard-card` skill. A card is a row in `cards`, an entry in `CARD_REGISTRY` (`frontend/src/components/Card.jsx`) and, for live data, an entry in `SERVICES` (`backend/app/routes/data.py`). The two registries agree only through the card's `source` string (ADR-008): change one, check the other. A seeded card's place goes in `DEFAULT_BOARD` (`backend/seed.py`).
+- **Checking a UI change:** use the `check-ui` skill: layout facts as text at every width, one contact sheet for design questions. Page states live in `frontend/e2e/ui-states.js`.
+- **Network:** `frontend/src/api.js` is the only module that calls the backend; components never call `fetch`.
+- **Requests:** routes check bodies and ids with `backend/app/routes/helpers.py` and fail with `abort(status, message)`; the app factory turns every error into `{"error": message}`.
+- **External APIs:** each service in `backend/app/services/` returns a flat dict and never raises; on failure it returns the same keys plus `"fallback": true` (ADR-009).
+- **Data:** models subclass the typed `Base`; query through `db.session`, never `Model.query`. A profile is a named board: `profile_cards` holds each card's `x`, `y`, `w`, `h` and `hidden` on it, and `cards` has no layout (ADR-019). Deleting a card deletes its todos and its board entries; deleting a profile deletes its entries (foreign keys are on). `python seed.py` adds missing default cards (placed via `DEFAULT_BOARD`, on "Default" only) and creates "Default" if no profile exists; `python seed.py --reset` deletes every card, profile and todo (ADR-017).
+- **Tests:** both suites refuse unmocked network calls, so a test that needs HTTP mocks it (`http_mock` in the backend, a stubbed `fetch` in the frontend).
 
-- **Backend:** Python 3.11+, Flask 3.x, Flask-SQLAlchemy, Flask-Migrate, Flask-CORS, `requests`, SQLite (`sqlite:///app.db` in `config.Config`).
-- **Frontend:** React 18, Vite 6, **Tailwind CSS v4** via `@tailwindcss/vite`, **react-grid-layout** v2.
+## Conventions and decisions
 
-## Local development
+- `docs/coding_standards.md` is the authority for conventions, with rule IDs to cite in a review. `.claude/rules/` holds short excerpts of it that load where they apply.
+- `docs/adr/` records why the app is the way it is. Read the ADR before changing what it covers; to reverse a decision, write a new ADR that supersedes it rather than editing the old one.
 
-Run **two processes** (from separate terminals).
+## Boundaries
 
-**Backend** (working directory `backend/`). Requires **Python 3.11+** (`app/models/*.py` use `datetime.UTC`, added in 3.11); build the venv with an explicit interpreter — a bare `python3` is often macOS system 3.9 or conda `base` 3.10 and fails only later at `db upgrade`:
+- **Always:** keep the change to what the task asks; new behaviour arrives with tests (TEST-1); run the checks above.
+- **Ask first:** a model or schema change (it needs an Alembic migration), a new dependency, reversing an accepted ADR, adding CI.
+- **Never:** read or print `.env` or anything in `secrets/`; edit a migration under `backend/migrations/versions/` that already exists; run `seed.py --reset` or delete `backend/instance/app.db` without being asked (it destroys the user's data); commit secrets.
 
-```bash
-python3.11 -m venv venv           # or python3.13; not a bare `python3`
-source venv/bin/activate
-python --version                  # confirm 3.11+
-pip install -r requirements.txt
-flask --app run.py db upgrade
-python seed.py                    # additive: adds missing default cards only
-python seed.py --reset            # destructive: wipes + re-seeds cards/todos
-python run.py
-```
+## Workshop tooling in this repo
 
-**Frontend** (working directory `frontend/`). Node version is pinned in `.nvmrc` (22; Node 20 is EOL):
-
-```bash
-nvm use                           # or `nvm install` first time
-npm install                       # if advisories appear, `npm audit fix` (never --force)
-npm run dev
-```
-
-**Ports and proxy (source of truth):**
-
-- Flask dev server listens on **port 5001** (`backend/run.py`).
-- Vite dev server uses **port 5173** and proxies **`/api`** to `http://127.0.0.1:5001` (`frontend/vite.config.js`).
-- The browser should load the UI at `http://localhost:5173`; API calls use relative `/api/...` (`frontend/src/api.js`).
-
-## Environment variables
-
-`backend/config.py` loads **repo-root** `.env` and reads:
-
-- **`NASA_API_KEY`** — optional; NASA APOD uses `DEMO_KEY` when unset (`backend/app/services/space.py`).
-- **`FLASK_SECRET_KEY`** — Flask secret; defaults to a dev value in config if unset.
-
-**Do not** commit real secrets. `.gitignore` and `.cursorignore` both exclude `.env`.
-
-## Backend architecture (orientation — non-obvious bits only)
-
-- **App factory** `backend/app/__init__.py` registers blueprints under `/api`.
-- **`/api/data/<source>`** (`routes/data.py`) dispatches to service callables in the `SERVICES` map; query-string args pass through as **kwargs** (e.g. weather `city`). Services return **flat dicts with graceful fallbacks** (pattern: `services/weather.py`).
-- **`Card`** (`models/card.py`) carries `config`/`layout` JSON, orders by `position`; the list route filters `is_active`.
-- Response shapes + status codes are governed by **`.claude/rules/api-conventions`** (authority — not restated here).
-
-## Frontend architecture (orientation — non-obvious bits only)
-
-- **Card types:** `Card.jsx` uses `CARD_REGISTRY` keyed by `card.source`; unknown sources fall back to the placeholder entry.
-- **Data loading:** for `needsData: true`, `fetchCardData(source, card.config)` builds query params and GETs `/api/data/<source>`.
-- **Layout UX:** the dashboard starts **locked**; unlocking enables drag/resize; `onLayoutChange` debounces a `PUT` of `layout: { x, y, w, h }` per card.
-- Styling policy — Tailwind-first with narrow exceptions for dynamic CSS vars and `index.css` overrides — is governed by **`.claude/rules/tailwind`** (authority — not restated here).
-
-## How to add a new dashboard “card type”
-
-Adding a card is a multi-step workflow — use the **`add-dashboard-card` skill** (`.claude/skills/add-dashboard-card/`), which is the authority for the archetype decision (data / static / stateful) and every step (backend service → `SERVICES` → frontend widget → `CARD_REGISTRY` → accent token → seed row → migration-if-stateful). Not restated here.
-
-## External APIs (current implementations)
-
-- **Weather:** Open-Meteo + Open-Meteo geocoding — **no API key**; `city` from query/config.
-- **Quotes:** `zenquotes.io/api/random` — offline fallback quote in code.
-- **Space:** NASA APOD — `NASA_API_KEY` or `DEMO_KEY`.
-
-## Agent behavior expectations
-
-- **Scope:** Change only what the task requires; prefer small, reviewable diffs unless the task explicitly calls for a larger refactor.
-- **Verify behavior:** After backend changes, ensure `flask --app run.py db upgrade` and seeds/migrations still make sense. After frontend changes, run `npm run dev` and confirm `/api` proxy matches the Flask port.
-- **Secrets & security:** governed by **`.claude/rules/security-review`** (authority — not restated here).
-- **Documentation:** If you change ports, proxy targets, or env vars, update `README.md` in the same change when practical.
-
-## MCP servers
-
-This repo connects to external services via the Model Context Protocol. Config lives in **two** files, kept in sync (dual-harness):
-
-- **`.mcp.json`** (repo root) -- **read by Claude Code** (both the CLI and the VS Code extension; Claude Code does **not** read `.vscode/mcp.json`). Top-level key is **`mcpServers`**. First use triggers a one-time approval prompt (security gate).
-- **`.vscode/mcp.json`** -- read by **VS Code / GitHub Copilot** agent mode. Top-level key is **`servers`**.
-
-Both define the same servers: Context7 (documentation lookup) and a project-local **`random-tools`** demo server (`coin_flip` + `roll_die`; stdio via `uv`). **If you add or change a server, update both files.**
-
-> **ClickUp is deprecated and removed.** It was a SolutionReach-engagement artifact and is not coming back. Do not re-add it, and do not propose it as an issue-tracker backend.
-
-### Project board + issue tracker
-
-**Issue tracker = GitHub Issues** on this repo (via the `gh` CLI). The engineering skills (`to-spec`, `to-tickets`, `triage`, `wayfinder`, `code-review`) read and write there; the configured details live in `docs/agents/issue-tracker.md`.
-
-The **GitHub Projects board** sits on top of those issues and is what the Day-4 (Section-4) demo drives. How an agent reads and updates it - moving cards, adding decomposed stories, the field model, draft vs real issues - is documented in **[`docs/board_interaction.md`](board_interaction.md)**. Read it before touching the board.
-
-### Team standards documents
-
-The `docs/standards/` directory contains team policy documents that AI agents reference during workflows:
-
-- **`docs/standards/definition_of_ready.md`** -- The team's Definition of Ready checklist. Agents read this file when evaluating whether a ticket is ready for development. See the file's "How this document is used" section for details.
-
-## Agent skills
-
-Per-repo configuration the engineering skills (`to-spec`, `to-tickets`, `triage`, `wayfinder`, `code-review`, `implement`, `domain-modeling`) read at runtime.
-
-### Issue tracker
-
-GitHub Issues on `rearc/agentic_ide_demo_app`, via the `gh` CLI. See [`docs/agents/issue-tracker.md`](agents/issue-tracker.md).
-
-### Triage labels
-
-The five canonical roles, each label string equal to its name (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See [`docs/agents/triage-labels.md`](agents/triage-labels.md).
-
-### Domain docs
-
-Single-context — one root `CONTEXT.md` (lazily created) plus `docs/adr/`. See [`docs/agents/domain.md`](agents/domain.md).
-
-## Known inconsistencies
-
-- **Port:** `README.md`, `backend/run.py`, and `frontend/vite.config.js` all agree on **5001**. (Earlier revisions of the README said 5000; that has been corrected.)
+- Demo runs and teaching defects use branches described in `docs/DEMO_BRANCHING.md`; `main` carries no known defects (ADR-018).
+- The GitHub Projects board: `docs/board_interaction.md`. Team policy (the Definition of Ready): `docs/standards/`.
+- The engineering skills (`to-spec`, `to-tickets`, `triage`, `code-review`, `implement`, `domain-modeling`) read their settings from `docs/agents/`: issues on `rearc/agentic_ide_demo_app` through `gh`, five triage labels, and domain docs in a root `CONTEXT.md` (created when first needed) plus `docs/adr/`.
+- MCP servers are configured in `.mcp.json`: Context7 (documentation) and `random-tools` (a demo server with `coin_flip` and `roll_die`, run by `uv`).

@@ -1,41 +1,48 @@
 #!/usr/bin/env bash
 # =============================================================================
-# audit.sh — passive audit-logging hook
+# audit.sh - Claude Code PreToolUse hook on every tool: a passive audit trail
 #
-# Logs every hook event to /tmp/agent-audit.log with a timestamp, creating
-# a full audit trail of agent activity for the workshop demo session. Wired to
-# one per-target manifest per harness (todo.md item 30):
-#   audit-claude-hooks.json   PreToolUse matcher ".*"   (Claude — all tools)
-#   audit-copilot-hooks.json  preToolUse                 (Copilot — all tools)
-#   audit-cursor-hooks.json   beforeShellExecution / beforeMCPExecution /
-#                             afterFileEdit / beforeSubmitPrompt / stop (Cursor)
+# Appends one JSON line per tool call to .claude/audit.log in the project
+# (gitignored). Each line records when, which session, which tool, and what it
+# touched: the command for Bash, the file path for file tools, the URL or query
+# for web tools, the pattern for searches, the skill or subagent name for Skill
+# and Agent calls. File contents, edit text and tool output are never logged,
+# and obvious secrets in commands are masked.
 #
-# Best-effort tool/event label (Claude .tool_name, Copilot CLI .toolName,
-# Cursor .hook_event_name) prefixes each line; the raw stdin JSON is logged
-# verbatim, so every harness's payload is preserved regardless of shape.
+# Wired in .claude/settings.json:
+#   "PreToolUse": [{ "matcher": "*", "hooks": [{ "type": "command",
+#     "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/.../audit.sh\"" }] }]
 #
-# Fails OPEN and ALWAYS exits 0 — passive observer, never blocks. Load-bearing
-# on Copilot CLI: preToolUse is fail-closed, so any non-zero exit (other than 2)
-# would DENY the tool call. A missing jq just degrades the label to "event".
+# Read the trail:  tail -f .claude/audit.log
+#                  jq -r '[.time, .tool, .target] | @tsv' .claude/audit.log
+#
+# Fails open and always exits 0: it observes and never blocks. Without jq it
+# logs nothing.
 # =============================================================================
 
 set -uo pipefail
 
-# Read JSON input from stdin
-json_input=$(cat)
+command -v jq >/dev/null 2>&1 || exit 0
 
-# Create timestamp for the log entry
-timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+LOG="${CLAUDE_PROJECT_DIR:-.}/.claude/audit.log"
 
-# Best-effort harness-agnostic tool/event label (never fatal; degrades to "event").
-if command -v jq &>/dev/null; then
-  label=$(printf '%s' "$json_input" | jq -r '.toolName // .tool_name // .hook_event_name // "event"' 2>/dev/null || echo "event")
-else
-  label="event"
-fi
+# Mask values that look like secrets: key=value pairs for key, token, secret and
+# password names, bearer tokens, and common key prefixes (sk-, ghp_, github_pat_, AKIA).
+jq -c --arg time "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" '
+  def mask:
+    gsub("(?<k>(api[_-]?key|token|secret|password|passwd)[\"'"'"']?\\s*[=:]\\s*)[^\\s\"'"'"'&]+"; "\(.k)[REDACTED]"; "i")
+    | gsub("(?i)bearer\\s+[A-Za-z0-9._~+/=-]+"; "Bearer [REDACTED]")
+    | gsub("(sk-[A-Za-z0-9_-]{16,}|ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|AKIA[0-9A-Z]{16})"; "[REDACTED]");
+  {
+    time: $time,
+    session: .session_id,
+    tool: .tool_name,
+    target: (
+      .tool_input
+      | (.command // .file_path // .notebook_path // .url // .query // .pattern // .skill // .subagent_type // .description // null)
+      | if type == "string" then mask | .[0:500] else . end
+    )
+  }
+' >> "$LOG" 2>/dev/null
 
-# Write the timestamped entry to the audit log (raw JSON preserved verbatim)
-echo "[$timestamp] tool=${label} ${json_input}" >> /tmp/agent-audit.log
-
-# Always allow — this hook only observes, never blocks
 exit 0

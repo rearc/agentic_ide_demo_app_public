@@ -1,59 +1,83 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  createProfile,
   createTodo,
+  deleteProfile,
   deleteTodo,
   fetchCardData,
   fetchCards,
+  fetchProfiles,
   fetchTodos,
-  updateCard,
+  updateProfile,
   updateTodo,
 } from './api'
 import { brokenJsonResponse, jsonResponse, stubFetch } from './test/helpers'
 
-/**
- * api.js is seven variations on one shape: build a URL, send it, throw on a
- * bad status, return the parsed body. Testing each variation longhand produced
- * seven near-identical blocks, so the shared behavior is table-driven here and
- * only the parts that genuinely differ get their own tests below.
- */
-
 const JSON_HEADERS = { 'Content-Type': 'application/json' }
+const BOARD = { 3: { x: 0, y: 0, w: 4, h: 4, hidden: false } }
 
+/**
+ * Every endpoint is one call to the shared request helper: what differs is the
+ * request it sends and what it resolves with, so that is what this table pins.
+ */
 const ENDPOINTS = [
   {
     name: 'fetchCards',
     call: () => fetchCards(),
     url: '/api/cards',
-    init: undefined,
+    init: { method: 'GET' },
     body: [{ id: 1, slug: 'weather' }],
-    ownMessage: 'Failed to fetch cards',
   },
   {
-    name: 'updateCard',
-    call: () => updateCard(1, { title: 'Renamed' }),
-    url: '/api/cards/1',
+    name: 'fetchProfiles',
+    call: () => fetchProfiles(),
+    url: '/api/profiles',
+    init: { method: 'GET' },
+    body: [{ id: 1, name: 'Default', board: {} }],
+  },
+  {
+    name: 'createProfile',
+    call: () => createProfile('Focus', BOARD),
+    url: '/api/profiles',
     init: {
-      method: 'PUT',
+      method: 'POST',
       headers: JSON_HEADERS,
-      body: JSON.stringify({ title: 'Renamed' }),
+      body: JSON.stringify({ name: 'Focus', board: BOARD }),
     },
-    body: { id: 1, title: 'Renamed' },
-    ownMessage: 'Failed to update card',
+    body: { id: 2, name: 'Focus', board: BOARD },
+  },
+  {
+    name: 'updateProfile',
+    call: () => updateProfile(2, { board: BOARD }),
+    url: '/api/profiles/2',
+    init: {
+      method: 'PATCH',
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ board: BOARD }),
+    },
+    body: { id: 2, name: 'Focus', board: BOARD },
+  },
+  {
+    name: 'deleteProfile',
+    call: () => deleteProfile(2),
+    url: '/api/profiles/2',
+    init: { method: 'DELETE' },
+    body: null,
+    resolvesWith: undefined,
   },
   {
     name: 'fetchCardData',
     call: () => fetchCardData('quote'),
     url: '/api/data/quote',
-    init: undefined,
+    init: { method: 'GET' },
     body: { text: 'A quote.', author: 'Someone' },
-    ownMessage: 'Failed to fetch data for quote',
   },
   {
     name: 'fetchTodos',
     call: () => fetchTodos(7),
     url: '/api/todos?card_id=7',
-    init: undefined,
+    init: { method: 'GET' },
     body: [{ id: 1, text: 'A task' }],
   },
   {
@@ -79,95 +103,108 @@ const ENDPOINTS = [
     body: { id: 1, done: true },
   },
   {
+    // A 204 has no body to parse, so this one resolves with nothing.
     name: 'deleteTodo',
     call: () => deleteTodo(1),
     url: '/api/todos/1',
     init: { method: 'DELETE' },
     body: null,
+    resolvesWith: undefined,
   },
 ]
 
-describe.each(ENDPOINTS)('$name', ({ call, url, init, body, ownMessage }) => {
-  it('sends the expected request', async () => {
-    const fetchMock = stubFetch(jsonResponse(body))
+it.each(ENDPOINTS.map((endpoint) => [endpoint.name, endpoint]))(
+  '%s sends its request and resolves with the response body',
+  async (_name, endpoint) => {
+    const fetchMock = stubFetch(jsonResponse(endpoint.body))
+    const expected =
+      'resolvesWith' in endpoint ? endpoint.resolvesWith : endpoint.body
 
-    await call()
+    const result = await endpoint.call()
 
-    expect(fetchMock).toHaveBeenCalledWith(...(init ? [url, init] : [url]))
-  })
+    expect(fetchMock).toHaveBeenCalledWith(endpoint.url, endpoint.init)
+    expect(result).toEqual(expected)
+  },
+)
 
-  it('surfaces the error message the API supplied', async () => {
-    stubFetch(
-      jsonResponse({ error: 'Something specific went wrong' }, { status: 500 }),
-    )
+describe('a failed request throws with', () => {
+  /* The message falls back in three steps: the API's own `error`, then the
+     caller's fallback, then the status text. One row per step, with and
+     without a JSON body, so removing any step fails a row. */
+  it.each([
+    [
+      "the API's own error message",
+      {
+        call: () => fetchCards(),
+        response: jsonResponse(
+          { error: 'Database is unavailable' },
+          { status: 500 },
+        ),
+        message: 'Database is unavailable',
+      },
+    ],
+    [
+      "the caller's fallback when the body carries no error",
+      {
+        call: () => fetchCards(),
+        response: jsonResponse({}, { status: 500 }),
+        message: 'Failed to fetch cards',
+      },
+    ],
+    [
+      'the status text when the caller has no fallback',
+      {
+        call: () => fetchTodos(7),
+        response: jsonResponse(
+          {},
+          { status: 500, statusText: 'Internal Server Error' },
+        ),
+        message: 'Internal Server Error',
+      },
+    ],
+    [
+      "the caller's fallback when the body is not JSON",
+      {
+        call: () => fetchCardData('weather'),
+        response: brokenJsonResponse(),
+        message: 'Failed to fetch data for weather',
+      },
+    ],
+    [
+      'the status text when the body is not JSON and there is no fallback',
+      {
+        call: () => fetchTodos(7),
+        response: brokenJsonResponse({
+          statusText: 'Bad Gateway',
+          status: 502,
+        }),
+        message: 'Bad Gateway',
+      },
+    ],
+  ])('%s', async (_reaching, { call, response, message }) => {
+    stubFetch(response)
 
-    await expect(call()).rejects.toThrow('Something specific went wrong')
-  })
-
-  it('falls back to its own message when the body carries no error', async () => {
-    stubFetch(
-      jsonResponse({}, { status: 500, statusText: 'Internal Server Error' }),
-    )
-
-    await expect(call()).rejects.toThrow(ownMessage ?? 'Internal Server Error')
-  })
-
-  it('falls back again when the error body is not JSON', async () => {
-    stubFetch(brokenJsonResponse({ status: 500, statusText: 'Server Error' }))
-
-    await expect(call()).rejects.toThrow(ownMessage ?? 'Server Error')
-  })
-})
-
-describe('returned values', () => {
-  it.each(ENDPOINTS.filter((endpoint) => endpoint.body !== null))(
-    '$name resolves with the parsed body',
-    async ({ call, body }) => {
-      stubFetch(jsonResponse(body))
-
-      await expect(call()).resolves.toEqual(body)
-    },
-  )
-
-  it('deleteTodo resolves with nothing', async () => {
-    stubFetch(jsonResponse(null, { status: 204 }))
-
-    await expect(deleteTodo(1)).resolves.toBeUndefined()
+    await expect(call()).rejects.toThrow(message)
   })
 })
 
 describe('fetchCardData query building', () => {
-  it('omits the query string when there is no config', async () => {
-    const fetchMock = stubFetch(jsonResponse({}))
-
-    await fetchCardData('quote')
-
-    expect(fetchMock).toHaveBeenCalledWith('/api/data/quote')
-  })
-
   it('omits the query string for an empty config', async () => {
     const fetchMock = stubFetch(jsonResponse({}))
 
     await fetchCardData('quote', {})
 
-    expect(fetchMock).toHaveBeenCalledWith('/api/data/quote')
+    expect(fetchMock).toHaveBeenCalledWith('/api/data/quote', { method: 'GET' })
   })
 
-  it('serializes config into the query string', async () => {
-    const fetchMock = stubFetch(jsonResponse({}))
-
-    await fetchCardData('weather', { city: 'Boston' })
-
-    expect(fetchMock).toHaveBeenCalledWith('/api/data/weather?city=Boston')
-  })
-
-  it('url-encodes config values', async () => {
+  it('serializes config into an encoded query string', async () => {
     const fetchMock = stubFetch(jsonResponse({}))
 
     await fetchCardData('weather', { city: 'San Francisco' })
 
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/data/weather?city=San+Francisco',
+      { method: 'GET' },
     )
   })
 })

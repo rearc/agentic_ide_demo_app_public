@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
+import { XIcon } from '@phosphor-icons/react'
+import LoadingDots from '../LoadingDots'
 import { createTodo, deleteTodo, fetchTodos, updateTodo } from '../../api'
 
-export default function TodoCard({ card }) {
+export default function TodoCard({ card, onNote }) {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -22,6 +24,11 @@ export default function TodoCard({ card }) {
     load()
   }, [load])
 
+  const doneCount = items.filter((t) => t.done).length
+  useEffect(() => {
+    onNote?.(items.length ? `${doneCount} of ${items.length} done` : null)
+  }, [onNote, doneCount, items.length])
+
   async function handleAdd(e) {
     e.preventDefault()
     const text = newText.trim()
@@ -37,17 +44,13 @@ export default function TodoCard({ card }) {
   }
 
   function toggleDone(todoId) {
+    const todo = items.find((x) => x.id === todoId)
+    if (!todo) return
+    const nextDone = !todo.done
     setError(null)
-    let nextDone
-    let found = false
-    setItems((prev) => {
-      const t = prev.find((x) => x.id === todoId)
-      if (!t) return prev
-      found = true
-      nextDone = !t.done
-      return prev.map((x) => (x.id === todoId ? { ...x, done: nextDone } : x))
-    })
-    if (!found) return
+    setItems((prev) =>
+      prev.map((x) => (x.id === todoId ? { ...x, done: nextDone } : x)),
+    )
     updateTodo(todoId, { done: nextDone })
       .then((updated) => {
         setItems((prev) => prev.map((x) => (x.id === updated.id ? updated : x)))
@@ -55,7 +58,7 @@ export default function TodoCard({ card }) {
       .catch((err) => {
         setError(err.message)
         setItems((prev) =>
-          prev.map((x) => (x.id === todoId ? { ...x, done: !nextDone } : x)),
+          prev.map((x) => (x.id === todoId ? { ...x, done: todo.done } : x)),
         )
       })
   }
@@ -105,28 +108,13 @@ export default function TodoCard({ card }) {
   }
 
   if (loading) {
-    return (
-      <div
-        className="flex justify-center py-8"
-        role="status"
-        aria-label="Loading todos"
-      >
-        <div className="flex gap-1.5">
-          {[0, 1, 2].map((i) => (
-            <div
-              key={i}
-              className="w-1.5 h-1.5 rounded-full bg-text-muted animate-subtle-pulse"
-              style={{ animationDelay: `${i * 0.2}s` }}
-            />
-          ))}
-        </div>
-      </div>
-    )
+    return <LoadingDots label="Loading todos" className="py-8" />
   }
 
   return (
-    <div className="flex flex-col gap-3 min-h-0">
-      {error && <p className="text-xs text-red-400/90 shrink-0">{error}</p>}
+    // Only the list scrolls: the error and the add form stay in view.
+    <div className="h-full flex flex-col gap-3">
+      {error && <p className="text-xs text-danger shrink-0">{error}</p>}
       <form onSubmit={handleAdd} className="flex gap-2 shrink-0">
         <input
           type="text"
@@ -134,23 +122,23 @@ export default function TodoCard({ card }) {
           onChange={(e) => setNewText(e.target.value)}
           placeholder="Add a task…"
           maxLength={500}
-          className="flex-1 min-w-0 rounded-sm border border-border-subtle bg-surface px-2.5 py-1.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-card-todo/50"
+          className="flex-1 min-w-0 border border-hairline-strong bg-surface px-2.5 py-1.5 min-h-9 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-text-secondary"
         />
         <button
           type="submit"
-          className="shrink-0 rounded-sm px-4 py-1.5 text-xs font-bold text-surface bg-gradient-to-r from-card-todo to-card-todo-2 hover:opacity-90 transition-opacity"
+          className="shrink-0 px-4 min-h-9 text-[13px] font-semibold text-surface bg-text-primary hover:bg-text-primary/90 transition-colors"
         >
           Add
         </button>
       </form>
-      <ul className="space-y-1.5 flex-1 min-h-0 overflow-auto pr-0.5">
+      <ul className="flex-1 min-h-0 overflow-auto card-scroll -mx-1 px-1">
         {items.length === 0 ? (
           <li className="text-sm text-text-muted py-2">No tasks yet.</li>
         ) : (
           items.map((todo) => (
             <li
               key={todo.id}
-              className="flex items-start gap-2 rounded-sm border border-transparent px-1 py-0.5 hover:border-border-subtle/80 hover:bg-surface/50"
+              className="flex items-center gap-2.5 py-1 border-b border-hairline last:border-b-0"
             >
               <button
                 type="button"
@@ -158,10 +146,10 @@ export default function TodoCard({ card }) {
                 aria-checked={todo.done}
                 aria-label={`Mark "${todo.text}" ${todo.done ? 'not done' : 'done'}`}
                 onClick={() => toggleDone(todo.id)}
-                className={`mt-0.5 h-4 w-4 shrink-0 rounded border text-[10px] leading-none flex items-center justify-center transition-colors ${
+                className={`h-[18px] w-[18px] shrink-0 border text-[10px] leading-none flex items-center justify-center transition-colors ${
                   todo.done
-                    ? 'border-card-todo bg-card-todo/30 text-card-todo'
-                    : 'border-border-subtle text-transparent hover:border-text-muted'
+                    ? 'border-live bg-live text-surface'
+                    : 'border-text-muted text-transparent hover:border-text-secondary'
                 }`}
               >
                 {todo.done ? '✓' : ''}
@@ -182,7 +170,7 @@ export default function TodoCard({ card }) {
                   aria-label={`Edit "${todo.text}"`}
                   maxLength={500}
                   autoFocus
-                  className="flex-1 min-w-0 rounded border border-border-subtle bg-surface px-2 py-0.5 text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-card-todo/50"
+                  className="flex-1 min-w-0 border border-hairline-strong bg-surface px-2 py-0.5 text-sm text-text-primary focus:outline-none focus:border-text-secondary"
                 />
               ) : (
                 <button
@@ -204,11 +192,11 @@ export default function TodoCard({ card }) {
                 // and surfacing a 404 for an action the user never took.
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => remove(todo.id)}
-                className="shrink-0 p-1 text-text-muted hover:text-red-400/90 text-xs"
+                className="shrink-0 grid place-items-center h-7 w-7 text-text-secondary hover:text-danger transition-colors"
                 title="Delete"
                 aria-label={`Delete "${todo.text}"`}
               >
-                ×
+                <XIcon size={16} aria-hidden />
               </button>
             </li>
           ))
