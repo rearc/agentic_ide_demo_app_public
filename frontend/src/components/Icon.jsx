@@ -5,6 +5,7 @@ import {
   CloudRainIcon,
   CloudSnowIcon,
   CloudSunIcon,
+  GlobeHemisphereWestIcon,
   ListChecksIcon,
   MoonIcon,
   PlanetIcon,
@@ -33,6 +34,7 @@ export const ICONS = {
   timer: TimerIcon,
   moon: MoonIcon,
   sunrise: SunHorizonIcon,
+  globe: GlobeHemisphereWestIcon,
   // Weather conditions
   sun: SunIcon,
   cloud: CloudIcon,

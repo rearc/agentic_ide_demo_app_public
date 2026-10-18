@@ -8,9 +8,13 @@ its own service test plus a dispatch case here.
 import pytest
 
 from app.routes.data import SERVICES
+from app.services import iss
+from app.services.iss import TLE_URL
 from app.services.open_meteo import FORECAST_URL, GEOCODE_URL
 from app.services.quotes import QUOTES_URL
 from app.services.space import APOD_URL
+
+ISS_BODY = f"ISS (ZARYA)   \n{iss.STORED_TLE['line1']}\n{iss.STORED_TLE['line2']}\n"
 
 # For each source, a (key, value) its healthy upstream below puts in the
 # response and its fallback cannot: proof the source reached its own service.
@@ -20,7 +24,17 @@ DISPATCH_CASES = {
     'quote': ('author', 'Someone'),
     'space': ('title', 'Pillars'),
     'daylight': ('sunrise', 1792332960),
+    'iss': ('source', 'celestrak'),
 }
+
+
+@pytest.fixture(autouse=True)
+def clear_iss_cache():
+    """The ISS service's module-level cache is not an lru_cache, so conftest
+    does not reset it (TEST-3)."""
+    iss._cached, iss._cached_at, iss._failed_at = None, 0.0, None
+    yield
+    iss._cached, iss._cached_at, iss._failed_at = None, 0.0, None
 
 
 @pytest.fixture
@@ -45,6 +59,7 @@ def healthy_upstreams(http_mock):
     )
     http_mock.get(QUOTES_URL, json=[{'q': 'A quote.', 'a': 'Someone'}])
     http_mock.get(APOD_URL, json={'title': 'Pillars', 'media_type': 'image'})
+    http_mock.get(TLE_URL, body=ISS_BODY)
     return http_mock
 
 

@@ -32,6 +32,7 @@ DEFAULT_BOARD = {
     'timer': {'x': 0, 'y': 11, 'w': 4, 'h': 4},
     'moon': {'x': 4, 'y': 11, 'w': 4, 'h': 4},
     'daylight': {'x': 8, 'y': 11, 'w': 4, 'h': 4},
+    'iss': {'x': 0, 'y': 15, 'w': 6, 'h': 7},
 }
 
 
@@ -107,6 +108,14 @@ def default_cards():
             source='daylight',
             config={'city': 'San Francisco'},
             position=8,
+        ),
+        Card(
+            slug='iss',
+            title='ISS',
+            description='The International Space Station, live, on a globe you can spin',
+            icon='globe',
+            source='iss',
+            position=9,
         ),
     ]
 

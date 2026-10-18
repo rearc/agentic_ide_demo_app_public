@@ -10,6 +10,7 @@ import TodoCard from './cards/TodoCard'
 import TimerCard from './cards/TimerCard'
 import MoonCard from './cards/MoonCard'
 import DaylightCard from './cards/DaylightCard'
+import IssCard from './cards/IssCard'
 import LoadingDots from './LoadingDots'
 
 /**
@@ -38,6 +39,7 @@ const CARD_REGISTRY = {
     accent: 'card-daylight',
     needsData: true,
   },
+  iss: { component: IssCard, accent: 'card-iss', needsData: true },
 }
 
 /**

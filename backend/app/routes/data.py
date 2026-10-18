@@ -1,6 +1,6 @@
 from flask import Blueprint, abort, jsonify, request
 
-from app.services import daylight, quotes, space, weather
+from app.services import daylight, iss, quotes, space, weather
 
 data_bp = Blueprint('data', __name__)
 
@@ -9,6 +9,7 @@ SERVICES = {
     'quote': quotes.fetch,
     'space': space.fetch,
     'daylight': daylight.fetch,
+    'iss': iss.fetch,
 }
 
 

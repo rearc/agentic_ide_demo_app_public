@@ -30,6 +30,15 @@ const DATA = {
     daylight_seconds: 34560,
     change_seconds: 25,
   },
+  iss: {
+    name: 'ISS (ZARYA)',
+    line1:
+      '1 25544U 98067A   26291.46721113  .00007452  00000+0  14361-3 0  9990',
+    line2:
+      '2 25544  51.6327  50.0298 0006783 279.2532  80.7689 15.48923373590865',
+    epoch: '2026-10-18T11:12:47Z',
+    source: 'celestrak',
+  },
 }
 
 async function mockDataApis(page) {
@@ -108,6 +117,7 @@ test('every seeded card renders its title and its mocked data', async ({
   await expect(page.getByText('Mocked quote for the test.')).toBeVisible()
   await expect(page.getByRole('img', { name: 'Mocked Nebula' })).toBeVisible()
   await expect(page.getByText('9h 36m')).toBeVisible()
+  await expect(page.getByRole('img', { name: /^ISS over/ })).toBeVisible()
 })
 
 test('the weather card shows Fahrenheit by default and Celsius once chosen', async ({
@@ -145,6 +155,9 @@ test('a card dragged by its header keeps its new position after a reload', async
   await page.getByRole('button', { name: 'Edit board' }).click()
 
   const header = page.locator('.card-drag-handle', { hasText: 'Weather' })
+  // hover() waits until the header stops moving: the library is still
+  // unfolding above the board and pushing it down.
+  await header.hover()
   const box = await header.boundingBox()
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
   await page.mouse.down()
@@ -214,9 +227,15 @@ test('a card dragged from the library lands where it is dropped', async ({
     .getByRole('region', { name: 'Card library' })
     .getByRole('listitem')
     .filter({ hasText: 'Coming Soon' })
-  await tile.dragTo(page.locator('.react-grid-layout'), {
-    targetPosition: { x: 40, y: 40 },
-  })
+  // Dragged by hand, not with dragTo: dragTo scrolls the whole grid into
+  // view first, and on a board taller than the window that puts the drop
+  // point under the sticky header.
+  const from = await tile.boundingBox()
+  const grid = await page.locator('.react-grid-layout').boundingBox()
+  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(grid.x + 40, grid.y + 40, { steps: 10 })
+  await page.mouse.up()
 
   await expect(placeholder).toBeVisible()
   // Dropped on the top-left corner, it takes that spot, and the card that was

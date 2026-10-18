@@ -78,7 +78,7 @@ backend/
       todos.py          # /api/todos (the todo card's items)
       data.py           # /api/data/<source>: SERVICES maps a source to its service
       helpers.py        # request checks every route uses
-    services/           # weather, quotes, space, daylight: fetch external data, fall back on failure; open_meteo.py is the city lookup weather and daylight share
+    services/           # weather, quotes, space, daylight, iss: fetch external data, fall back on failure; open_meteo.py is the city lookup weather and daylight share
   migrations/           # Alembic
   tests/
   config.py             # Config, TestConfig, E2EConfig

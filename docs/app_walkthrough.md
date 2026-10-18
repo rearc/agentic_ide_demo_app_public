@@ -95,7 +95,7 @@ That's the app. Everything below is just the detail of each stop.
 - **[frontend/src/index.css](../frontend/src/index.css)** — design tokens in Tailwind's `@theme`: surface and text colours, a named palette (`--color-rally-*`), and one `--color-card-*` token per card that points at a palette colour. That token is how each card gets its colour.
 
 **The key frontend idea — three kinds of cards.** All are just one entry in `CARD_REGISTRY`; they differ only in *where their data lives*:
-- **Data card** (`needsData: true`) — fetches live data from `/api/data/<source>` through a backend service. Owns no table. *(weather, quote, space, daylight)*
+- **Data card** (`needsData: true`) — fetches live data from `/api/data/<source>` through a backend service. Owns no table. *(weather, quote, space, daylight, iss: the ISS card gets the station's orbit data and its browser works out the position every second, on a d3 globe loaded only when the card is shown)*
 - **Static card** (`needsData: false`) — fixed or purely client-side content, no backend at all. *(placeholder; timer, a countdown with a Pomodoro mode; moon, the phase worked out from the date)*
 - **Stateful card** (`needsData: false`) — owns **persisted data** via its own model, routes, and table, so it needs a **migration**. It talks to its own endpoint, not `/api/data`. *(todo)*
 

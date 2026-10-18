@@ -22,9 +22,13 @@
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",
+    "d3-geo": "^3.1.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-grid-layout": "^2.2.3"
+    "react-grid-layout": "^2.2.3",
+    "satellite.js": "^6.0.2",
+    "topojson-client": "^3.1.0",
+    "world-atlas": "^2.0.2"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1",
