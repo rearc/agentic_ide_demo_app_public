@@ -23,8 +23,8 @@ const DEGREES = Math.PI / 180
 const LAND = feature(land110m, land110m.objects.land)
 const GRATICULE = geoGraticule10()
 const SPHERE = { type: 'Sphere' }
-// One orbit takes about 92 minutes; the path shows half of it either side.
-const ORBIT_HALF_MINUTES = 46
+// The orbit is drawn from this many points, one whole revolution.
+const ORBIT_POINTS = 96
 const DRAG_DEGREES_PER_PIXEL = 0.4
 const KEY_STEP_DEGREES = 10
 const START_OFFSET = [0, 30]
@@ -48,19 +48,25 @@ export function issPosition(satrec, date) {
 }
 
 /**
- * The orbit around `date`, one point a minute, as a GeoJSON line: the path
- * the station follows through space, so the Earth is held still at `date`
- * (a ground track would also turn with the Earth beneath it).
+ * One whole orbit from `date`, as a closed GeoJSON line: the path the
+ * station follows through space, so the Earth is held still at `date` (a
+ * ground track would also turn with the Earth beneath it). One revolution
+ * takes 2π divided by the mean motion (`no`, radians a minute), about 93
+ * minutes.
  */
 export function orbitPath(satrec, date) {
   const earthTurn = gstime(date)
+  const periodMs = ((2 * Math.PI) / satrec.no) * 60_000
   const coordinates = []
-  for (let m = -ORBIT_HALF_MINUTES; m <= ORBIT_HALF_MINUTES; m++) {
-    const state = propagate(satrec, new Date(date.getTime() + m * 60_000))
+  for (let i = 0; i < ORBIT_POINTS; i++) {
+    const at = new Date(date.getTime() + (i / ORBIT_POINTS) * periodMs)
+    const state = propagate(satrec, at)
     if (!state?.position) continue
     const geo = eciToGeodetic(state.position, earthTurn)
     coordinates.push([degreesLong(geo.longitude), degreesLat(geo.latitude)])
   }
+  // Back to the start, so the ring closes.
+  if (coordinates.length) coordinates.push(coordinates[0])
   return { type: 'LineString', coordinates }
 }
 

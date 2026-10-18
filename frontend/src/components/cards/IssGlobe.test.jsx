@@ -33,8 +33,14 @@ describe('the orbit maths', () => {
     expect(place.speed).toBeLessThan(28_500)
   })
 
-  it('draws the orbit a minute at a time, 46 minutes either side', () => {
-    expect(orbitPath(SATREC, NOW).coordinates).toHaveLength(93)
+  it('draws one whole orbit as a closed ring', () => {
+    const { coordinates } = orbitPath(SATREC, NOW)
+
+    expect(coordinates).toHaveLength(97)
+    expect(coordinates.at(-1)).toEqual(coordinates[0])
+    // The second point is about 1/96 of a revolution on: under 4 degrees.
+    const [[lon0, lat0], [lon1, lat1]] = coordinates
+    expect(Math.hypot(lon1 - lon0, lat1 - lat0)).toBeLessThan(5)
   })
 
   it('limits the tilt to 70 degrees either way', () => {
