@@ -129,6 +129,24 @@ class TestGracefulFallback:
 
         assert space.fetch()['fallback'] is True
 
+    @pytest.mark.parametrize('status', [403, 429])
+    def test_demo_key_refused_suggests_configuring_a_key(self, app, http_mock, status):
+        app.config['NASA_API_KEY'] = ''
+        http_mock.get(APOD_URL, status=status)
+
+        assert 'NASA_API_KEY' in space.fetch()['explanation']
+
+    def test_own_key_refused_does_not_blame_the_key(self, app, http_mock):
+        http_mock.get(APOD_URL, status=429)
+
+        assert 'NASA_API_KEY' not in space.fetch()['explanation']
+
+    def test_other_failure_without_a_key_does_not_blame_the_key(self, app, http_mock):
+        app.config['NASA_API_KEY'] = ''
+        http_mock.get(APOD_URL, status=500)
+
+        assert 'NASA_API_KEY' not in space.fetch()['explanation']
+
     def test_fallback_url_is_empty_so_no_broken_image_renders(self, app, http_mock):
         http_mock.get(APOD_URL, status=500)
 

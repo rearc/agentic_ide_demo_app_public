@@ -75,8 +75,7 @@ describe('SpaceCard', () => {
       fallback: true,
       title: 'Space Photo Unavailable',
       url: '',
-      explanation:
-        'Configure NASA_API_KEY in .env for Astronomy Picture of the Day',
+      explanation: 'Set NASA_API_KEY in .env for Astronomy Picture of the Day',
       date: '',
       media_type: 'image',
     }
