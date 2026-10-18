@@ -8,8 +8,9 @@ network.
 import pytest
 import requests
 
-from app.services import weather
-from app.services.weather import FORECAST_URL, GEOCODE_URL, WEATHER_CODE_ICONS
+from app.services import open_meteo, weather
+from app.services.open_meteo import FORECAST_URL, GEOCODE_URL
+from app.services.weather import WEATHER_CODE_ICONS
 
 
 def register_geocode(http_mock, results):
@@ -49,7 +50,7 @@ def fallback_payload(http_mock):
     reuse the coordinates `success_payload` cached and never reach the failing
     geocode call at all.
     """
-    weather._geocode.cache_clear()
+    open_meteo.geocode.cache_clear()
     http_mock.get(GEOCODE_URL, status=500)
     return weather.fetch(city='San Francisco')
 
@@ -148,7 +149,7 @@ class TestGracefulFallback:
 
 class TestGeocodeCaching:
     def test_repeated_lookups_of_one_city_hit_the_geocoder_once(self, http_mock):
-        """`_geocode` is lru_cache'd, so the second fetch reuses the coordinates."""
+        """`geocode` is lru_cache'd, so the second fetch reuses the coordinates."""
         register_geocode(http_mock, SF_RESULT)
         register_forecast(http_mock)
         register_forecast(http_mock)

@@ -10,6 +10,7 @@ import {
   PlanetIcon,
   QuestionIcon,
   QuotesIcon,
+  SunHorizonIcon,
   SunIcon,
   ThermometerIcon,
   TimerIcon,
@@ -31,6 +32,7 @@ export const ICONS = {
   checklist: ListChecksIcon,
   timer: TimerIcon,
   moon: MoonIcon,
+  sunrise: SunHorizonIcon,
   // Weather conditions
   sun: SunIcon,
   cloud: CloudIcon,

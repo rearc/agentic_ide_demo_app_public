@@ -31,6 +31,7 @@ DEFAULT_BOARD = {
     'todo': {'x': 6, 'y': 4, 'w': 6, 'h': 7},
     'timer': {'x': 0, 'y': 11, 'w': 4, 'h': 4},
     'moon': {'x': 4, 'y': 11, 'w': 4, 'h': 4},
+    'daylight': {'x': 8, 'y': 11, 'w': 4, 'h': 4},
 }
 
 
@@ -97,6 +98,15 @@ def default_cards():
             icon='moon',
             source='moon',
             position=7,
+        ),
+        Card(
+            slug='daylight',
+            title='Daylight',
+            description='Sunrise, sunset and the light left today',
+            icon='sunrise',
+            source='daylight',
+            config={'city': 'San Francisco'},
+            position=8,
         ),
     ]
 

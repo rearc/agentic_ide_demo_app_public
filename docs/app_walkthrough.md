@@ -95,7 +95,7 @@ That's the app. Everything below is just the detail of each stop.
 - **[frontend/src/index.css](../frontend/src/index.css)** — design tokens in Tailwind's `@theme`: surface and text colours, a named palette (`--color-rally-*`), and one `--color-card-*` token per card that points at a palette colour. That token is how each card gets its colour.
 
 **The key frontend idea — three kinds of cards.** All are just one entry in `CARD_REGISTRY`; they differ only in *where their data lives*:
-- **Data card** (`needsData: true`) — fetches live data from `/api/data/<source>` through a backend service. Owns no table. *(weather, quote, space)*
+- **Data card** (`needsData: true`) — fetches live data from `/api/data/<source>` through a backend service. Owns no table. *(weather, quote, space, daylight)*
 - **Static card** (`needsData: false`) — fixed or purely client-side content, no backend at all. *(placeholder; timer, a countdown with a Pomodoro mode; moon, the phase worked out from the date)*
 - **Stateful card** (`needsData: false`) — owns **persisted data** via its own model, routes, and table, so it needs a **migration**. It talks to its own endpoint, not `/api/data`. *(todo)*
 
@@ -112,7 +112,7 @@ That last distinction is the whole cost story of adding a card: static is cheape
 - **[backend/app/routes/profiles.py](../backend/app/routes/profiles.py)** - `/api/profiles`: list, create, `PATCH` (rename and/or replace the whole `board`), delete. A board is an object keyed by card id, `{"3": {"x": 0, "y": 0, "w": 4, "h": 4, "hidden": false}}`; an unknown card id is a 400, a duplicate name a 409, and the last profile cannot be deleted (409).
 - **[backend/app/routes/helpers.py](../backend/app/routes/helpers.py)** - the request checks every route module shares: `json_object_body()` (the body must be a JSON object), `get_or_404()` and `is_sqlite_integer()`. Each bad request calls `abort`, and the app factory's handlers turn it into the JSON error.
 - **[backend/app/routes/data.py](../backend/app/routes/data.py)** — the **`SERVICES` dispatch table**. `GET /api/data/<source>` looks up `<source>` and calls its handler. Adding a data source = adding one line here. (This is the backend twin of the frontend's `CARD_REGISTRY`.)
-- **[backend/app/services/weather.py](../backend/app/services/weather.py)** — a representative **service**: call an external API, return a flat dict, and **always** return a fallback dict on failure so a dead API never breaks the UI. `quotes.py` and `space.py` follow the same shape.
+- **[backend/app/services/weather.py](../backend/app/services/weather.py)** — a representative **service**: call an external API, return a flat dict, and **always** return a fallback dict on failure so a dead API never breaks the UI. `quotes.py`, `space.py` and `daylight.py` follow the same shape; `weather.py` and `daylight.py` share the city lookup in `open_meteo.py`.
 - **[backend/app/routes/todos.py](../backend/app/routes/todos.py)** - a fuller CRUD example (the todo card is stateful), showing validation and status codes. Todos belong only to cards whose `source` is `todo`; any other card id answers 404.
 
 **The key backend idea:** two registries mirror each other — **`CARD_REGISTRY`** (frontend: how to render a source) and **`SERVICES`** (backend: how to fetch a source).

@@ -9,6 +9,7 @@ import PlaceholderCard from './cards/PlaceholderCard'
 import TodoCard from './cards/TodoCard'
 import TimerCard from './cards/TimerCard'
 import MoonCard from './cards/MoonCard'
+import DaylightCard from './cards/DaylightCard'
 import LoadingDots from './LoadingDots'
 
 /**
@@ -32,6 +33,11 @@ const CARD_REGISTRY = {
   todo: { component: TodoCard, accent: 'card-todo', needsData: false },
   timer: { component: TimerCard, accent: 'card-timer', needsData: false },
   moon: { component: MoonCard, accent: 'card-moon', needsData: false },
+  daylight: {
+    component: DaylightCard,
+    accent: 'card-daylight',
+    needsData: true,
+  },
 }
 
 /**

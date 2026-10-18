@@ -8,9 +8,9 @@ its own service test plus a dispatch case here.
 import pytest
 
 from app.routes.data import SERVICES
+from app.services.open_meteo import FORECAST_URL, GEOCODE_URL
 from app.services.quotes import QUOTES_URL
 from app.services.space import APOD_URL
-from app.services.weather import FORECAST_URL, GEOCODE_URL
 
 # For each source, a (key, value) its healthy upstream below puts in the
 # response and its fallback cannot: proof the source reached its own service.
@@ -19,6 +19,7 @@ DISPATCH_CASES = {
     'weather': ('city', 'Somewhere'),
     'quote': ('author', 'Someone'),
     'space': ('title', 'Pillars'),
+    'daylight': ('sunrise', 1792332960),
 }
 
 
@@ -31,7 +32,16 @@ def healthy_upstreams(http_mock):
     )
     http_mock.get(
         FORECAST_URL,
-        json={'current': {'temperature_2m': 1.0, 'relative_humidity_2m': 2, 'weather_code': 0}},
+        json={
+            # One body serves the weather card ('current') and the daylight card.
+            'current': {'temperature_2m': 1.0, 'relative_humidity_2m': 2, 'weather_code': 0},
+            'timezone': 'GMT',
+            'daily': {
+                'sunrise': [1792246500, 1792332960, 1792419420],
+                'sunset': [1792286160, 1792372440, 1792458780],
+                'daylight_duration': [39600, 39480, 39360],
+            },
+        },
     )
     http_mock.get(QUOTES_URL, json=[{'q': 'A quote.', 'a': 'Someone'}])
     http_mock.get(APOD_URL, json={'title': 'Pillars', 'media_type': 'image'})

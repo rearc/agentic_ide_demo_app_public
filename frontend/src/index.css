@@ -41,6 +41,7 @@
   --color-card-todo: var(--color-rally-navy);
   --color-card-timer: var(--color-rally-sand);
   --color-card-moon: var(--color-rally-silver);
+  --color-card-daylight: var(--color-rally-gold);
 
   --color-live: #3ddc84;
   --color-fallback: #f5a524;

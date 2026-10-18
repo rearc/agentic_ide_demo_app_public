@@ -1,12 +1,11 @@
 import logging
-from functools import lru_cache
 
 import requests
 
+from app.services.open_meteo import FORECAST_URL, geocode
+
 logger = logging.getLogger(__name__)
 
-GEOCODE_URL = 'https://geocoding-api.open-meteo.com/v1/search'
-FORECAST_URL = 'https://api.open-meteo.com/v1/forecast'
 
 WEATHER_CODE_DESCRIPTIONS = {
     0: 'Clear sky', 1: 'Mainly clear', 2: 'Partly cloudy', 3: 'Overcast',
@@ -42,24 +41,9 @@ def _fallback(city, description):
     }
 
 
-@lru_cache(maxsize=128)
-def _geocode(city):
-    resp = requests.get(
-        GEOCODE_URL,
-        params={'name': city, 'count': 1},
-        timeout=5,
-    )
-    resp.raise_for_status()
-    results = resp.json().get('results')
-    if not results:
-        return None
-    loc = results[0]
-    return (loc['latitude'], loc['longitude'], loc.get('name', city))
-
-
 def fetch(city='San Francisco', **_kwargs):
     try:
-        geo = _geocode(city)
+        geo = geocode(city)
         if not geo:
             return _fallback(city, f'Could not find location: {city}')
 

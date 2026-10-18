@@ -20,6 +20,16 @@ const DATA = {
     date: '2026-01-01',
     media_type: 'image',
   },
+  daylight: {
+    city: 'San Francisco',
+    timezone: 'America/Los_Angeles',
+    // 1 January 2026, 07:25 and 17:01 in San Francisco (UTC-8).
+    sunrise: 1767281100,
+    sunset: 1767315660,
+    tomorrow_sunrise: 1767367500,
+    daylight_seconds: 34560,
+    change_seconds: 25,
+  },
 }
 
 async function mockDataApis(page) {
@@ -97,6 +107,7 @@ test('every seeded card renders its title and its mocked data', async ({
   await expect(page.getByText('partly cloudy')).toBeVisible()
   await expect(page.getByText('Mocked quote for the test.')).toBeVisible()
   await expect(page.getByRole('img', { name: 'Mocked Nebula' })).toBeVisible()
+  await expect(page.getByText('9h 36m')).toBeVisible()
 })
 
 test('the weather card shows Fahrenheit by default and Celsius once chosen', async ({
