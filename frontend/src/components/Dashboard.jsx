@@ -1,4 +1,8 @@
-import { GridLayout, useContainerWidth } from 'react-grid-layout'
+import {
+  GridLayout,
+  useContainerWidth,
+  verticalCompactor,
+} from 'react-grid-layout'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 import { placedSize } from '../useBoard'
@@ -7,6 +11,7 @@ import LoadingDots from './LoadingDots'
 
 // Cards sit MARGIN px apart. Each draws a 1 px outline just outside its box
 // (Card.jsx), so the grid keeps OUTLINE px clear around its edge for it.
+const COLS = 12
 const ROW_HEIGHT = 46
 const MARGIN = 8
 const OUTLINE = 1
@@ -41,6 +46,28 @@ function buildLayout(cards, board) {
     })
 }
 
+// The id react-grid-layout gives the placeholder for a card dragged in.
+const DROPPING_ID = '__dropping-elem__'
+
+/**
+ * The grid's usual vertical compaction, except that a card being dragged in
+ * from the library wins any tie for a spot: the cards it covers move down.
+ * Without this, a card hovered over the cell where it entered the grid sorts
+ * after the card already there and is settled below it, so it lands lower
+ * than where it was dropped.
+ */
+const dropFirstCompactor = {
+  ...verticalCompactor,
+  compact(layout, cols) {
+    const pin = (static_) => (l) =>
+      l.i === DROPPING_ID ? { ...l, static: static_ } : l
+    // Pinned while the others settle around it, then free to float up like
+    // any card.
+    const settled = verticalCompactor.compact(layout.map(pin(true)), cols)
+    return verticalCompactor.compact(settled.map(pin(false)), cols)
+  },
+}
+
 /**
  * The shown profile's board. It owns no state: `useBoard` hands it the cards,
  * the board and the actions that change them. Every finished move, resize,
@@ -70,11 +97,16 @@ export default function Dashboard({
     return placedSize(board, draggingCardId)
   }
 
-  // `item` is the grid's drop placeholder (`__dropping-elem__`), which carries
+  // The grid's items include its drop placeholder (DROPPING_ID), which marks
   // where the card was dropped; the card itself is the one being dragged.
-  function handleDrop(_layout, item) {
-    if (!item || draggingCardId === null) return
-    showCard(draggingCardId, { x: item.x, y: item.y })
+  // They are settled once more, because a drop straight onto the cell where
+  // the card entered the grid arrives before the grid has made room.
+  function handleDrop(gridItems) {
+    if (draggingCardId === null) return
+    const settled = dropFirstCompactor.compact(gridItems, COLS)
+    const dropped = settled.find((l) => l.i === DROPPING_ID)
+    if (!dropped) return
+    showCard(draggingCardId, { x: dropped.x, y: dropped.y }, settled)
   }
 
   let content
@@ -126,12 +158,13 @@ export default function Dashboard({
           className="min-h-64"
           width={width}
           layout={layout}
+          compactor={dropFirstCompactor}
           onDragStop={saveLayout}
           onResizeStop={saveLayout}
           onDropDragOver={sizeDropping}
           onDrop={handleDrop}
           gridConfig={{
-            cols: 12,
+            cols: COLS,
             rowHeight: ROW_HEIGHT,
             margin: [MARGIN, MARGIN],
             containerPadding: [OUTLINE, OUTLINE],

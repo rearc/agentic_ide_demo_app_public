@@ -12,7 +12,7 @@ vi.mock('../api')
 // boxes, which jsdom does not provide. Stub it so these tests cover
 // Dashboard's own logic: which layout it hands the grid, and what it does with
 // what the grid reports back. The stub keeps the callbacks so a test can fire
-// them as the real grid would.
+// them as the real grid would. The compaction is pure, so it stays real.
 const grid = vi.hoisted(() => ({
   onDragStop: null,
   onResizeStop: null,
@@ -21,7 +21,8 @@ const grid = vi.hoisted(() => ({
   width: 1200,
 }))
 
-vi.mock('react-grid-layout', () => ({
+vi.mock('react-grid-layout', async (importOriginal) => ({
+  verticalCompactor: (await importOriginal()).verticalCompactor,
   GridLayout: ({
     children,
     layout,
@@ -214,15 +215,19 @@ describe('dropping a card from the library', () => {
     expect(grid.onDropDragOver()).toBe(false)
   })
 
-  it('shows the dragged card where the placeholder was dropped', () => {
-    /* The layout argument also holds the placeholder and every other card;
-       only the placeholder item says where the drop landed. */
+  it('shows the dragged card where it was dropped, moving the card it covers down', () => {
+    /* The grid can report a drop onto an occupied cell before it has made
+       room (a drop in the cell where the card entered the grid). */
     const { showCard } = renderDashboard({ draggingCardId: 3 })
-    const placeholder = { i: '__dropping-elem__', x: 4, y: 2, w: 4, h: 4 }
+    const placeholder = { i: '__dropping-elem__', x: 0, y: 0, w: 4, h: 4 }
 
     grid.onDrop([{ i: '1', x: 0, y: 0, w: 4, h: 4 }, placeholder], placeholder)
 
-    expect(showCard).toHaveBeenCalledWith(3, { x: 4, y: 2 })
+    expect(showCard).toHaveBeenCalledWith(
+      3,
+      { x: 0, y: 0 },
+      expect.arrayContaining([expect.objectContaining({ i: '1', x: 0, y: 4 })]),
+    )
   })
 
   it('ignores a drop with no library card being dragged', () => {

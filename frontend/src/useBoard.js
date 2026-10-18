@@ -19,6 +19,20 @@ export function placedSize(board, cardId) {
   return entry ? { w: entry.w, h: entry.h } : NEW_CARD_SIZE
 }
 
+/**
+ * `board` with the grid's items laid over it: each visible card takes the
+ * place the grid gives it. Hidden entries keep theirs, and grid items that
+ * are not on the board (the drop placeholder) are ignored.
+ */
+function withGridItems(board, gridItems) {
+  const next = { ...board }
+  for (const { i, x, y, w, h } of gridItems) {
+    const entry = next[i]
+    if (entry && !entry.hidden) next[i] = { ...entry, x, y, w, h }
+  }
+  return next
+}
+
 /** The profile on screen: the chosen one, else the first. */
 function shownProfile(profiles, shownId) {
   return profiles.find((p) => p.id === shownId) ?? profiles[0] ?? null
@@ -129,16 +143,11 @@ export default function useBoard() {
       )
     }
 
-    /** Overlay the grid's items onto the full board, hidden entries kept. */
+    /** Save where the grid has put the board's visible cards. */
     function saveLayout(gridItems) {
       const profile = current()
       if (!profile) return
-      const board = { ...profile.board }
-      for (const { i, x, y, w, h } of gridItems) {
-        const entry = board[i]
-        if (entry && !entry.hidden) board[i] = { ...entry, x, y, w, h }
-      }
-      writeBoard(profile.id, board)
+      writeBoard(profile.id, withGridItems(profile.board, gridItems))
     }
 
     function hideCard(cardId) {
@@ -151,11 +160,16 @@ export default function useBoard() {
       })
     }
 
-    /** Put a card on the board at `place` ({x, y}), else at the bottom. */
-    function showCard(cardId, place) {
+    /**
+     * Put a card on the board at `place` ({x, y}), else at the bottom. A drop
+     * also passes the grid's items, which hold where the other cards moved to
+     * make room; without them, the card and the one it displaced would both
+     * claim the spot and the grid would push the new card below.
+     */
+    function showCard(cardId, place, gridItems = []) {
       const profile = current()
       if (!profile) return
-      const { board } = profile
+      const board = withGridItems(profile.board, gridItems)
       const { x, y } = place ?? { x: 0, y: bottomEdge(board) }
       writeBoard(profile.id, {
         ...board,

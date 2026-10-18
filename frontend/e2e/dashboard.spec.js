@@ -171,7 +171,7 @@ test('a removed card stays off the board, and comes back from the library', asyn
   await expect(weather).toBeVisible()
 })
 
-test('a card dragged from the library lands on the board', async ({
+test('a card dragged from the library lands where it is dropped', async ({
   page,
   request,
 }) => {
@@ -190,9 +190,18 @@ test('a card dragged from the library lands on the board', async ({
   })
 
   await expect(placeholder).toBeVisible()
+  // Dropped on the top-left corner, it takes that spot, and the card that was
+  // there (Weather, 4 rows tall) moves down below it.
+  const place = async (slug) => {
+    const { x, y, hidden } = await defaultEntry(request, slug)
+    return { x, y, hidden }
+  }
   await expect
-    .poll(async () => (await defaultEntry(request, 'placeholder')).hidden)
-    .toBe(false)
+    .poll(async () => [await place('placeholder'), await place('weather')])
+    .toEqual([
+      { x: 0, y: 0, hidden: false },
+      { x: 0, y: 4, hidden: false },
+    ])
 })
 
 test('a profile saved from the board keeps its own cards', async ({ page }) => {

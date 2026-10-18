@@ -193,6 +193,25 @@ describe('hiding and showing cards', () => {
       board: { ...DEFAULT_BOARD, 3: boardEntry({ x: 4, y: 2, w: 4, h: 4 }) },
     })
   })
+
+  it('saves where a drop moved the other cards to make room', async () => {
+    const board = await renderBoard()
+    const gridItems = [
+      { i: '1', x: 0, y: 4, w: 6, h: 4 },
+      { i: '__dropping-elem__', x: 0, y: 0, w: 4, h: 4 },
+    ]
+
+    act(() => board.current.showCard(3, { x: 0, y: 0 }, gridItems))
+    await settle()
+
+    expect(updateProfile).toHaveBeenCalledWith(10, {
+      board: {
+        ...DEFAULT_BOARD,
+        1: boardEntry({ x: 0, y: 4, w: 6, h: 4 }),
+        3: boardEntry({ x: 0, y: 0, w: 4, h: 4 }),
+      },
+    })
+  })
 })
 
 describe('profiles', () => {
