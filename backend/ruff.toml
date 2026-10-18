@@ -1,0 +1,11 @@
+# Lint for the backend: `ruff check .` from backend/ (the kit's lint hook runs
+# `ruff check --fix` on each edited file). Formatting stays with the code's own
+# style; only these rule sets are checked.
+line-length = 100
+# Alembic writes migrations/versions/; their style is not reviewed.
+extend-exclude = ["venv", "migrations/versions"]
+
+[lint]
+# pycodestyle errors, pyflakes, import order, bugbear, and pyupgrade for the
+# Python 3.11+ syntax the code already uses.
+select = ["E", "F", "I", "B", "UP"]

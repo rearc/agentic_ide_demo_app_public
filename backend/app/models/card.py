@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Optional
 
 from sqlalchemy import JSON, Boolean, DateTime, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
@@ -18,8 +17,8 @@ class Card(Base):
     description: Mapped[str] = mapped_column(String(255), default='')
     icon: Mapped[str] = mapped_column(String(10), default='')
     source: Mapped[str] = mapped_column(String(50), nullable=False)
-    config: Mapped[Optional[dict]] = mapped_column(JSON, default=dict)
-    layout: Mapped[Optional[dict]] = mapped_column(JSON, default=dict)
+    config: Mapped[dict | None] = mapped_column(JSON, default=dict)
+    layout: Mapped[dict | None] = mapped_column(JSON, default=dict)
     position: Mapped[int] = mapped_column(Integer, default=0)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(

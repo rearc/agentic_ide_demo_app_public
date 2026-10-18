@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 
-from app.services import weather, quotes, space
+from app.services import quotes, space, weather
 
 data_bp = Blueprint('data', __name__)
 
