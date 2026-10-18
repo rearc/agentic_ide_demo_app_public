@@ -25,7 +25,6 @@ class Profile(Base):
     board_entries: Mapped[list[ProfileCard]] = relationship(
         cascade='all, delete-orphan',
         passive_deletes=True,
-        order_by=ProfileCard.card_id,
     )
 
     def to_dict(self) -> dict:

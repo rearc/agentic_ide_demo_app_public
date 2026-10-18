@@ -135,7 +135,8 @@ def insert_old_card(connection, card_id, layout, is_active=True):
 
 def test_upgrade_moves_card_layouts_onto_a_default_profile(migration_db):
     """An inactive card becomes a hidden entry; a card whose layout the board
-    cannot hold (the old default `{}`, or a value out of bounds) gets 4 by 4,
+    cannot hold (the old default `{}`, none at all, or a value out of bounds)
+    gets 4 by 4,
     stacked below the lowest visible card."""
     config, engine = migration_db
     command.upgrade(config, BEFORE_PROFILES)
@@ -144,6 +145,7 @@ def test_upgrade_moves_card_layouts_onto_a_default_profile(migration_db):
         insert_old_card(connection, 2, {'x': 4, 'y': 0, 'w': 4, 'h': 9}, is_active=False)
         insert_old_card(connection, 3, {})
         insert_old_card(connection, 4, {'x': -1, 'y': 0, 'w': 4, 'h': 4})
+        insert_old_card(connection, 5, None)
 
     command.upgrade(config, 'head')
 
@@ -154,6 +156,7 @@ def test_upgrade_moves_card_layouts_onto_a_default_profile(migration_db):
         '2': {'x': 4, 'y': 0, 'w': 4, 'h': 9, 'hidden': True},
         '3': {'x': 0, 'y': 4, 'w': 4, 'h': 4, 'hidden': False},
         '4': {'x': 0, 'y': 8, 'w': 4, 'h': 4, 'hidden': False},
+        '5': {'x': 0, 'y': 12, 'w': 4, 'h': 4, 'hidden': False},
     }
 
 

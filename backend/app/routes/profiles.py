@@ -58,7 +58,8 @@ def _is_entry(value):
 
 def _card_id(key):
     """The card id a board key names, or None when it cannot name a card."""
-    if not re.fullmatch(r'[0-9]+', key):
+    # Canonical digits only: "03" would name card 3 a second time.
+    if not re.fullmatch(r'0|[1-9][0-9]*', key):
         return None
     card_id = int(key)
     return card_id if is_sqlite_integer(card_id) else None

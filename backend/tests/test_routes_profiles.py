@@ -231,10 +231,18 @@ class TestProfileValidation:
         assert response.status_code in (200, 201)
 
     def test_rejects_keys_that_name_no_card(self, send, card):
-        """A missing id, a non-digit key, and a digit string beyond SQLite's
-        range (which would otherwise overflow the query) are all reported."""
+        """A missing id, a non-digit key, a digit string beyond SQLite's range
+        (which would otherwise overflow the query) and a zero-padded id (which
+        would name an existing card twice) are all reported."""
         too_big = str(SQLITE_INT_MAX + 1)
-        board = {str(card.id): ENTRY, '999': ENTRY, 'abc': ENTRY, too_big: ENTRY}
+        padded = f'0{card.id}'
+        board = {
+            str(card.id): ENTRY,
+            '999': ENTRY,
+            'abc': ENTRY,
+            too_big: ENTRY,
+            padded: ENTRY,
+        }
 
         response = send({'board': board})
 
@@ -242,5 +250,5 @@ class TestProfileValidation:
         error = response.get_json()['error']
         assert error.startswith('Unknown card id(s): ')
         assert set(error.removeprefix('Unknown card id(s): ').split(', ')) == {
-            '999', 'abc', too_big,
+            '999', 'abc', too_big, padded,
         }
