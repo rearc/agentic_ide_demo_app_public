@@ -43,39 +43,48 @@ function dashboardLocked() {
   return screen.getByTestId('dashboard').dataset.locked
 }
 
-describe('lock toggle', () => {
-  it('starts locked', () => {
+describe('edit mode', () => {
+  function library() {
+    return screen.queryByRole('region', { name: 'Card library' })
+  }
+
+  it('starts locked, with the library closed', () => {
     render(<App />)
 
     expect(dashboardLocked()).toBe('true')
-    expect(
-      screen.getByRole('button', { name: 'Customize layout' }),
-    ).toBeInTheDocument()
+    expect(library()).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Edit board' })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    )
   })
 
-  it('unlocks the dashboard when clicked', async () => {
+  it('unlocks the dashboard and opens the library with Edit board', async () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.click(screen.getByRole('button', { name: 'Customize layout' }))
+    await user.click(screen.getByRole('button', { name: 'Edit board' }))
 
     expect(dashboardLocked()).toBe('false')
-    expect(
-      screen.getByRole('button', { name: 'Lock layout' }),
-    ).toBeInTheDocument()
+    expect(library()).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Done' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    )
   })
 
-  it('locks it again on a second click', async () => {
+  it('locks it and closes the library with Done', async () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.click(screen.getByRole('button', { name: 'Customize layout' }))
-    await user.click(screen.getByRole('button', { name: 'Lock layout' }))
+    await user.click(screen.getByRole('button', { name: 'Edit board' }))
+    await user.click(screen.getByRole('button', { name: 'Done' }))
 
     expect(dashboardLocked()).toBe('true')
+    expect(library()).not.toBeInTheDocument()
   })
 
-  it('shows the drag hint only while unlocked', async () => {
+  it('shows the drag hint only while editing', async () => {
     const user = userEvent.setup()
     render(<App />)
 
@@ -83,52 +92,9 @@ describe('lock toggle', () => {
       screen.queryByText(/changes save automatically/),
     ).not.toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'Customize layout' }))
+    await user.click(screen.getByRole('button', { name: 'Edit board' }))
 
     expect(screen.getByText(/changes save automatically/)).toBeInTheDocument()
-  })
-})
-
-describe('library toggle', () => {
-  function library() {
-    return screen.queryByRole('region', { name: 'Card library' })
-  }
-
-  it('opens the library and unlocks the dashboard', async () => {
-    const user = userEvent.setup()
-    render(<App />)
-
-    await user.click(screen.getByRole('button', { name: 'Library' }))
-
-    expect(library()).toBeInTheDocument()
-    expect(dashboardLocked()).toBe('false')
-    expect(screen.getByRole('button', { name: 'Library' })).toHaveAttribute(
-      'aria-expanded',
-      'true',
-    )
-  })
-
-  it('closes it on a second click, leaving the dashboard unlocked', async () => {
-    const user = userEvent.setup()
-    render(<App />)
-
-    await user.click(screen.getByRole('button', { name: 'Library' }))
-    await user.click(screen.getByRole('button', { name: 'Library' }))
-
-    expect(library()).not.toBeInTheDocument()
-    expect(dashboardLocked()).toBe('false')
-  })
-
-  it('closes it when the dashboard is locked', async () => {
-    /* Adding a card is a Customize action, so the library does not outlive
-       Customize mode. */
-    const user = userEvent.setup()
-    render(<App />)
-
-    await user.click(screen.getByRole('button', { name: 'Library' }))
-    await user.click(screen.getByRole('button', { name: 'Lock layout' }))
-
-    expect(library()).not.toBeInTheDocument()
   })
 })
 

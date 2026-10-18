@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -14,6 +14,7 @@ vi.mock('../api')
 // what the grid reports back. The stub keeps the callbacks so a test can fire
 // them as the real grid would. The compaction is pure, so it stays real.
 const grid = vi.hoisted(() => ({
+  onDragStart: null,
   onDragStop: null,
   onResizeStop: null,
   onDrop: null,
@@ -33,8 +34,15 @@ vi.mock('react-grid-layout', async (importOriginal) => ({
     onResizeStop,
     onDrop,
     onDropDragOver,
+    onDragStart,
   }) => {
-    Object.assign(grid, { onDragStop, onResizeStop, onDrop, onDropDragOver })
+    Object.assign(grid, {
+      onDragStart,
+      onDragStop,
+      onResizeStop,
+      onDrop,
+      onDropDragOver,
+    })
     return (
       <div
         data-testid="grid"
@@ -236,6 +244,41 @@ describe('dropping a card from the library', () => {
     grid.onDrop([], { i: '__dropping-elem__', x: 0, y: 0, w: 1, h: 1 })
 
     expect(showCard).not.toHaveBeenCalled()
+  })
+})
+
+describe('while editing', () => {
+  function container() {
+    return screen.getByTestId('grid').closest('[data-recede]')
+  }
+
+  it('shows the column guides only while unlocked', () => {
+    renderDashboard({ locked: true })
+    expect(
+      document.querySelector('[data-column-guides]').dataset.columnGuides,
+    ).toBe('false')
+  })
+
+  it.each([
+    ['locked', { locked: true }, 'false'],
+    ['unlocked', { locked: false }, 'true'],
+    ['a library card is dragged in', { draggingCardId: 1 }, 'false'],
+  ])('recedes the board only while editing: %s', (_case, props, recede) => {
+    renderDashboard(props)
+
+    expect(container().dataset.recede).toBe(recede)
+  })
+
+  it('draws the drop preview in the colour of the card being moved', () => {
+    renderDashboard({
+      cards: [cardRecord({ id: 1, source: 'placeholder' })],
+    })
+
+    act(() => grid.onDragStart([], { i: '1' }))
+
+    expect(container().style.getPropertyValue('--drop-color')).toBe(
+      'var(--color-card-placeholder)',
+    )
   })
 })
 

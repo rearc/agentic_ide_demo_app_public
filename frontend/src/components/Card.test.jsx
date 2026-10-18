@@ -99,8 +99,8 @@ describe('chrome', () => {
   })
 })
 
-describe('removing a card (Customize only)', () => {
-  it('offers an × only in Customize mode', async () => {
+describe('removing a card (only while editing)', () => {
+  it('offers an × only while editing', async () => {
     const { rerender } = render(
       <Card card={weatherCard()} locked onRemove={() => {}} />,
     )

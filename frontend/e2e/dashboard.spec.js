@@ -126,7 +126,7 @@ test('a card dragged by its header keeps its new position after a reload', async
   request,
 }) => {
   const before = await defaultEntry(request, 'weather')
-  await page.getByRole('button', { name: 'Customize layout' }).click()
+  await page.getByRole('button', { name: 'Edit board' }).click()
 
   const header = page.locator('.card-drag-handle', { hasText: 'Weather' })
   const box = await header.boundingBox()
@@ -149,7 +149,7 @@ test('a removed card stays off the board, and comes back from the library', asyn
   request,
 }) => {
   const weather = page.getByRole('heading', { name: 'Weather' })
-  await page.getByRole('button', { name: 'Customize layout' }).click()
+  await page.getByRole('button', { name: 'Edit board' }).click()
   await page.getByRole('button', { name: 'Remove "Weather"' }).click()
   await expect(weather).toHaveCount(0)
   await expect
@@ -160,7 +160,7 @@ test('a removed card stays off the board, and comes back from the library', asyn
   await expect(page.getByRole('heading', { name: 'Daily Quote' })).toBeVisible()
   await expect(weather).toHaveCount(0)
 
-  await page.getByRole('button', { name: 'Library' }).click()
+  await page.getByRole('button', { name: 'Edit board' }).click()
   await page.getByRole('button', { name: 'Add "Weather"' }).click()
   await expect(weather).toBeVisible()
   await expect
@@ -176,11 +176,10 @@ test('a card dragged from the library lands where it is dropped', async ({
   request,
 }) => {
   const placeholder = page.getByRole('heading', { name: 'Coming Soon' })
-  await page.getByRole('button', { name: 'Customize layout' }).click()
+  await page.getByRole('button', { name: 'Edit board' }).click()
   await page.getByRole('button', { name: 'Remove "Coming Soon"' }).click()
   await expect(placeholder).toHaveCount(0)
 
-  await page.getByRole('button', { name: 'Library' }).click()
   const tile = page
     .getByRole('region', { name: 'Card library' })
     .getByRole('listitem')
@@ -219,7 +218,7 @@ test('a profile saved from the board keeps its own cards', async ({ page }) => {
   await page.getByRole('button', { name: 'Save' }).click()
   await expect(menu('Focus')).toBeVisible()
 
-  await page.getByRole('button', { name: 'Customize layout' }).click()
+  await page.getByRole('button', { name: 'Edit board' }).click()
   await page.getByRole('button', { name: 'Remove "Daily Quote"' }).click()
   await expect(quote).toHaveCount(0)
 

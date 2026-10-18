@@ -85,13 +85,13 @@ backend/
 
 frontend/
   src/
-    App.jsx             # header (profile menu, Library button, clock), layout lock
+    App.jsx             # header (profile menu, Edit board, clock), edit mode
     useBoard.js         # the one owner of board state: library, profiles, shown profile
     api.js              # the only module that calls the backend
     components/
       Dashboard.jsx     # the grid; renders the board it is handed, saves on every change
       ProfileMenu.jsx   # switch, save as new, rename, delete a profile
-      LibraryButton.jsx # opens the library drawer
+      EditButton.jsx    # Edit board / Done: unlocks the cards, opens the library
       LibraryDrawer.jsx # every card, with search; add or drag one onto the board
       Card.jsx          # CARD_REGISTRY: a card's source picks its widget
       cards/            # one component per card type

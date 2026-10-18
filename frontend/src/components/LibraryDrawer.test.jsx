@@ -20,6 +20,7 @@ const BOARD = {
 function renderDrawer(props = {}) {
   const all = {
     id: 'card-library',
+    open: true,
     cards: CARDS,
     board: BOARD,
     onAdd: vi.fn(),
@@ -35,6 +36,24 @@ function renderDrawer(props = {}) {
 function tile(title) {
   return screen.getByText(title).closest('li')
 }
+
+describe('open and closed', () => {
+  it('is inert and hidden from assistive technology while closed', () => {
+    renderDrawer({ open: false })
+
+    const drawer = document.getElementById('card-library')
+    expect(drawer).toHaveAttribute('aria-hidden', 'true')
+    expect(drawer).toHaveAttribute('inert')
+  })
+
+  it('is reachable while open', () => {
+    renderDrawer()
+
+    expect(
+      screen.getByRole('region', { name: 'Card library' }),
+    ).not.toHaveAttribute('inert')
+  })
+})
 
 describe('tiles', () => {
   it('lists every card, marking the ones on the board', () => {

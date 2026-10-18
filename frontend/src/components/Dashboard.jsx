@@ -5,8 +5,9 @@ import {
 } from 'react-grid-layout'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
+import { useState } from 'react'
 import { placedSize } from '../useBoard'
-import Card, { DRAG_HANDLE_CLASS } from './Card'
+import Card, { DRAG_HANDLE_CLASS, cardAccent } from './Card'
 import LoadingDots from './LoadingDots'
 
 // Cards sit MARGIN px apart. Each draws a 1 px outline just outside its box
@@ -26,8 +27,35 @@ export const STACK_BELOW = 728
 function EmptyBoard() {
   return (
     <p className="text-center text-sm text-text-secondary py-10">
-      No cards on this board. Open the Library to add some.
+      No cards on this board. Choose Edit board to add some from the library.
     </p>
+  )
+}
+
+/**
+ * The grid's 12 columns, drawn faintly behind the cards while editing so it
+ * shows where a card will land. Same padding and gaps as the grid, so each
+ * guide lines up with a column.
+ */
+function ColumnGuides({ shown }) {
+  return (
+    <div
+      aria-hidden
+      data-column-guides={shown}
+      className={`absolute inset-0 grid pointer-events-none transition-opacity duration-300 ${shown ? 'opacity-100' : 'opacity-0'}`}
+      style={{
+        gridTemplateColumns: `repeat(${COLS}, minmax(0, 1fr))`,
+        gap: MARGIN,
+        padding: OUTLINE,
+      }}
+    >
+      {Array.from({ length: COLS }, (_, i) => (
+        <span
+          key={i}
+          className="bg-text-primary/[0.025] shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-text-primary)_5%,transparent)]"
+        />
+      ))}
+    </div>
   )
 }
 
@@ -85,10 +113,13 @@ export default function Dashboard({
   showCard,
 }) {
   const { width, containerRef, mounted } = useContainerWidth()
+  // The card being moved or resized on the grid, for the preview's colour.
+  const [movingId, setMovingId] = useState(null)
 
   const layout = buildLayout(cards, board)
   const cardsById = new Map(cards.map((card) => [String(card.id), card]))
   const stacked = width < STACK_BELOW
+  const previewCard = cardsById.get(String(movingId ?? draggingCardId))
 
   // While a library tile is dragged over the grid, the placeholder takes the
   // size the card will land at. Anything else dragged in is refused.
@@ -107,6 +138,11 @@ export default function Dashboard({
     const dropped = settled.find((l) => l.i === DROPPING_ID)
     if (!dropped) return
     showCard(draggingCardId, { x: dropped.x, y: dropped.y }, settled)
+  }
+
+  function finishMove(gridItems) {
+    setMovingId(null)
+    saveLayout(gridItems)
   }
 
   let content
@@ -151,16 +187,19 @@ export default function Dashboard({
     )
   } else if (mounted) {
     content = (
-      <>
+      <div className="relative">
         {layout.length === 0 && <EmptyBoard />}
+        <ColumnGuides shown={!locked} />
         <GridLayout
           // An empty board still needs room to drop a card onto.
           className="min-h-64"
           width={width}
           layout={layout}
           compactor={dropFirstCompactor}
-          onDragStop={saveLayout}
-          onResizeStop={saveLayout}
+          onDragStart={(_layout, item) => setMovingId(item.i)}
+          onResizeStart={(_layout, item) => setMovingId(item.i)}
+          onDragStop={finishMove}
+          onResizeStop={finishMove}
           onDropDragOver={sizeDropping}
           onDrop={handleDrop}
           gridConfig={{
@@ -195,7 +234,7 @@ export default function Dashboard({
             )
           })}
         </GridLayout>
-      </>
+      </div>
     )
   }
 
@@ -203,5 +242,17 @@ export default function Dashboard({
   // useContainerWidth measures it once, on mount, and a container that
   // appeared only after loading was never measured (the grid kept the hook's
   // 1280 px default and overflowed narrower windows).
-  return <div ref={containerRef}>{content}</div>
+  //
+  // While editing, the board recedes (index.css), except during a drag in
+  // from the library, when it must be at full size to drop onto.
+  return (
+    <div
+      ref={containerRef}
+      className="board-recede"
+      data-recede={!locked && !stacked && draggingCardId === null}
+      style={{ '--drop-color': cardAccent(previewCard?.source) }}
+    >
+      {content}
+    </div>
+  )
 }

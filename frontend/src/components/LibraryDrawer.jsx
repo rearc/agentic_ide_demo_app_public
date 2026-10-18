@@ -10,7 +10,7 @@ const TILE =
  * One library card. A card not on the board can be dragged onto the grid or
  * added with its button; one already there says so.
  */
-function Tile({ card, onBoard, onAdd, onDragStart, onDragEnd }) {
+function Tile({ card, onBoard, onAdd, onDragStart, onDragEnd, order }) {
   const accent = cardAccent(card.source)
 
   function handleDragStart(e) {
@@ -24,7 +24,8 @@ function Tile({ card, onBoard, onAdd, onDragStart, onDragEnd }) {
       draggable={!onBoard}
       onDragStart={handleDragStart}
       onDragEnd={onDragEnd}
-      className={`${TILE} ${onBoard ? '' : 'cursor-grab active:cursor-grabbing hover:shadow-[0_0_0_1px_var(--color-hairline-strong)]'}`}
+      className={`library-reveal ${TILE} ${onBoard ? '' : 'cursor-grab active:cursor-grabbing hover:shadow-[0_0_0_1px_var(--color-hairline-strong)]'}`}
+      style={{ '--i': order }}
     >
       {accent && (
         <span
@@ -66,11 +67,14 @@ function Tile({ card, onBoard, onAdd, onDragStart, onDragEnd }) {
 }
 
 /**
- * The card library, opened under the header's row: a search field and every
- * card as a tile, left to right, scrolling sideways when they overflow.
+ * The card library, under the header's row: a search field and every card as
+ * a tile, left to right, scrolling sideways when they overflow. It stays
+ * mounted so it can animate open and closed (index.css); closed, it is inert
+ * and hidden from assistive technology.
  */
 export default function LibraryDrawer({
   id,
+  open,
   cards,
   board,
   onAdd,
@@ -88,50 +92,62 @@ export default function LibraryDrawer({
     <section
       id={id}
       aria-label="Card library"
-      className="border-t border-hairline"
+      aria-hidden={!open}
+      // React 18 sets `inert` only as a string attribute.
+      inert={open ? undefined : ''}
+      data-open={open}
+      className="library-drawer"
     >
-      <div className="max-w-[1600px] mx-auto px-5 py-3 flex flex-col sm:flex-row sm:items-center gap-3">
-        <label className="relative flex items-center shrink-0 sm:w-48">
-          <MagnifyingGlassIcon
-            size={14}
-            aria-hidden
-            className="absolute left-2.5 text-text-muted pointer-events-none"
-          />
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            aria-label="Search cards"
-            placeholder="Search cards"
-            className="w-full h-8 pl-8 pr-2.5 bg-transparent border border-hairline text-[13px] text-text-primary placeholder:text-text-muted focus:outline-none focus:border-text-muted transition-colors"
-          />
-        </label>
-        {shown.length === 0 ? (
-          <p className="text-[13px] text-text-secondary">
-            {cards.length === 0
-              ? 'The library is empty.'
-              : `No cards match "${query.trim()}".`}
-          </p>
-        ) : (
-          // The padding leaves room for the tiles' 1 px outline and the
-          // sideways scrollbar; the negative margin keeps it out of the row's
-          // spacing.
-          <ul className="flex-1 min-w-0 flex gap-2 overflow-x-auto card-scroll px-px py-2 -my-2">
-            {shown.map((card) => {
-              const entry = board[card.id]
-              return (
-                <Tile
-                  key={card.id}
-                  card={card}
-                  onBoard={Boolean(entry) && !entry.hidden}
-                  onAdd={onAdd}
-                  onDragStart={onDragStart}
-                  onDragEnd={onDragEnd}
-                />
-              )
-            })}
-          </ul>
-        )}
+      <div className="min-h-0 overflow-hidden">
+        <div className="library-drawer-row border-t border-hairline">
+          <div className="max-w-[1600px] mx-auto px-5 py-3 flex flex-col sm:flex-row sm:items-center gap-3">
+            <label
+              className="library-reveal relative flex items-center shrink-0 sm:w-48"
+              style={{ '--i': 0 }}
+            >
+              <MagnifyingGlassIcon
+                size={14}
+                aria-hidden
+                className="absolute left-2.5 text-text-muted pointer-events-none"
+              />
+              <input
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                aria-label="Search cards"
+                placeholder="Search cards"
+                className="w-full h-8 pl-8 pr-2.5 bg-transparent border border-hairline text-[13px] text-text-primary placeholder:text-text-muted focus:outline-none focus:border-text-muted transition-colors"
+              />
+            </label>
+            {shown.length === 0 ? (
+              <p className="text-[13px] text-text-secondary">
+                {cards.length === 0
+                  ? 'The library is empty.'
+                  : `No cards match "${query.trim()}".`}
+              </p>
+            ) : (
+              // The padding leaves room for the tiles' 1 px outline and the
+              // sideways scrollbar; the negative margin keeps it out of the row's
+              // spacing.
+              <ul className="flex-1 min-w-0 flex gap-2 overflow-x-auto card-scroll px-px py-2 -my-2">
+                {shown.map((card, i) => {
+                  const entry = board[card.id]
+                  return (
+                    <Tile
+                      key={card.id}
+                      order={i + 1}
+                      card={card}
+                      onBoard={Boolean(entry) && !entry.hidden}
+                      onAdd={onAdd}
+                      onDragStart={onDragStart}
+                      onDragEnd={onDragEnd}
+                    />
+                  )
+                })}
+              </ul>
+            )}
+          </div>
+        </div>
       </div>
     </section>
   )

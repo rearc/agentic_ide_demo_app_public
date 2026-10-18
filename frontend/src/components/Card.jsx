@@ -104,7 +104,7 @@ function CardStatus({ status, fetchedAt }) {
 }
 
 /**
- * One card on the board. In Customize mode (`locked` false) it offers an ×
+ * One card on the board. While editing (`locked` false) it offers an ×
  * that calls `onRemove`, and, when `movable`, its header becomes the drag
  * handle; the stacked board passes `movable={false}` since it cannot drag.
  */

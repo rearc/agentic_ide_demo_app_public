@@ -177,7 +177,7 @@ describe('the whole board', () => {
 
     expect(screen.queryAllByTitle('Drag to move')).toHaveLength(0)
 
-    await user.click(screen.getByRole('button', { name: 'Customize layout' }))
+    await user.click(screen.getByRole('button', { name: 'Edit board' }))
 
     expect(screen.getAllByTitle('Drag to move')).toHaveLength(CARDS.length)
   })
@@ -193,7 +193,7 @@ describe('the whole board', () => {
     const user = userEvent.setup()
     await renderApp()
 
-    await user.click(screen.getByRole('button', { name: 'Customize layout' }))
+    await user.click(screen.getByRole('button', { name: 'Edit board' }))
     await user.click(
       screen.getByRole('button', { name: 'Remove "Daily Quote"' }),
     )
@@ -216,7 +216,7 @@ describe('the whole board', () => {
     localStorage.setItem('dashboard.profileId', '2')
     await renderApp()
 
-    await user.click(screen.getByRole('button', { name: 'Library' }))
+    await user.click(screen.getByRole('button', { name: 'Edit board' }))
     await user.click(screen.getByRole('button', { name: 'Add "Coming Soon"' }))
 
     expect(

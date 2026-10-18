@@ -41,6 +41,9 @@
   --color-live: #3ddc84;
   --color-fallback: #f5a524;
   --color-danger: #f87171;
+
+  /* Fast start, long soft settle: the curve of a sheet sliding into place. */
+  --ease-sheet: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 html,
@@ -88,9 +91,22 @@ body {
 .react-grid-item > div {
   height: 100%;
 }
+/* The drop preview is drawn in the colour of the card being moved, resized
+   or dragged in (Dashboard.jsx sets --drop-color). */
 .react-grid-placeholder {
-  background: var(--color-text-secondary) !important;
-  opacity: 0.08 !important;
+  background: color-mix(
+    in srgb,
+    var(--drop-color, var(--color-text-secondary)) 10%,
+    transparent
+  ) !important;
+  outline: 1px dashed
+    color-mix(
+      in srgb,
+      var(--drop-color, var(--color-text-secondary)) 75%,
+      transparent
+    );
+  outline-offset: -1px;
+  opacity: 1 !important;
   border-radius: 0 !important;
 }
 .react-resizable-handle::after {
@@ -109,4 +125,93 @@ body {
 .card-scroll::-webkit-scrollbar-thumb {
   background: var(--color-hairline-strong);
   border-radius: 999px;
+}
+
+/* The library drawer unfolds: its height opens on the sheet curve while its
+   row is uncovered top-down, then the search field and the tiles glide in
+   from the right, one after another (each sets --i to its place). It closes
+   faster than it opens, all at once. */
+.library-drawer {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 240ms cubic-bezier(0.4, 0, 1, 1);
+}
+.library-drawer[data-open='true'] {
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 420ms var(--ease-sheet);
+}
+.library-drawer-row {
+  clip-path: inset(0 0 100% 0);
+  transition: clip-path 200ms;
+}
+[data-open='true'] .library-drawer-row {
+  clip-path: inset(0);
+  transition: clip-path 460ms var(--ease-sheet);
+}
+.library-reveal {
+  opacity: 0;
+  transform: translateX(28px);
+  transition:
+    opacity 120ms,
+    transform 120ms;
+}
+[data-open='true'] .library-reveal {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 360ms ease-out,
+    transform 560ms var(--ease-sheet);
+  transition-delay: calc(90ms + var(--i, 0) * 55ms);
+}
+
+/* The edit control's two labels share one cell and cross-fade. */
+.label-swap {
+  display: inline-grid;
+  justify-items: center;
+}
+.label-swap > * {
+  grid-area: 1 / 1;
+  transition:
+    opacity 160ms,
+    transform 220ms var(--ease-sheet);
+}
+.label-swap > :last-child,
+.label-swap[data-on='true'] > :first-child {
+  opacity: 0;
+  transform: translateY(6px);
+}
+.label-swap[data-on='true'] > :first-child {
+  transform: translateY(-6px);
+}
+.label-swap[data-on='true'] > :last-child {
+  opacity: 1;
+  transform: none;
+}
+
+/* While editing, the board recedes so the library comes forward. Pointing
+   at the board, or moving or resizing a card on it, brings it back (a
+   library drag clears data-recede, Dashboard.jsx). Only where there is a
+   pointer to hover with: on touch it would stay dimmed. */
+.board-recede {
+  transform-origin: 50% 0;
+  transition:
+    transform 420ms var(--ease-sheet),
+    filter 420ms;
+}
+@media (hover: hover) {
+  .board-recede[data-recede='true']:not(:hover):not(
+      :has(.react-draggable-dragging, .resizing)
+    ) {
+    transform: scale(0.985);
+    filter: brightness(0.72);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .library-drawer,
+  .library-drawer *,
+  .label-swap > *,
+  .board-recede {
+    transition: none !important;
+  }
 }
