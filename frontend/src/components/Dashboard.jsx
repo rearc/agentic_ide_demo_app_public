@@ -12,8 +12,10 @@ import LoadingDots from './LoadingDots'
 
 // Cards sit MARGIN px apart. Each draws a 1 px outline just outside its box
 // (Card.jsx), so the grid keeps OUTLINE px clear around its edge for it.
-const COLS = 12
-const ROW_HEIGHT = 46
+// 24 columns and short rows, so cards move and resize in fine steps: a card
+// 8 by 8 is a third of the width and 208 px tall.
+const COLS = 24
+const ROW_HEIGHT = 19
 const MARGIN = 8
 const OUTLINE = 1
 
@@ -33,7 +35,7 @@ function EmptyBoard() {
 }
 
 /**
- * The grid's 12 columns, drawn faintly behind the cards while editing so it
+ * The grid's columns, drawn faintly behind the cards while editing so it
  * shows where a card will land. Same padding and gaps as the grid, so each
  * guide lines up with a column.
  */
@@ -49,10 +51,11 @@ function ColumnGuides({ shown }) {
         padding: OUTLINE,
       }}
     >
+      {/* Every other column fainter, so 24 columns do not look busy. */}
       {Array.from({ length: COLS }, (_, i) => (
         <span
           key={i}
-          className="bg-text-primary/[0.025] shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-text-primary)_5%,transparent)]"
+          className={`bg-text-primary/[0.025] shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-text-primary)_5%,transparent)] ${i % 2 ? 'opacity-50' : ''}`}
         />
       ))}
     </div>
@@ -70,7 +73,7 @@ function buildLayout(cards, board) {
     .filter((card) => board[card.id] && !board[card.id].hidden)
     .map((card) => {
       const { x, y, w, h } = board[card.id]
-      return { i: String(card.id), x, y, w, h, minW: 2, minH: 2 }
+      return { i: String(card.id), x, y, w, h, minW: 4, minH: 4 }
     })
 }
 

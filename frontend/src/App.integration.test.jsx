@@ -230,7 +230,7 @@ describe('the whole board', () => {
       expect(savedBoards()).toEqual([
         [
           '/api/profiles/2',
-          { ...PROFILES[1].board, 3: boardEntry({ x: 0, y: 8 }) },
+          { ...PROFILES[1].board, 3: boardEntry({ x: 0, y: 8, w: 8, h: 8 }) },
         ],
       ]),
     )

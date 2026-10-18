@@ -170,13 +170,13 @@ describe('hiding and showing cards', () => {
     )
   })
 
-  it('brings a card never placed on this board in at 4 by 4', async () => {
+  it('brings a card never placed on this board in at 8 by 8', async () => {
     const board = await renderBoard()
 
     act(() => board.current.showCard(3))
 
     expect(board.current.board[3]).toEqual(
-      boardEntry({ x: 0, y: 4, w: 4, h: 4 }),
+      boardEntry({ x: 0, y: 4, w: 8, h: 8 }),
     )
   })
 
@@ -187,10 +187,10 @@ describe('hiding and showing cards', () => {
     await settle()
 
     expect(board.current.board[3]).toEqual(
-      boardEntry({ x: 4, y: 2, w: 4, h: 4 }),
+      boardEntry({ x: 4, y: 2, w: 8, h: 8 }),
     )
     expect(updateProfile).toHaveBeenCalledWith(10, {
-      board: { ...DEFAULT_BOARD, 3: boardEntry({ x: 4, y: 2, w: 4, h: 4 }) },
+      board: { ...DEFAULT_BOARD, 3: boardEntry({ x: 4, y: 2, w: 8, h: 8 }) },
     })
   })
 
@@ -208,7 +208,7 @@ describe('hiding and showing cards', () => {
       board: {
         ...DEFAULT_BOARD,
         1: boardEntry({ x: 0, y: 4, w: 6, h: 4 }),
-        3: boardEntry({ x: 0, y: 0, w: 4, h: 4 }),
+        3: boardEntry({ x: 0, y: 0, w: 8, h: 8 }),
       },
     })
   })
@@ -353,7 +353,7 @@ describe('writes', () => {
 
     expect(updateProfile).toHaveBeenCalledTimes(2)
     expect(updateProfile.mock.calls[1][1].board[3]).toEqual(
-      boardEntry({ x: 0, y: 0, w: 4, h: 4 }),
+      boardEntry({ x: 0, y: 0, w: 8, h: 8 }),
     )
   })
 

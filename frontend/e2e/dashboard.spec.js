@@ -242,7 +242,7 @@ test('a card dragged from the library lands where it is dropped', async ({
 
   await expect(placeholder).toBeVisible()
   // Dropped on the top-left corner, it takes that spot, and the card that was
-  // there (Weather, 4 rows tall) moves down below it.
+  // there (Weather, 8 rows tall) moves down below it.
   const place = async (slug) => {
     const { x, y, hidden } = await defaultEntry(request, slug)
     return { x, y, hidden }
@@ -251,7 +251,7 @@ test('a card dragged from the library lands where it is dropped', async ({
     .poll(async () => [await place('placeholder'), await place('weather')])
     .toEqual([
       { x: 0, y: 0, hidden: false },
-      { x: 0, y: 4, hidden: false },
+      { x: 0, y: 8, hidden: false },
     ])
 })
 

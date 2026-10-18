@@ -98,6 +98,8 @@ def test_chain_replays_over_a_database_holding_data(migration_db):
 
 # The revision before profiles: cards still carry `layout` and `is_active`.
 BEFORE_PROFILES = 'c7d8e9f0a1b2'
+# Profiles, with places in the 12-column grid the next revision doubles.
+PROFILES = 'd8e9f0a1b2c3'
 
 # `cards` as it stands at BEFORE_PROFILES, for writing and reading rows the
 # current model cannot describe.
@@ -147,7 +149,7 @@ def test_upgrade_moves_card_layouts_onto_a_default_profile(migration_db):
         insert_old_card(connection, 4, {'x': -1, 'y': 0, 'w': 4, 'h': 4})
         insert_old_card(connection, 5, None)
 
-    command.upgrade(config, 'head')
+    command.upgrade(config, PROFILES)
 
     profile = db.session.scalars(db.select(Profile)).one()
     assert profile.name == 'Default'
@@ -164,7 +166,7 @@ def test_downgrade_restores_card_layouts_from_the_first_profile(migration_db):
     """A hidden entry comes back inactive, and a card absent from the first
     profile comes back inactive with no layout, whatever later profiles hold."""
     config, engine = migration_db
-    command.upgrade(config, 'head')
+    command.upgrade(config, PROFILES)
     shown, hidden, elsewhere = (
         Card(slug=slug, title='A card', source='weather')
         for slug in ('shown', 'hidden', 'elsewhere')
@@ -192,6 +194,37 @@ def test_downgrade_restores_card_layouts_from_the_first_profile(migration_db):
         'hidden': ({'x': 4, 'y': 0, 'w': 6, 'h': 7}, False),
         'elsewhere': (None, False),
     }
+
+
+def place(profile_id, card_id):
+    """A board entry's place, read with plain SQL (no model, any revision)."""
+    with db.engine.connect() as connection:
+        return connection.execute(
+            sa.text(
+                'SELECT x, y, w, h FROM profile_cards'
+                ' WHERE profile_id = :p AND card_id = :c'
+            ),
+            {'p': profile_id, 'c': card_id},
+        ).one()
+
+
+def test_the_finer_grid_doubles_every_place_and_halving_restores_it(migration_db):
+    """Twice the cells, so every card keeps its spot and size on screen."""
+    config, _engine = migration_db
+    command.upgrade(config, PROFILES)
+    card = Card(slug='a-card', title='A card', source='weather')
+    db.session.add(card)
+    db.session.flush()
+    profile = db.session.scalars(db.select(Profile)).one()
+    profile.board_entries = [ProfileCard(card_id=card.id, x=4, y=3, w=6, h=7)]
+    db.session.commit()
+    ids = (profile.id, card.id)
+
+    command.upgrade(config, 'head')
+    assert tuple(place(*ids)) == (8, 6, 12, 14)
+
+    command.downgrade(config, PROFILES)
+    assert tuple(place(*ids)) == (4, 3, 6, 7)
 
 
 REBUILD_CARDS_MIGRATION = """

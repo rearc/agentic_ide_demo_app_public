@@ -22,17 +22,19 @@ from app.models.todo import Todo
 STARTER_TODO_TEXT = 'Try checking this off'
 DEFAULT_PROFILE_NAME = 'Default'
 
-# Where each default card sits on the "Default" profile's board, by slug.
+# Where each default card sits on the "Default" profile's board, by slug, in
+# grid cells: the board is 24 columns wide, and a row is 19 px plus an 8 px gap
+# (Dashboard.jsx), so 8 by 8 is a third of the width and 208 px tall.
 DEFAULT_BOARD = {
-    'weather': {'x': 0, 'y': 0, 'w': 4, 'h': 4},
-    'quote': {'x': 4, 'y': 0, 'w': 4, 'h': 4},
-    'placeholder': {'x': 8, 'y': 0, 'w': 4, 'h': 4},
-    'space': {'x': 0, 'y': 4, 'w': 6, 'h': 7},
-    'todo': {'x': 6, 'y': 4, 'w': 6, 'h': 7},
-    'timer': {'x': 0, 'y': 11, 'w': 4, 'h': 4},
-    'moon': {'x': 4, 'y': 11, 'w': 4, 'h': 4},
-    'daylight': {'x': 8, 'y': 11, 'w': 4, 'h': 4},
-    'iss': {'x': 0, 'y': 15, 'w': 6, 'h': 7},
+    'weather': {'x': 0, 'y': 0, 'w': 8, 'h': 8},
+    'quote': {'x': 8, 'y': 0, 'w': 8, 'h': 8},
+    'placeholder': {'x': 16, 'y': 0, 'w': 8, 'h': 8},
+    'space': {'x': 0, 'y': 8, 'w': 12, 'h': 14},
+    'todo': {'x': 12, 'y': 8, 'w': 12, 'h': 14},
+    'timer': {'x': 0, 'y': 22, 'w': 8, 'h': 8},
+    'moon': {'x': 8, 'y': 22, 'w': 8, 'h': 8},
+    'daylight': {'x': 16, 'y': 22, 'w': 8, 'h': 8},
+    'iss': {'x': 0, 'y': 30, 'w': 12, 'h': 14},
 }
 
 

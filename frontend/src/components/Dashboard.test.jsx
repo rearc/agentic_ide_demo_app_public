@@ -136,7 +136,7 @@ describe('layout computation', () => {
     renderDashboard({ board: { 1: boardEntry({ x: 2, y: 3, w: 6, h: 5 }) } })
 
     expect(renderedLayout()).toEqual([
-      { i: '1', x: 2, y: 3, w: 6, h: 5, minW: 2, minH: 2 },
+      { i: '1', x: 2, y: 3, w: 6, h: 5, minW: 4, minH: 4 },
     ])
   })
 
@@ -204,7 +204,7 @@ describe('dropping a card from the library', () => {
 
   it.each([
     ['its stored size, for a hidden card', 2, { w: 6, h: 5 }],
-    ['4 by 4, for a card never placed', 3, { w: 4, h: 4 }],
+    ['8 by 8, for a card never placed', 3, { w: 8, h: 8 }],
   ])('sizes the drop placeholder at %s', (_case, draggingCardId, size) => {
     renderDashboard({
       board: {

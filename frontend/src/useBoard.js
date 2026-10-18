@@ -5,7 +5,7 @@ import * as api from './api'
 export const PROFILE_STORAGE_KEY = 'dashboard.profileId'
 
 /** The size a card takes on a board where it has never been placed. */
-export const NEW_CARD_SIZE = { w: 4, h: 4 }
+export const NEW_CARD_SIZE = { w: 8, h: 8 }
 
 const EMPTY_BOARD = {}
 
