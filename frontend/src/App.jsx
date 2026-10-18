@@ -28,11 +28,16 @@ function Clock() {
   })
 
   return (
-    <div className="text-right hidden sm:block">
+    // nowrap: a wrapped date would make the header taller while editing,
+    // when the Library button takes room, and move the board. Below `md`
+    // there is room for the time only.
+    <div className="text-right whitespace-nowrap hidden sm:block">
       <p className="font-mono text-lg font-medium leading-none tabular-nums">
         {time}
       </p>
-      <p className="text-text-secondary text-xs mt-1.5">{date}</p>
+      <p className="hidden md:block text-text-secondary text-xs mt-1.5">
+        {date}
+      </p>
     </div>
   )
 }
