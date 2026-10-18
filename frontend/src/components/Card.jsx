@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { Component, useState, useEffect } from 'react'
 import { DotsSixVerticalIcon, XIcon } from '@phosphor-icons/react'
 import { fetchCardData } from '../api'
 import Icon from './Icon'
@@ -73,6 +73,35 @@ export function cardAccent(source) {
   // `accent` names a colour token in index.css (--color-<accent>).
   const accent = CARD_REGISTRY[source]?.accent
   return accent && `var(--color-${accent})`
+}
+
+/**
+ * Catches an error thrown while drawing a card's content, so one broken card
+ * says so in its own body instead of taking the whole board down with it.
+ * It sits inside the loaded branch below, so a fresh fetch starts it clean.
+ */
+class CardErrorBoundary extends Component {
+  state = { failed: false }
+
+  static getDerivedStateFromError() {
+    return { failed: true }
+  }
+
+  componentDidCatch(error) {
+    console.error(`The "${this.props.title}" card failed to render`, error)
+  }
+
+  render() {
+    if (!this.state.failed) return this.props.children
+    return (
+      <div role="alert" className="text-sm">
+        <p className="text-danger">This card could not be shown.</p>
+        <p className="text-xs text-text-muted mt-2">
+          The error is in the browser console.
+        </p>
+      </div>
+    )
+  }
 }
 
 const STATUS = {
@@ -227,7 +256,9 @@ export default function Card({ card, locked, movable = true, onRemove }) {
         ) : error ? (
           <p className="text-sm text-danger">{error}</p>
         ) : (
-          <CardContent data={data} card={card} onNote={setNote} />
+          <CardErrorBoundary title={card.title}>
+            <CardContent data={data} card={card} onNote={setNote} />
+          </CardErrorBoundary>
         )}
       </div>
     </div>

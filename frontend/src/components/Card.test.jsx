@@ -356,3 +356,73 @@ describe('load and error states', () => {
     expect(screen.queryByText('Overcast')).not.toBeInTheDocument()
   })
 })
+
+describe('a card whose content fails to render', () => {
+  /* Daylight given an empty answer is a real case: its content reads fields
+     that are not there and throws. Without a boundary that blanks the app. */
+  function daylightCard(overrides = {}) {
+    return cardRecord({ title: 'Daylight', source: 'daylight', ...overrides })
+  }
+
+  beforeEach(() => {
+    // React, jsdom and the boundary all report the error; keep the run quiet.
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    const quiet = (event) => event.preventDefault()
+    window.addEventListener('error', quiet)
+    return () => window.removeEventListener('error', quiet)
+  })
+
+  it('says so in its own body and keeps its header', async () => {
+    fetchCardData.mockResolvedValue({})
+
+    render(<Card card={daylightCard()} locked />)
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'This card could not be shown.',
+    )
+    expect(
+      screen.getByRole('heading', { name: 'Daylight' }),
+    ).toBeInTheDocument()
+    expect(console.error).toHaveBeenCalledWith(
+      'The "Daylight" card failed to render',
+      expect.any(Error),
+    )
+  })
+
+  it('leaves the cards beside it working', async () => {
+    fetchCardData.mockImplementation((source) =>
+      Promise.resolve(source === 'daylight' ? {} : WEATHER_DATA),
+    )
+
+    render(
+      <>
+        <Card card={daylightCard()} locked />
+        <Card card={weatherCard({ id: 2 })} locked />
+      </>,
+    )
+
+    expect(await screen.findByRole('alert')).toBeInTheDocument()
+    expect(await screen.findByText('Overcast')).toBeInTheDocument()
+  })
+
+  it('tries again when the card fetches anew', async () => {
+    fetchCardData.mockResolvedValueOnce({})
+    const { rerender } = render(
+      <Card card={daylightCard({ config: { city: 'Boston' } })} locked />,
+    )
+    await screen.findByRole('alert')
+
+    fetchCardData.mockResolvedValueOnce({
+      fallback: true,
+      description: 'Daylight times are unavailable',
+    })
+    rerender(
+      <Card card={daylightCard({ config: { city: 'Denver' } })} locked />,
+    )
+
+    expect(
+      await screen.findByText('Daylight times are unavailable'),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+})
