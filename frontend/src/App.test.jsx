@@ -29,6 +29,7 @@ vi.mock('./useBoard', async () => {
       draggingCardId: null,
       setDraggingCardId: noop,
       selectProfile: noop,
+      stepProfile: noop,
       saveLayout: noop,
       hideCard: noop,
       showCard: noop,

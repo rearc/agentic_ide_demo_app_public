@@ -232,6 +232,11 @@ test('a profile saved from the board keeps its own cards', async ({ page }) => {
   await page.reload()
   await expect(menu('Focus')).toBeVisible()
   await expect(quote).toHaveCount(0)
+
+  // The arrows turn through the profiles, wrapping past the last.
+  await page.getByRole('button', { name: 'Next profile' }).click()
+  await expect(menu('Default')).toBeVisible()
+  await expect(quote).toBeVisible()
 })
 
 for (const width of [1280, 760, 390]) {

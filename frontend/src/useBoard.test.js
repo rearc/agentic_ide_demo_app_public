@@ -215,6 +215,26 @@ describe('hiding and showing cards', () => {
 })
 
 describe('profiles', () => {
+  it.each([
+    ['next', 1],
+    ['previous, wrapping from the first to the last', -1],
+  ])('steps to the %s profile', async (_case, step) => {
+    const board = await renderBoard()
+
+    act(() => board.current.stepProfile(step))
+
+    expect(board.current.profile.name).toBe('Focus')
+  })
+
+  it('wraps from the last profile back to the first', async () => {
+    const board = await renderBoard()
+
+    act(() => board.current.stepProfile(1))
+    act(() => board.current.stepProfile(1))
+
+    expect(board.current.profile.name).toBe('Default')
+  })
+
   it('saves the shown board as a new profile, then shows it', async () => {
     const created = profileRecord({
       id: 12,

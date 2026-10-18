@@ -11,6 +11,10 @@ import {
 } from 'vitest'
 
 import App from './App'
+
+function nextArrow() {
+  return screen.getByRole('button', { name: 'Next profile' })
+}
 import {
   boardEntry,
   cardRecord,
@@ -230,6 +234,32 @@ describe('the whole board', () => {
         ],
       ]),
     )
+  })
+
+  it.each([
+    ['its next arrow', (user) => user.click(nextArrow())],
+    ['the right arrow key', (user) => user.keyboard('{ArrowRight}')],
+  ])('turns to the next profile with %s', async (_case, turn) => {
+    const user = userEvent.setup()
+    await renderApp()
+
+    await turn(user)
+
+    expect(
+      screen.getByRole('button', { name: 'Control Center, profile Focus' }),
+    ).toBeInTheDocument()
+  })
+
+  it('leaves the arrow keys alone while typing', async () => {
+    const user = userEvent.setup()
+    await renderApp()
+
+    await user.click(screen.getByPlaceholderText('Add a task…'))
+    await user.keyboard('{ArrowRight}')
+
+    expect(
+      screen.getByRole('button', { name: 'Control Center, profile Default' }),
+    ).toBeInTheDocument()
   })
 
   it('switches the board from the profile menu', async () => {

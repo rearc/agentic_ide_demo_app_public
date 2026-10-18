@@ -4,6 +4,7 @@ import Dashboard from './components/Dashboard'
 import EditButton from './components/EditButton'
 import LibraryDrawer from './components/LibraryDrawer'
 import ProfileMenu from './components/ProfileMenu'
+import ProfilePager from './components/ProfilePager'
 import AnimatedLabsLockup from './components/brand/AnimatedLabsLockup'
 import useBoard from './useBoard'
 
@@ -45,6 +46,19 @@ export default function App() {
   // Editing is one mode: the cards can be moved, resized and removed, and the
   // library is open to add more. "Edit board" turns it on, "Done" off.
   const [editing, setEditing] = useState(false)
+  // Which way the last profile change went: 'next' or 'prev' from the
+  // arrows, null from the menu. The board slides in from that side.
+  const [turn, setTurn] = useState(null)
+
+  function stepProfile(step) {
+    setTurn(step > 0 ? 'next' : 'prev')
+    board.stepProfile(step)
+  }
+
+  function selectProfile(id) {
+    setTurn(null)
+    board.selectProfile(id)
+  }
 
   return (
     <IconContext.Provider value={ICON_STYLE}>
@@ -58,14 +72,16 @@ export default function App() {
               title="Rearc AI Labs"
             />
             <span className="h-7 w-px shrink-0 bg-hairline-strong" />
-            <ProfileMenu
-              profiles={board.profiles}
-              profile={board.profile}
-              onSelect={board.selectProfile}
-              onCreate={board.createProfile}
-              onRename={board.renameProfile}
-              onDelete={board.deleteProfile}
-            />
+            <ProfilePager count={board.profiles.length} onStep={stepProfile}>
+              <ProfileMenu
+                profiles={board.profiles}
+                profile={board.profile}
+                onSelect={selectProfile}
+                onCreate={board.createProfile}
+                onRename={board.renameProfile}
+                onDelete={board.deleteProfile}
+              />
+            </ProfilePager>
             <div className="ml-auto flex items-center gap-3">
               {editing && (
                 <span className="hidden 2xl:inline text-xs text-text-secondary">
@@ -95,6 +111,8 @@ export default function App() {
           <Dashboard
             cards={board.cards}
             board={board.board}
+            profileId={board.profile?.id}
+            turn={turn}
             locked={!editing}
             loading={board.loading}
             error={board.error}

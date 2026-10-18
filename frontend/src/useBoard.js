@@ -108,6 +108,14 @@ export default function useBoard() {
       return shownProfile(profilesRef.current, shownIdRef.current)
     }
 
+    /** Show the profile `step` places along (1 next, -1 previous), wrapping. */
+    function stepProfile(step) {
+      const list = profilesRef.current
+      if (list.length < 2) return
+      const at = list.findIndex((p) => p.id === current()?.id)
+      selectProfile(list[(at + step + list.length) % list.length].id)
+    }
+
     function enqueue(send) {
       const result = queueRef.current.then(send)
       // The next write waits for this one to settle either way. Its failure is
@@ -217,6 +225,7 @@ export default function useBoard() {
 
     return {
       selectProfile,
+      stepProfile,
       saveLayout,
       hideCard,
       showCard,

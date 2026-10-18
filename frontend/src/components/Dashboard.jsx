@@ -5,7 +5,7 @@ import {
 } from 'react-grid-layout'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { placedSize } from '../useBoard'
 import Card, { DRAG_HANDLE_CLASS, cardAccent } from './Card'
 import LoadingDots from './LoadingDots'
@@ -104,6 +104,8 @@ const dropFirstCompactor = {
 export default function Dashboard({
   cards,
   board,
+  profileId,
+  turn,
   locked,
   loading,
   error,
@@ -115,6 +117,29 @@ export default function Dashboard({
   const { width, containerRef, mounted } = useContainerWidth()
   // The card being moved or resized on the grid, for the preview's colour.
   const [movingId, setMovingId] = useState(null)
+  const pageRef = useRef(null)
+
+  // A page turn: the board slides in from the side the arrow points to.
+  // Animated in place rather than remounting the board, so the cards both
+  // profiles show keep their data instead of fetching it again.
+  useEffect(() => {
+    const page = pageRef.current
+    if (!turn || !page?.animate) return
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+    const from = turn === 'next' ? 48 : -48
+    page.getAnimations().forEach((a) => a.cancel())
+    page.animate(
+      [
+        { opacity: 0, transform: `translateX(${from}px)` },
+        { opacity: 1, transform: 'none' },
+      ],
+      {
+        duration: 420,
+        easing:
+          getComputedStyle(page).getPropertyValue('--ease-sheet') || 'ease-out',
+      },
+    )
+  }, [profileId, turn])
 
   const layout = buildLayout(cards, board)
   const cardsById = new Map(cards.map((card) => [String(card.id), card]))
@@ -219,11 +244,13 @@ export default function Dashboard({
         >
           {layout.map((item, i) => {
             const card = cardsById.get(item.i)
+            // On a page turn the board slides in whole, without the cards'
+            // own staggered entrance.
             return (
               <div
                 key={item.i}
-                className="animate-card-enter"
-                style={{ animationDelay: `${i * 0.06}s` }}
+                className={turn ? undefined : 'animate-card-enter'}
+                style={turn ? undefined : { animationDelay: `${i * 0.06}s` }}
               >
                 <Card
                   card={card}
@@ -252,7 +279,7 @@ export default function Dashboard({
       data-recede={!locked && !stacked && draggingCardId === null}
       style={{ '--drop-color': cardAccent(previewCard?.source) }}
     >
-      {content}
+      <div ref={pageRef}>{content}</div>
     </div>
   )
 }
