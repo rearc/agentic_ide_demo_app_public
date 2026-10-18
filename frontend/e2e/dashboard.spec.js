@@ -34,6 +34,18 @@ async function fetchCards(request) {
   return response.json()
 }
 
+async function fetchProfiles(request) {
+  const response = await request.get('/api/profiles')
+  return response.json()
+}
+
+/** The seeded "Default" profile's entry for the card with `slug`. */
+async function defaultEntry(request, slug) {
+  const card = seededCards.find((c) => c.slug === slug)
+  const [profile] = await fetchProfiles(request)
+  return profile.board[card.id]
+}
+
 async function deleteAllTodos(request, cardId) {
   const response = await request.get(`/api/todos?card_id=${cardId}`)
   for (const todo of await response.json()) {
@@ -42,17 +54,25 @@ async function deleteAllTodos(request, cardId) {
 }
 
 let seededCards
+let seededDefault
 
 test.beforeAll(async ({ request }) => {
   seededCards = await fetchCards(request)
+  ;[seededDefault] = await fetchProfiles(request)
 })
 
-// Specs share one database, so each one leaves it as it found it.
+// Specs share one database, so each one leaves it as it found it: the seeded
+// "Default" board, no other profile, no todos.
 test.afterEach(async ({ request }) => {
+  for (const profile of await fetchProfiles(request)) {
+    if (profile.id !== seededDefault.id) {
+      await request.delete(`/api/profiles/${profile.id}`)
+    }
+  }
+  await request.patch(`/api/profiles/${seededDefault.id}`, {
+    data: { board: seededDefault.board },
+  })
   for (const card of seededCards) {
-    await request.put(`/api/cards/${card.id}`, {
-      data: { layout: card.layout },
-    })
     if (card.source === 'todo') await deleteAllTodos(request, card.id)
   }
 })
@@ -105,7 +125,7 @@ test('a card dragged by its header keeps its new position after a reload', async
   page,
   request,
 }) => {
-  const before = (await fetchCards(request)).find((c) => c.slug === 'weather')
+  const before = await defaultEntry(request, 'weather')
   await page.getByRole('button', { name: 'Customize layout' }).click()
 
   const header = page.locator('.card-drag-handle', { hasText: 'Weather' })
@@ -115,22 +135,92 @@ test('a card dragged by its header keeps its new position after a reload', async
   await page.mouse.move(box.x + 500, box.y + 300, { steps: 20 })
   await page.mouse.up()
 
-  // The dashboard saves 500 ms after the last change.
-  await expect
-    .poll(async () => {
-      const weather = (await fetchCards(request)).find(
-        (c) => c.slug === 'weather',
-      )
-      return weather.layout
-    })
-    .not.toEqual(before.layout)
-  const saved = (await fetchCards(request)).find(
-    (c) => c.slug === 'weather',
-  ).layout
+  // Saved when the drag ends; the request is still in flight here.
+  await expect.poll(() => defaultEntry(request, 'weather')).not.toEqual(before)
+  const saved = await defaultEntry(request, 'weather')
 
   await page.reload()
-  const after = (await fetchCards(request)).find((c) => c.slug === 'weather')
-  expect(after.layout).toEqual(saved)
+  await expect(page.getByRole('heading', { name: 'Weather' })).toBeVisible()
+  expect(await defaultEntry(request, 'weather')).toEqual(saved)
+})
+
+test('a removed card stays off the board, and comes back from the library', async ({
+  page,
+  request,
+}) => {
+  const weather = page.getByRole('heading', { name: 'Weather' })
+  await page.getByRole('button', { name: 'Customize layout' }).click()
+  await page.getByRole('button', { name: 'Remove "Weather"' }).click()
+  await expect(weather).toHaveCount(0)
+  await expect
+    .poll(async () => (await defaultEntry(request, 'weather')).hidden)
+    .toBe(true)
+
+  await page.reload()
+  await expect(page.getByRole('heading', { name: 'Daily Quote' })).toBeVisible()
+  await expect(weather).toHaveCount(0)
+
+  await page.getByRole('button', { name: 'Library' }).click()
+  await page.getByRole('button', { name: 'Add "Weather"' }).click()
+  await expect(weather).toBeVisible()
+
+  await page.reload()
+  await expect(weather).toBeVisible()
+})
+
+test('a card dragged from the library lands on the board', async ({
+  page,
+  request,
+}) => {
+  const placeholder = page.getByRole('heading', { name: 'Coming Soon' })
+  await page.getByRole('button', { name: 'Customize layout' }).click()
+  await page.getByRole('button', { name: 'Remove "Coming Soon"' }).click()
+  await expect(placeholder).toHaveCount(0)
+
+  await page.getByRole('button', { name: 'Library' }).click()
+  const tile = page
+    .getByRole('region', { name: 'Card library' })
+    .getByRole('listitem')
+    .filter({ hasText: 'Coming Soon' })
+  await tile.dragTo(page.locator('.react-grid-layout'), {
+    targetPosition: { x: 40, y: 40 },
+  })
+
+  await expect(placeholder).toBeVisible()
+  await expect
+    .poll(async () => (await defaultEntry(request, 'placeholder')).hidden)
+    .toBe(false)
+})
+
+test('a profile saved from the board keeps its own cards', async ({ page }) => {
+  const quote = page.getByRole('heading', { name: 'Daily Quote' })
+  const menu = (name) =>
+    page.getByRole('button', { name: `Control Center, profile ${name}` })
+  const pick = (name) =>
+    page
+      .getByRole('region', { name: 'Profiles' })
+      .getByRole('button', { name, exact: true })
+
+  await menu('Default').click()
+  await page.getByRole('button', { name: 'Save as new profile' }).click()
+  await page.getByRole('textbox', { name: 'New profile name' }).fill('Focus')
+  await page.getByRole('button', { name: 'Save' }).click()
+  await expect(menu('Focus')).toBeVisible()
+
+  await page.getByRole('button', { name: 'Customize layout' }).click()
+  await page.getByRole('button', { name: 'Remove "Daily Quote"' }).click()
+  await expect(quote).toHaveCount(0)
+
+  await menu('Focus').click()
+  await pick('Default').click()
+  await expect(quote).toBeVisible()
+
+  // The shown profile is remembered across a reload.
+  await menu('Default').click()
+  await pick('Focus').click()
+  await page.reload()
+  await expect(menu('Focus')).toBeVisible()
+  await expect(quote).toHaveCount(0)
 })
 
 for (const width of [1280, 760, 390]) {

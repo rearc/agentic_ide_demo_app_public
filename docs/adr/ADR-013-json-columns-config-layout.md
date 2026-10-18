@@ -1,7 +1,7 @@
 # ADR-013: JSON Columns for Card Configuration and Layout
 
 **Date:** March 2026
-**Status:** Accepted
+**Status:** Accepted; the layout half superseded by ADR-019
 
 ### Context
 
