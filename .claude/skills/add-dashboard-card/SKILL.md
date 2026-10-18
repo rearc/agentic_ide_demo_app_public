@@ -228,7 +228,7 @@ New behavior ships with tests (`TEST-1`), and tests never touch the network (`TE
    - Correct title and icon in the header (the description shows when hovering the title)
    - Data loaded from your service (not a loading spinner or error), and `Live` in the header for a data card
    - The card's colour in the tab beside the header and on its icon
-5. Unlock the layout and drag the card: confirm it keeps its position after a reload. Open the Library: the card is listed, marked "On board"
+5. Choose "Edit board" and drag the card: confirm it keeps its position after a reload. The library that opens lists the card, marked "On board"
 
 ## Quick Checklist
 
