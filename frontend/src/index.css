@@ -1,9 +1,9 @@
 @import 'tailwindcss';
 
-/* Design tokens. One palette for the whole board: graphite panels joined by
-   hairlines, light text, and colour only where it carries meaning (a card's
-   live or fallback status, an error). `static` emits every token as a CSS
-   variable on :root even when no utility class uses it. */
+/* Design tokens: graphite panels joined by hairlines, light text, a colour
+   per card, and status colours (live, fallback, error). `static` emits every
+   token as a CSS variable on :root even when no utility class uses it, which
+   the card colours need: Card.jsx reads them through var(). */
 @theme static {
   --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -19,6 +19,24 @@
   --color-text-primary: #e8eaee;
   --color-text-secondary: #8b93a1;
   --color-text-muted: #7d8594;
+
+  /* Card colours, in two layers. The palette holds the raw colours, named
+     for what they are (Rally white; its dark red and navy lifted to read on
+     graphite). Each card's colour then points at one of them, named for the
+     card; CARD_REGISTRY's `accent` names that card colour, and components
+     never use a palette colour or a hex value directly. A new card points at
+     a palette colour, or adds a new palette colour first. */
+  --color-rally-gold: #e8a900;
+  --color-rally-orange: #e06c00;
+  --color-rally-red: #cc2f1f;
+  --color-rally-raspberry: #c32258;
+  --color-rally-navy: #2e73b2;
+
+  --color-card-weather: var(--color-rally-gold);
+  --color-card-quote: var(--color-rally-orange);
+  --color-card-placeholder: var(--color-rally-red);
+  --color-card-space: var(--color-rally-raspberry);
+  --color-card-todo: var(--color-rally-navy);
 
   --color-live: #3ddc84;
   --color-fallback: #f5a524;

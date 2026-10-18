@@ -43,6 +43,27 @@ describe('chrome', () => {
     ).toBeInTheDocument()
   })
 
+  it('marks the header with the colour its registry entry names', async () => {
+    const { container } = render(<Card card={weatherCard()} locked />)
+    await screen.findByRole('heading', { name: 'Weather' })
+
+    expect(container.querySelector('[data-card-tab]').style.background).toBe(
+      'var(--color-card-weather)',
+    )
+    expect(container.querySelector('[data-icon="cloud-sun"]').style.color).toBe(
+      'var(--color-card-weather)',
+    )
+  })
+
+  it('gives an unregistered card no colour', async () => {
+    const { container } = render(
+      <Card card={cardRecord({ source: 'not-a-real-source' })} locked />,
+    )
+    await screen.findByText(/no component is registered/i)
+
+    expect(container.querySelector('[data-card-tab]')).toBeNull()
+  })
+
   it('draws no icon for a card with an empty or unknown icon name', async () => {
     const { rerender } = render(
       <Card card={cardRecord({ icon: '☀️' })} locked />,

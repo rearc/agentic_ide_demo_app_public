@@ -39,10 +39,16 @@ export const ICONS = {
 }
 
 /** The named icon, decorative; nothing for an empty or unknown name. */
-export default function Icon({ name, size = 18, className = '' }) {
+export default function Icon({ name, size = 18, className = '', style }) {
   const Glyph = ICONS[name]
   if (!Glyph) return null
   return (
-    <Glyph size={size} className={className} aria-hidden data-icon={name} />
+    <Glyph
+      size={size}
+      className={className}
+      style={style}
+      aria-hidden
+      data-icon={name}
+    />
   )
 }

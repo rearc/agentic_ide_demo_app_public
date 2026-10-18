@@ -19,11 +19,15 @@ import LoadingDots from './LoadingDots'
 export const DRAG_HANDLE_CLASS = 'card-drag-handle'
 
 const CARD_REGISTRY = {
-  weather: { component: WeatherCard, needsData: true },
-  quote: { component: QuoteCard, needsData: true },
-  space: { component: SpaceCard, needsData: true },
-  placeholder: { component: PlaceholderCard, needsData: false },
-  todo: { component: TodoCard, needsData: false },
+  weather: { component: WeatherCard, accent: 'card-weather', needsData: true },
+  quote: { component: QuoteCard, accent: 'card-quote', needsData: true },
+  space: { component: SpaceCard, accent: 'card-space', needsData: true },
+  placeholder: {
+    component: PlaceholderCard,
+    accent: 'card-placeholder',
+    needsData: false,
+  },
+  todo: { component: TodoCard, accent: 'card-todo', needsData: false },
 }
 
 /**
@@ -130,6 +134,9 @@ export default function Card({ card, locked }) {
   }, [card.source, entry.needsData, configKey])
 
   const CardContent = entry.component
+  // `accent` names a colour token in index.css (--color-<accent>); an entry
+  // without one (the unregistered card) gets no colour.
+  const accent = entry.accent && `var(--color-${entry.accent})`
   let status = null
   if (entry.needsData && !loading) {
     if (error) status = 'error'
@@ -139,11 +146,23 @@ export default function Card({ card, locked }) {
   return (
     // The outline draws into the 1 px gap the grid leaves, so neighbouring
     // panels share a single hairline.
-    <div className="h-full flex flex-col bg-panel shadow-[0_0_0_1px_var(--color-hairline)]">
+    <div className="relative h-full flex flex-col bg-panel shadow-[0_0_0_1px_var(--color-hairline)]">
+      {accent && (
+        <span
+          aria-hidden
+          data-card-tab
+          className="absolute left-0 top-0 h-11 w-1.5"
+          style={{ background: accent }}
+        />
+      )}
       <div
         className={`flex items-center gap-2.5 h-11 shrink-0 px-4 border-b border-hairline ${!locked ? `${DRAG_HANDLE_CLASS} cursor-grab active:cursor-grabbing` : ''}`}
       >
-        <Icon name={card.icon} className="shrink-0 text-text-secondary" />
+        <Icon
+          name={card.icon}
+          className="shrink-0 text-text-secondary"
+          style={{ color: accent }}
+        />
         <h2
           className="min-w-0 truncate text-sm font-semibold"
           title={card.description || undefined}
