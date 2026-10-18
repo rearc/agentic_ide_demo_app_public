@@ -32,6 +32,7 @@
   --color-rally-raspberry: #c32258;
   --color-rally-navy: #2e73b2;
   --color-rally-sand: #c9b28a;
+  --color-rally-silver: #9aa6b8;
 
   --color-card-weather: var(--color-rally-gold);
   --color-card-quote: var(--color-rally-orange);
@@ -39,6 +40,7 @@
   --color-card-space: var(--color-rally-raspberry);
   --color-card-todo: var(--color-rally-navy);
   --color-card-timer: var(--color-rally-sand);
+  --color-card-moon: var(--color-rally-silver);
 
   --color-live: #3ddc84;
   --color-fallback: #f5a524;

@@ -30,6 +30,7 @@ DEFAULT_BOARD = {
     'space': {'x': 0, 'y': 4, 'w': 6, 'h': 7},
     'todo': {'x': 6, 'y': 4, 'w': 6, 'h': 7},
     'timer': {'x': 0, 'y': 11, 'w': 4, 'h': 4},
+    'moon': {'x': 4, 'y': 11, 'w': 4, 'h': 4},
 }
 
 
@@ -88,6 +89,14 @@ def default_cards():
             icon='timer',
             source='timer',
             position=6,
+        ),
+        Card(
+            slug='moon',
+            title='Moon',
+            description="Tonight's moon phase",
+            icon='moon',
+            source='moon',
+            position=7,
         ),
     ]
 

@@ -21,7 +21,7 @@ DEFAULT_SLUGS = [c.slug for c in default_cards()]
 
 # Cards that never call /api/data/<source>: the todo card owns /api/todos, and
 # the placeholder renders without fetching.
-SOURCES_WITHOUT_A_SERVICE = {'todo', 'placeholder', 'timer'}
+SOURCES_WITHOUT_A_SERVICE = {'todo', 'placeholder', 'timer', 'moon'}
 
 
 def all_cards():

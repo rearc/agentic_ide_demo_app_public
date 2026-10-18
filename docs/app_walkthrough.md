@@ -96,7 +96,7 @@ That's the app. Everything below is just the detail of each stop.
 
 **The key frontend idea — three kinds of cards.** All are just one entry in `CARD_REGISTRY`; they differ only in *where their data lives*:
 - **Data card** (`needsData: true`) — fetches live data from `/api/data/<source>` through a backend service. Owns no table. *(weather, quote, space)*
-- **Static card** (`needsData: false`) — fixed or purely client-side content, no backend at all. *(placeholder; timer, a countdown with a Pomodoro mode)*
+- **Static card** (`needsData: false`) — fixed or purely client-side content, no backend at all. *(placeholder; timer, a countdown with a Pomodoro mode; moon, the phase worked out from the date)*
 - **Stateful card** (`needsData: false`) — owns **persisted data** via its own model, routes, and table, so it needs a **migration**. It talks to its own endpoint, not `/api/data`. *(todo)*
 
 That last distinction is the whole cost story of adding a card: static is cheapest, a data card adds one service, and only a **stateful** card pays for a database migration (see [the punchline](#the-punchline-adding-a-feature--adding-a-card)).
