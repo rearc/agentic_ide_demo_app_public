@@ -1,6 +1,7 @@
 ---
 name: coin-flip-true-random
 description: Flips a coin using random.org atmospheric noise instead of a pseudorandom PRNG.
+allowed-tools: Bash(python3 *)
 ---
 
 # Coin Flip (True Random)

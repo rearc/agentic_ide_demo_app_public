@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-10-18T00:17:44.978440+00:00'
+generated_at: '2026-10-18T03:41:09.755493+00:00'
 apm_version: 0.33.0
 dependencies:
 - repo_url: _local/rearc-pocock-kit
@@ -93,14 +93,14 @@ dependencies:
     .claude/skills/add-dashboard-card/references/weather-card-example.md: sha256:50da688d198c43e79d711e87f5d78042369354fff3f1df735a47b8c0eebf6021
     .claude/skills/coin-flip-code/SKILL.md: sha256:77ced8c51b49c4d24a0201ab9ec3286514cbffa6c665a1f5b3d667f33f4a48da
     .claude/skills/coin-flip-code/scripts/flip.py: sha256:76180c7779923387eaa813624ae91e97d7549226f292c783f794dc0992c11f5a
-    .claude/skills/coin-flip-true-random/SKILL.md: sha256:2d3ced2328642d28c002b7f3d40bcdf6ed3a51b790d15cb89fc5b5481892964b
+    .claude/skills/coin-flip-true-random/SKILL.md: sha256:a1e4c6c2158a79e25206b02924be0156ce934c8363146b3b2741051b74798124
     .claude/skills/coin-flip-true-random/scripts/flip.py: sha256:67c9d6a27b3a83447e329d08b55b5a9c0441d942199e1165a63a2563e64c25e1
     .claude/skills/coin-flip/SKILL.md: sha256:b4e7834fc4f070d8e88a0203636e835e3ee67b5fb761a5457e155660e472ed3e
     .claude/skills/commit-message/SKILL.md: sha256:dbd6d778bda1a897ca6d4f07fba6ea1c77d2451587c4f7ff49639f5380c06ebd
     .claude/skills/commit-message/references/commit_conventions.md: sha256:f0164ec9209aba5dd9a0f2c11adf6056fdc8cb51b386d330df0f7660430ad300
     .claude/skills/flask-api-conventions/SKILL.md: sha256:b420f7a0311f31905a97eb6ee0d73a3731ba6ca2ddb121a8c65ea532cf47e8ee
-    .claude/skills/flip-until-heads/SKILL.md: sha256:006ba460cd59fc48347c0b5f9518fae1eb6a036fcf61be54b560083bd6f98d0f
-    .claude/skills/frontmatter-reference/SKILL.md: sha256:56a13b318ae4d862b8f0f5dc9a36b8089c9f88dec1d00862183d2132ecec9e8a
+    .claude/skills/flip-until-heads/SKILL.md: sha256:d94b6d802e0db74de5dd1b130ce4f4a676f9eac6cc73e03cb9c15b1ccec388fa
+    .claude/skills/frontmatter-reference/SKILL.md: sha256:99e5a45091e3414e797e8d0940d7a1d4eebb4920d33ea3ba74299cda4119a869
     .claude/skills/security-checklist/SKILL.md: sha256:0bbe4f62680a7d0dd112b909a1616a5773072efcd80fdbcc4791d9c78abb85a9
   source: local
   local_path: ../ai-toolkit/packages/rearc-workshop-demo-kit
@@ -1199,7 +1199,7 @@ deployments:
   owners:
   - ../ai-toolkit/packages/rearc-workshop-demo-kit
   active_owner: ../ai-toolkit/packages/rearc-workshop-demo-kit
-  content_hash: sha256:2d3ced2328642d28c002b7f3d40bcdf6ed3a51b790d15cb89fc5b5481892964b
+  content_hash: sha256:a1e4c6c2158a79e25206b02924be0156ce934c8363146b3b2741051b74798124
 - kind: project-relative
   target: claude
   value: .claude/skills/coin-flip-true-random/scripts/flip.py
@@ -1361,7 +1361,7 @@ deployments:
   owners:
   - ../ai-toolkit/packages/rearc-workshop-demo-kit
   active_owner: ../ai-toolkit/packages/rearc-workshop-demo-kit
-  content_hash: sha256:006ba460cd59fc48347c0b5f9518fae1eb6a036fcf61be54b560083bd6f98d0f
+  content_hash: sha256:d94b6d802e0db74de5dd1b130ce4f4a676f9eac6cc73e03cb9c15b1ccec388fa
 - kind: project-relative
   target: claude
   value: .claude/skills/frontend-design
@@ -1406,7 +1406,7 @@ deployments:
   owners:
   - ../ai-toolkit/packages/rearc-workshop-demo-kit
   active_owner: ../ai-toolkit/packages/rearc-workshop-demo-kit
-  content_hash: sha256:56a13b318ae4d862b8f0f5dc9a36b8089c9f88dec1d00862183d2132ecec9e8a
+  content_hash: sha256:99e5a45091e3414e797e8d0940d7a1d4eebb4920d33ea3ba74299cda4119a869
 - kind: project-relative
   target: claude
   value: .claude/skills/grill-me

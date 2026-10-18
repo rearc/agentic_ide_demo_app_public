@@ -22,12 +22,12 @@ A guided tour of every documented `SKILL.md` frontmatter field. This skill is **
 | `disable-model-invocation` | `true` = only you can invoke it (Claude won't load it on its own); also keeps it from being preloaded into subagents or run by a scheduled task. Default `false`. | Workflows with side effects or timing you control: `/commit`, `/deploy`. | `commit-message`, this skill |
 | `user-invocable` | `false` = hidden from the `/` menu and not run when you type `/name`; only Claude invokes it. Default `true`. | Background knowledge that isn't a user action, e.g. domain conventions. | `flask-api-conventions` |
 | `allowed-tools` | Tools Claude may use **without a permission prompt** during the turn that invokes the skill; the grant clears when you send your next message. It does not restrict other tools: permission settings still govern them. Space- or comma-separated string, or YAML list. `${CLAUDE_SKILL_DIR}` works inside Bash rules here. | No prompts for a skill's known tool calls. | `coin-flip-code` (`Bash(python3 *)`), `commit-message` (`Bash(git ...)`) |
-| `disallowed-tools` | Tools **removed** from Claude's pool while the skill is active; clears when you send your next message. | Autonomous loops that must never call a tool (the docs' example: `AskUserQuestion` in a background loop). | `flip-until-heads` |
+| `disallowed-tools` | Tools **removed** from Claude's pool while the skill is active; clears when you send your next message. | Autonomous loops that must never call a tool (the docs' example: `AskUserQuestion` in a background loop; subagents never have it, so it matters in the main conversation). | (none yet) |
 | `model` | Model for the rest of the current turn (not saved; the session model resumes on your next prompt). Accepts `/model` values or `inherit`. With `context: fork`, it sets the forked subagent's model. | Pin a heavy skill to a stronger model, or a trivial one to a smaller model, without changing your session. | `coin-flip` (`sonnet`) |
 | `effort` | Effort level while active (`low`, `medium`, `high`, `xhigh`, `max`; which ones exist depends on the model); overrides the session effort. | Pin a heavy workflow high, a trivial one low. | `add-dashboard-card` (`high`) |
 | `context` | `fork` = run the skill in a forked subagent; the SKILL.md content becomes that subagent's prompt, without the conversation history. | Isolate verbose work; only a summary comes back. | `flip-until-heads` |
 | `agent` | Which subagent type runs the fork when `context: fork` is set (e.g. `Explore`, `general-purpose`, or one of yours). | Match the fork to the job. | `flip-until-heads` |
-| `background` | Only with `context: fork`. `false` = wait for the fork's result in the turn that invoked the skill; default `true` runs it in the background and the result arrives when it finishes. A background fork also gets the narrower tool set of background subagents. Claude Code 2.1.218+. | Set `false` when the next step needs the result, or the fork needs a tool background subagents lack. | (none yet) |
+| `background` | Only with `context: fork`. `false` = wait for the fork's result in the turn that invoked the skill; default `true` runs it in the background and the result arrives when it finishes. A background fork also gets the narrower tool set of background subagents. Claude Code 2.1.218+. | Set `false` when the next step needs the result, or the fork needs a tool background subagents lack. | `flip-until-heads` |
 | `hooks` | Hooks registered when the skill is invoked; they keep running for the rest of the session (the `once` option fires one only once). | Enforce or observe around one workflow. | (none: reference only) |
 | `paths` | Globs that limit when Claude loads the skill automatically: only when working with matching files. Comma-separated string or YAML list; same format as path-scoped rules. | Load knowledge only where it applies. | `flask-api-conventions` (`backend/**`) |
 | `shell` | Shell for `` !`command` `` and ```` ```! ```` injection: `bash` (default) or `powershell` (needs the PowerShell tool, on by default on Windows without Git Bash). | Skills that inject live command output on Windows. | (none yet) |
@@ -37,7 +37,7 @@ A guided tour of every documented `SKILL.md` frontmatter field. This skill is **
 
 > **Outside Claude Code** (claude.ai uploads, the Skills API, `package_skill.py`), only six fields are allowed: `name`, `description`, `license`, `compatibility`, `metadata`, `allowed-tools`. Any other field fails the upload with "Unexpected key(s) in SKILL.md frontmatter". A skill meant for both places sticks to those six.
 >
-> **`model` vs `effort`:** `model` switches *which* Claude model runs the skill; `effort` tunes how much it thinks within that model. Both are temporary per-invocation overrides. `hooks`, `shell`, `background` and `compatibility` have no live example in this repo.
+> **`model` vs `effort`:** `model` switches *which* Claude model runs the skill; `effort` tunes how much it thinks within that model. Both are temporary per-invocation overrides. `hooks`, `shell`, `disallowed-tools` and `compatibility` have no live example in this repo.
 
 ## String substitutions (in the body, filled in before Claude sees the skill)
 
@@ -66,6 +66,6 @@ Settings can turn injection off (`"disableSkillShellExecution": true`), which is
 ## Where to see them live
 
 - **Invocation control:** `commit-message` (`disable-model-invocation`), `flask-api-conventions` (`user-invocable: false`).
-- **Tool control:** `coin-flip-code` / `commit-message` (`allowed-tools`), `flip-until-heads` (`disallowed-tools`).
+- **Tool control:** `coin-flip-code`, `coin-flip-true-random`, `commit-message` (`allowed-tools`).
 - **Arguments + injection:** `add-dashboard-card` (`arguments`/`$slug`), `commit-message` (`` !`git diff --staged` ``).
-- **Subagent + effort + paths:** `flip-until-heads` (`context: fork` + `agent`), `add-dashboard-card` (`effort`), `flask-api-conventions` (`paths`).
+- **Subagent + effort + paths:** `flip-until-heads` (`context: fork` + `agent` + `background: false`), `add-dashboard-card` (`effort`), `flask-api-conventions` (`paths`).
