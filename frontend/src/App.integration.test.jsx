@@ -240,7 +240,9 @@ describe('the whole board', () => {
     expect(
       screen.getByRole('button', { name: 'Try checking this off' }),
     ).toBeInTheDocument()
-    expect(fetchMock).toHaveBeenCalledWith('/api/todos?card_id=5')
+    expect(fetchMock).toHaveBeenCalledWith('/api/todos?card_id=5', {
+      method: 'GET',
+    })
   })
 })
 

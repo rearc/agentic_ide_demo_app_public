@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import LoadingDots from '../LoadingDots'
 import { createTodo, deleteTodo, fetchTodos, updateTodo } from '../../api'
 
 export default function TodoCard({ card }) {
@@ -37,17 +38,13 @@ export default function TodoCard({ card }) {
   }
 
   function toggleDone(todoId) {
+    const todo = items.find((x) => x.id === todoId)
+    if (!todo) return
+    const nextDone = !todo.done
     setError(null)
-    let nextDone
-    let found = false
-    setItems((prev) => {
-      const t = prev.find((x) => x.id === todoId)
-      if (!t) return prev
-      found = true
-      nextDone = !t.done
-      return prev.map((x) => (x.id === todoId ? { ...x, done: nextDone } : x))
-    })
-    if (!found) return
+    setItems((prev) =>
+      prev.map((x) => (x.id === todoId ? { ...x, done: nextDone } : x)),
+    )
     updateTodo(todoId, { done: nextDone })
       .then((updated) => {
         setItems((prev) => prev.map((x) => (x.id === updated.id ? updated : x)))
@@ -55,7 +52,7 @@ export default function TodoCard({ card }) {
       .catch((err) => {
         setError(err.message)
         setItems((prev) =>
-          prev.map((x) => (x.id === todoId ? { ...x, done: !nextDone } : x)),
+          prev.map((x) => (x.id === todoId ? { ...x, done: todo.done } : x)),
         )
       })
   }
@@ -105,23 +102,7 @@ export default function TodoCard({ card }) {
   }
 
   if (loading) {
-    return (
-      <div
-        className="flex justify-center py-8"
-        role="status"
-        aria-label="Loading todos"
-      >
-        <div className="flex gap-1.5">
-          {[0, 1, 2].map((i) => (
-            <div
-              key={i}
-              className="w-1.5 h-1.5 rounded-full bg-text-muted animate-subtle-pulse"
-              style={{ animationDelay: `${i * 0.2}s` }}
-            />
-          ))}
-        </div>
-      </div>
-    )
+    return <LoadingDots label="Loading todos" className="py-8" />
   }
 
   return (

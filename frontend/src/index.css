@@ -59,31 +59,6 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Animated gradient wordmark */
-@keyframes hue-drift {
-  0%,
-  100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-}
-.text-gradient {
-  background: linear-gradient(
-    100deg,
-    var(--color-card-space),
-    var(--color-card-quote),
-    var(--color-card-placeholder),
-    var(--color-card-space)
-  );
-  background-size: 300% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: hue-drift 12s ease-in-out infinite;
-}
-
 /* Staggered card entrance — opacity + slight rise. Transform is only used
    before react-grid-layout takes over positioning (opacity keeps it safe). */
 @keyframes card-enter {

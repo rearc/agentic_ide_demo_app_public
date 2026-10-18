@@ -4,6 +4,7 @@ import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 import { fetchCards, updateCard } from '../api'
 import Card, { DRAG_HANDLE_CLASS } from './Card'
+import LoadingDots from './LoadingDots'
 
 function buildLayout(cards) {
   return cards.map((card, i) => ({
@@ -80,23 +81,7 @@ export default function Dashboard({ locked }) {
   )
 
   if (loading) {
-    return (
-      <div
-        className="flex items-center justify-center py-24"
-        role="status"
-        aria-label="Loading dashboard"
-      >
-        <div className="flex gap-1.5">
-          {[0, 1, 2].map((i) => (
-            <div
-              key={i}
-              className="w-2 h-2 rounded-full bg-text-muted animate-subtle-pulse"
-              style={{ animationDelay: `${i * 0.2}s` }}
-            />
-          ))}
-        </div>
-      </div>
-    )
+    return <LoadingDots label="Loading dashboard" size="md" className="py-24" />
   }
 
   if (error) {

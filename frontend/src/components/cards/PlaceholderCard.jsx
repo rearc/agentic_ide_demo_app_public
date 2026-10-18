@@ -1,3 +1,5 @@
+import { GRADIENT_TEXT_CLASS } from './gradientText'
+
 export default function PlaceholderCard() {
   return (
     <div
@@ -6,13 +8,7 @@ export default function PlaceholderCard() {
     >
       <p className="text-4xl mb-3 animate-subtle-pulse">✨</p>
       <p
-        className="text-base font-bold"
-        style={{
-          backgroundImage: 'linear-gradient(135deg, var(--a), var(--b))',
-          WebkitBackgroundClip: 'text',
-          backgroundClip: 'text',
-          color: 'transparent',
-        }}
+        className={`text-base font-bold ${GRADIENT_TEXT_CLASS}`}
       >
         What should we build here?
       </p>

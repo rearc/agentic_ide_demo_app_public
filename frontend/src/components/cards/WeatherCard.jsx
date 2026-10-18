@@ -1,11 +1,6 @@
 import { useState } from 'react'
 
-const gradientText = {
-  backgroundImage: 'linear-gradient(135deg, var(--a), var(--b))',
-  WebkitBackgroundClip: 'text',
-  backgroundClip: 'text',
-  color: 'transparent',
-}
+import { GRADIENT_TEXT_CLASS } from './gradientText'
 
 /** Minimal °C / °F segmented toggle — shows the widget isn't static. */
 function UnitToggle({ unit, setUnit }) {
@@ -52,8 +47,7 @@ export default function WeatherCard({ data }) {
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p
-            className="text-5xl font-extrabold tracking-tight leading-[1.15] pr-1"
-            style={gradientText}
+            className={`text-5xl font-extrabold tracking-tight leading-[1.15] pr-1 ${GRADIENT_TEXT_CLASS}`}
           >
             {temp}°
           </p>

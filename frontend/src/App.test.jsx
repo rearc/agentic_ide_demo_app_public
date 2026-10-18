@@ -6,10 +6,12 @@ import App from './App'
 
 // Dashboard and the brand lockup have their own tests; stubbing them keeps this
 // file about App's own job: the clock, and the lock toggle it owns.
+const dashboardRender = vi.fn()
 vi.mock('./components/Dashboard', () => ({
-  default: ({ locked }) => (
-    <div data-testid="dashboard" data-locked={String(locked)} />
-  ),
+  default: ({ locked }) => {
+    dashboardRender()
+    return <div data-testid="dashboard" data-locked={String(locked)} />
+  },
 }))
 
 function dashboardLocked() {
@@ -111,6 +113,19 @@ describe('clock', () => {
     })
 
     expect(screen.getByText(/\d{1,2}:\d{2}/).textContent).not.toBe(before)
+  })
+
+  it('does not re-render the dashboard on a tick', () => {
+    /* The tick state lives in the clock alone; if it moved back into App, the
+       whole grid would re-render every second. */
+    render(<App />)
+    dashboardRender.mockClear()
+
+    act(() => {
+      vi.advanceTimersByTime(5_000)
+    })
+
+    expect(dashboardRender).not.toHaveBeenCalled()
   })
 
   it('ticks every second, not on some slower cadence', () => {

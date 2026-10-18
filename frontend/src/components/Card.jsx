@@ -5,6 +5,7 @@ import QuoteCard from './cards/QuoteCard'
 import SpaceCard from './cards/SpaceCard'
 import PlaceholderCard from './cards/PlaceholderCard'
 import TodoCard from './cards/TodoCard'
+import LoadingDots from './LoadingDots'
 
 /**
  * Class marking the drag target within a card.
@@ -132,21 +133,7 @@ export default function Card({ card, locked }) {
         </div>
         <div className="flex-1 min-h-0 overflow-auto card-scroll">
           {loading ? (
-            <div
-              className="flex justify-center py-8"
-              role="status"
-              aria-label="Loading card data"
-            >
-              <div className="flex gap-1.5">
-                {[0, 1, 2].map((i) => (
-                  <div
-                    key={i}
-                    className="w-1.5 h-1.5 rounded-full bg-text-muted animate-subtle-pulse"
-                    style={{ animationDelay: `${i * 0.2}s` }}
-                  />
-                ))}
-              </div>
-            </div>
+            <LoadingDots label="Loading card data" className="py-8" />
           ) : error ? (
             <p className="text-sm text-red-400/80 py-4">{error}</p>
           ) : (

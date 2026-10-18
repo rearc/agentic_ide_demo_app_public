@@ -1,3 +1,5 @@
+import { GRADIENT_TEXT_CLASS } from './gradientText'
+
 export default function QuoteCard({ data }) {
   if (!data) return null
   return (
@@ -5,13 +7,7 @@ export default function QuoteCard({ data }) {
       <blockquote className="relative text-lg italic text-text-primary/90 leading-relaxed font-light pl-1">
         <span
           aria-hidden
-          className="absolute -left-1 -top-6 text-6xl leading-none font-serif opacity-40 select-none"
-          style={{
-            backgroundImage: 'linear-gradient(135deg, var(--a), var(--b))',
-            WebkitBackgroundClip: 'text',
-            backgroundClip: 'text',
-            color: 'transparent',
-          }}
+          className={`absolute -left-1 -top-6 text-6xl leading-none font-serif opacity-40 select-none ${GRADIENT_TEXT_CLASS}`}
         >
           &ldquo;
         </span>

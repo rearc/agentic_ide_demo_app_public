@@ -2,18 +2,14 @@ import { useState, useEffect } from 'react'
 import Dashboard from './components/Dashboard'
 import AnimatedLabsLockup from './components/brand/AnimatedLabsLockup'
 
-function useNow() {
+/** Header clock. Owns the one-second tick so only it re-renders, not the app. */
+function Clock() {
   const [now, setNow] = useState(() => new Date())
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000)
     return () => clearInterval(id)
   }, [])
-  return now
-}
 
-export default function App() {
-  const now = useNow()
-  const [locked, setLocked] = useState(true)
   const time = now.toLocaleTimeString([], {
     hour: 'numeric',
     minute: '2-digit',
@@ -23,6 +19,19 @@ export default function App() {
     month: 'long',
     day: 'numeric',
   })
+
+  return (
+    <div className="text-right hidden sm:block">
+      <p className="font-display text-2xl font-bold tracking-tight text-text-primary tabular-nums leading-none">
+        {time}
+      </p>
+      <p className="text-text-muted text-xs mt-1.5">{date}</p>
+    </div>
+  )
+}
+
+export default function App() {
+  const [locked, setLocked] = useState(true)
 
   return (
     <div className="min-h-screen">
@@ -56,12 +65,7 @@ export default function App() {
             >
               {locked ? 'Customize layout' : 'Lock layout'}
             </button>
-            <div className="text-right hidden sm:block">
-              <p className="font-display text-2xl font-bold tracking-tight text-text-primary tabular-nums leading-none">
-                {time}
-              </p>
-              <p className="text-text-muted text-xs mt-1.5">{date}</p>
-            </div>
+            <Clock />
           </div>
         </div>
       </header>

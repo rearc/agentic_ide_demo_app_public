@@ -25,7 +25,7 @@ const ENDPOINTS = [
     name: 'fetchCards',
     call: () => fetchCards(),
     url: '/api/cards',
-    init: undefined,
+    init: { method: 'GET' },
     body: [{ id: 1, slug: 'weather' }],
     ownMessage: 'Failed to fetch cards',
   },
@@ -45,7 +45,7 @@ const ENDPOINTS = [
     name: 'fetchCardData',
     call: () => fetchCardData('quote'),
     url: '/api/data/quote',
-    init: undefined,
+    init: { method: 'GET' },
     body: { text: 'A quote.', author: 'Someone' },
     ownMessage: 'Failed to fetch data for quote',
   },
@@ -53,7 +53,7 @@ const ENDPOINTS = [
     name: 'fetchTodos',
     call: () => fetchTodos(7),
     url: '/api/todos?card_id=7',
-    init: undefined,
+    init: { method: 'GET' },
     body: [{ id: 1, text: 'A task' }],
   },
   {
@@ -93,7 +93,7 @@ describe.each(ENDPOINTS)('$name', ({ call, url, init, body, ownMessage }) => {
 
     await call()
 
-    expect(fetchMock).toHaveBeenCalledWith(...(init ? [url, init] : [url]))
+    expect(fetchMock).toHaveBeenCalledWith(url, init)
   })
 
   it('surfaces the error message the API supplied', async () => {
@@ -142,7 +142,7 @@ describe('fetchCardData query building', () => {
 
     await fetchCardData('quote')
 
-    expect(fetchMock).toHaveBeenCalledWith('/api/data/quote')
+    expect(fetchMock).toHaveBeenCalledWith('/api/data/quote', { method: 'GET' })
   })
 
   it('omits the query string for an empty config', async () => {
@@ -150,7 +150,7 @@ describe('fetchCardData query building', () => {
 
     await fetchCardData('quote', {})
 
-    expect(fetchMock).toHaveBeenCalledWith('/api/data/quote')
+    expect(fetchMock).toHaveBeenCalledWith('/api/data/quote', { method: 'GET' })
   })
 
   it('serializes config into the query string', async () => {
@@ -158,7 +158,9 @@ describe('fetchCardData query building', () => {
 
     await fetchCardData('weather', { city: 'Boston' })
 
-    expect(fetchMock).toHaveBeenCalledWith('/api/data/weather?city=Boston')
+    expect(fetchMock).toHaveBeenCalledWith('/api/data/weather?city=Boston', {
+      method: 'GET',
+    })
   })
 
   it('url-encodes config values', async () => {
@@ -168,6 +170,7 @@ describe('fetchCardData query building', () => {
 
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/data/weather?city=San+Francisco',
+      { method: 'GET' },
     )
   })
 })
