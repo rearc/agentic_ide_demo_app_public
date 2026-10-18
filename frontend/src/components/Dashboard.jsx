@@ -5,7 +5,7 @@ import {
 } from 'react-grid-layout'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { placedSize } from '../useBoard'
 import Card, { DRAG_HANDLE_CLASS, cardAccent } from './Card'
 import LoadingDots from './LoadingDots'
@@ -35,30 +35,46 @@ function EmptyBoard() {
 }
 
 /**
- * The grid's columns, drawn faintly behind the cards while editing so it
- * shows where a card will land. Same padding and gaps as the grid, so each
- * guide lines up with a column.
+ * The grid's cells, drawn faintly behind the cards while editing so it shows
+ * where a card will land and how big it can be. One SVG pattern repeats a
+ * pair of cells across the board (the second fainter, so 24 columns do not
+ * look busy), with the grid's own padding, gaps and column width.
  */
-function ColumnGuides({ shown }) {
+function GridGuides({ shown, width }) {
+  const patternId = useId()
+  const cell = (width - 2 * OUTLINE - (COLS - 1) * MARGIN) / COLS
   return (
-    <div
+    <svg
       aria-hidden
-      data-column-guides={shown}
-      className={`absolute inset-0 grid pointer-events-none transition-opacity duration-300 ${shown ? 'opacity-100' : 'opacity-0'}`}
-      style={{
-        gridTemplateColumns: `repeat(${COLS}, minmax(0, 1fr))`,
-        gap: MARGIN,
-        padding: OUTLINE,
-      }}
+      data-grid-guides={shown}
+      className={`absolute inset-0 size-full pointer-events-none transition-opacity duration-300 ${shown ? 'opacity-100' : 'opacity-0'}`}
     >
-      {/* Every other column fainter, so 24 columns do not look busy. */}
-      {Array.from({ length: COLS }, (_, i) => (
-        <span
-          key={i}
-          className={`bg-text-primary/[0.025] shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-text-primary)_5%,transparent)] ${i % 2 ? 'opacity-50' : ''}`}
-        />
-      ))}
-    </div>
+      <defs>
+        <pattern
+          id={patternId}
+          x={OUTLINE}
+          y={OUTLINE}
+          width={2 * (cell + MARGIN)}
+          height={ROW_HEIGHT + MARGIN}
+          patternUnits="userSpaceOnUse"
+        >
+          <rect
+            width={cell}
+            height={ROW_HEIGHT}
+            className="fill-text-primary"
+            fillOpacity="0.035"
+          />
+          <rect
+            x={cell + MARGIN}
+            width={cell}
+            height={ROW_HEIGHT}
+            className="fill-text-primary"
+            fillOpacity="0.02"
+          />
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill={`url(#${patternId})`} />
+    </svg>
   )
 }
 
@@ -218,7 +234,7 @@ export default function Dashboard({
     content = (
       <div className="relative">
         {layout.length === 0 && <EmptyBoard />}
-        <ColumnGuides shown={!locked} />
+        <GridGuides shown={!locked} width={width} />
         <GridLayout
           // An empty board still needs room to drop a card onto.
           className="min-h-64"

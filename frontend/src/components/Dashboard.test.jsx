@@ -252,10 +252,10 @@ describe('while editing', () => {
     return screen.getByTestId('grid').closest('[data-recede]')
   }
 
-  it('shows the column guides only while unlocked', () => {
+  it('shows the grid guides only while unlocked', () => {
     renderDashboard({ locked: true })
     expect(
-      document.querySelector('[data-column-guides]').dataset.columnGuides,
+      document.querySelector('[data-grid-guides]').dataset.gridGuides,
     ).toBe('false')
   })
 
