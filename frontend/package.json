@@ -16,7 +16,9 @@
     "pretest:run": "npm run check:node",
     "test:run": "vitest run",
     "pretest:ui": "npm run check:node",
-    "test:ui": "vitest --ui"
+    "test:ui": "vitest --ui",
+    "test:e2e": "playwright test",
+    "lint": "prettier --check src e2e \"*.js\""
   },
   "dependencies": {
     "react": "^18.3.1",
@@ -24,6 +26,7 @@
     "react-grid-layout": "^2.2.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
     "@tailwindcss/vite": "^4.2.2",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",

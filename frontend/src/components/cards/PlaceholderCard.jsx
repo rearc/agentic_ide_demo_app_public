@@ -7,9 +7,7 @@ export default function PlaceholderCard() {
       style={{ borderColor: 'color-mix(in oklab, var(--a) 45%, transparent)' }}
     >
       <p className="text-4xl mb-3 animate-subtle-pulse">✨</p>
-      <p
-        className={`text-base font-bold ${GRADIENT_TEXT_CLASS}`}
-      >
+      <p className={`text-base font-bold ${GRADIENT_TEXT_CLASS}`}>
         What should we build here?
       </p>
       <p className="text-text-muted text-xs mt-2">
