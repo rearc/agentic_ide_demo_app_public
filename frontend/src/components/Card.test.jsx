@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import Card from './Card'
@@ -95,6 +96,37 @@ describe('chrome', () => {
     rerender(<Card card={weatherCard()} locked={false} />)
 
     expect(screen.getByTitle('Drag to move')).toBeInTheDocument()
+  })
+})
+
+describe('removing a card (Customize only)', () => {
+  it('offers an × only in Customize mode', async () => {
+    const { rerender } = render(
+      <Card card={weatherCard()} locked onRemove={() => {}} />,
+    )
+    await screen.findByRole('heading', { name: 'Weather' })
+
+    expect(
+      screen.queryByRole('button', { name: 'Remove "Weather"' }),
+    ).not.toBeInTheDocument()
+
+    rerender(<Card card={weatherCard()} locked={false} onRemove={() => {}} />)
+
+    expect(
+      screen.getByRole('button', { name: 'Remove "Weather"' }),
+    ).toBeInTheDocument()
+  })
+
+  it('calls onRemove when the × is pressed', async () => {
+    const user = userEvent.setup()
+    const onRemove = vi.fn()
+    render(<Card card={weatherCard()} locked={false} onRemove={onRemove} />)
+
+    await user.click(
+      await screen.findByRole('button', { name: 'Remove "Weather"' }),
+    )
+
+    expect(onRemove).toHaveBeenCalledTimes(1)
   })
 })
 

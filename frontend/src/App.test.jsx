@@ -4,8 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import App from './App'
 
-// Dashboard has its own tests; stubbing it keeps this file about App's own job:
-// the clock, and the lock toggle it owns.
+// Dashboard and useBoard have their own tests; stubbing them keeps this file
+// about App's own job: the clock, and the lock and library toggles it owns.
 const dashboardRender = vi.fn()
 vi.mock('./components/Dashboard', () => ({
   default: ({ locked }) => {
@@ -13,6 +13,31 @@ vi.mock('./components/Dashboard', () => ({
     return <div data-testid="dashboard" data-locked={String(locked)} />
   },
 }))
+
+vi.mock('./useBoard', async () => {
+  const { cardRecord, profileRecord } = await import('./test/helpers')
+  const noop = () => {}
+  const profile = profileRecord()
+  return {
+    default: () => ({
+      cards: [cardRecord({ title: 'Weather' })],
+      profiles: [profile],
+      profile,
+      board: profile.board,
+      loading: false,
+      error: null,
+      draggingCardId: null,
+      setDraggingCardId: noop,
+      selectProfile: noop,
+      saveLayout: noop,
+      hideCard: noop,
+      showCard: noop,
+      createProfile: noop,
+      renameProfile: noop,
+      deleteProfile: noop,
+    }),
+  }
+})
 
 function dashboardLocked() {
   return screen.getByTestId('dashboard').dataset.locked
@@ -61,6 +86,49 @@ describe('lock toggle', () => {
     await user.click(screen.getByRole('button', { name: 'Customize layout' }))
 
     expect(screen.getByText(/changes save automatically/)).toBeInTheDocument()
+  })
+})
+
+describe('library toggle', () => {
+  function library() {
+    return screen.queryByRole('region', { name: 'Card library' })
+  }
+
+  it('opens the library and unlocks the dashboard', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: 'Library' }))
+
+    expect(library()).toBeInTheDocument()
+    expect(dashboardLocked()).toBe('false')
+    expect(screen.getByRole('button', { name: 'Library' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    )
+  })
+
+  it('closes it on a second click, leaving the dashboard unlocked', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: 'Library' }))
+    await user.click(screen.getByRole('button', { name: 'Library' }))
+
+    expect(library()).not.toBeInTheDocument()
+    expect(dashboardLocked()).toBe('false')
+  })
+
+  it('closes it when the dashboard is locked', async () => {
+    /* Adding a card is a Customize action, so the library does not outlive
+       Customize mode. */
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: 'Library' }))
+    await user.click(screen.getByRole('button', { name: 'Lock layout' }))
+
+    expect(library()).not.toBeInTheDocument()
   })
 })
 

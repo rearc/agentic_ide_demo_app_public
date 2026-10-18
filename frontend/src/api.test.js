@@ -1,17 +1,21 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  createProfile,
   createTodo,
+  deleteProfile,
   deleteTodo,
   fetchCardData,
   fetchCards,
+  fetchProfiles,
   fetchTodos,
-  updateCard,
+  updateProfile,
   updateTodo,
 } from './api'
 import { brokenJsonResponse, jsonResponse, stubFetch } from './test/helpers'
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' }
+const BOARD = { 3: { x: 0, y: 0, w: 4, h: 4, hidden: false } }
 
 /**
  * Every endpoint is one call to the shared request helper: what differs is the
@@ -26,15 +30,41 @@ const ENDPOINTS = [
     body: [{ id: 1, slug: 'weather' }],
   },
   {
-    name: 'updateCard',
-    call: () => updateCard(1, { title: 'Renamed' }),
-    url: '/api/cards/1',
+    name: 'fetchProfiles',
+    call: () => fetchProfiles(),
+    url: '/api/profiles',
+    init: { method: 'GET' },
+    body: [{ id: 1, name: 'Default', board: {} }],
+  },
+  {
+    name: 'createProfile',
+    call: () => createProfile('Focus', BOARD),
+    url: '/api/profiles',
     init: {
-      method: 'PUT',
+      method: 'POST',
       headers: JSON_HEADERS,
-      body: JSON.stringify({ title: 'Renamed' }),
+      body: JSON.stringify({ name: 'Focus', board: BOARD }),
     },
-    body: { id: 1, title: 'Renamed' },
+    body: { id: 2, name: 'Focus', board: BOARD },
+  },
+  {
+    name: 'updateProfile',
+    call: () => updateProfile(2, { board: BOARD }),
+    url: '/api/profiles/2',
+    init: {
+      method: 'PATCH',
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ board: BOARD }),
+    },
+    body: { id: 2, name: 'Focus', board: BOARD },
+  },
+  {
+    name: 'deleteProfile',
+    call: () => deleteProfile(2),
+    url: '/api/profiles/2',
+    init: { method: 'DELETE' },
+    body: null,
+    resolvesWith: undefined,
   },
   {
     name: 'fetchCardData',

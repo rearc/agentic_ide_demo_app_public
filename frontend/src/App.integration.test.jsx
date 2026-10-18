@@ -1,9 +1,22 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 
 import App from './App'
-import { cardRecord, jsonResponse } from './test/helpers'
+import {
+  boardEntry,
+  cardRecord,
+  jsonResponse,
+  profileRecord,
+} from './test/helpers'
 
 /**
  * The one test file that renders the real tree: App -> Dashboard -> Card ->
@@ -22,31 +35,30 @@ const CARDS = [
     title: 'Weather',
     source: 'weather',
     config: { city: 'San Francisco' },
-    layout: { x: 0, y: 0, w: 4, h: 4 },
   }),
-  cardRecord({
+  cardRecord({ id: 2, title: 'Daily Quote', source: 'quote' }),
+  cardRecord({ id: 3, title: 'Coming Soon', source: 'placeholder' }),
+  cardRecord({ id: 4, title: 'Space Photo', source: 'space' }),
+  cardRecord({ id: 5, title: 'Todos', source: 'todo' }),
+]
+
+// Default shows every card; Focus only the todos.
+const PROFILES = [
+  profileRecord({
+    id: 1,
+    name: 'Default',
+    board: {
+      1: boardEntry({ x: 0, y: 0, w: 4, h: 4 }),
+      2: boardEntry({ x: 4, y: 0, w: 4, h: 4 }),
+      3: boardEntry({ x: 8, y: 0, w: 4, h: 4 }),
+      4: boardEntry({ x: 0, y: 4, w: 6, h: 7 }),
+      5: boardEntry({ x: 6, y: 4, w: 6, h: 7 }),
+    },
+  }),
+  profileRecord({
     id: 2,
-    title: 'Daily Quote',
-    source: 'quote',
-    layout: { x: 4, y: 0, w: 4, h: 4 },
-  }),
-  cardRecord({
-    id: 3,
-    title: 'Coming Soon',
-    source: 'placeholder',
-    layout: { x: 8, y: 0, w: 4, h: 4 },
-  }),
-  cardRecord({
-    id: 4,
-    title: 'Space Photo',
-    source: 'space',
-    layout: { x: 0, y: 4, w: 6, h: 7 },
-  }),
-  cardRecord({
-    id: 5,
-    title: 'Todos',
-    source: 'todo',
-    layout: { x: 6, y: 4, w: 6, h: 7 },
+    name: 'Focus',
+    board: { 5: boardEntry({ x: 0, y: 0, w: 12, h: 8 }) },
   }),
 ]
 
@@ -74,11 +86,18 @@ const DATA = {
   },
 }
 
-/** Stands in for the Flask API's read routes, routing on the path. */
+/**
+ * Stands in for the Flask API, routing on the path. A profile PATCH answers
+ * with the profile as sent; the test reads the request it was given.
+ */
 function stubBackend({ todos = [], failingSource } = {}) {
-  globalThis.fetch = vi.fn(async (url, { method }) => {
+  globalThis.fetch = vi.fn(async (url, { method, body }) => {
     const path = String(url)
     if (method === 'GET' && path === '/api/cards') return jsonResponse(CARDS)
+    if (method === 'GET' && path === '/api/profiles')
+      return jsonResponse(PROFILES)
+    if (method === 'PATCH' && path.startsWith('/api/profiles/'))
+      return jsonResponse(JSON.parse(body))
     if (method === 'GET' && path.startsWith('/api/todos'))
       return jsonResponse(todos)
 
@@ -110,6 +129,18 @@ beforeAll(() => {
 afterAll(() => {
   Object.defineProperty(HTMLElement.prototype, 'offsetWidth', offsetWidth)
 })
+
+// The shown profile is remembered in localStorage (TEST-3).
+beforeEach(() => {
+  localStorage.clear()
+})
+
+/** The board each profile PATCH sent, in order. */
+function savedBoards() {
+  return fetch.mock.calls
+    .filter(([, init]) => init.method === 'PATCH')
+    .map(([url, init]) => [url, JSON.parse(init.body).board])
+}
 
 /** Render the app against the stub and wait for every card to finish loading. */
 async function renderApp(backend) {
@@ -156,5 +187,65 @@ describe('the whole board', () => {
 
     expect(screen.getByText('Internal server error')).toBeInTheDocument()
     expect(screen.getByText('65°')).toBeInTheDocument()
+  })
+
+  it('hides a card with its × and saves it hidden', async () => {
+    const user = userEvent.setup()
+    await renderApp()
+
+    await user.click(screen.getByRole('button', { name: 'Customize layout' }))
+    await user.click(
+      screen.getByRole('button', { name: 'Remove "Daily Quote"' }),
+    )
+
+    expect(
+      screen.queryByRole('heading', { name: 'Daily Quote' }),
+    ).not.toBeInTheDocument()
+    await waitFor(() =>
+      expect(savedBoards()).toEqual([
+        [
+          '/api/profiles/1',
+          { ...PROFILES[0].board, 2: boardEntry({ x: 4, hidden: true }) },
+        ],
+      ]),
+    )
+  })
+
+  it('adds a card from the library to the board', async () => {
+    const user = userEvent.setup()
+    localStorage.setItem('dashboard.profileId', '2')
+    await renderApp()
+
+    await user.click(screen.getByRole('button', { name: 'Library' }))
+    await user.click(screen.getByRole('button', { name: 'Add "Coming Soon"' }))
+
+    expect(
+      screen.getByRole('heading', { name: 'Coming Soon' }),
+    ).toBeInTheDocument()
+    await waitFor(() =>
+      expect(savedBoards()).toEqual([
+        [
+          '/api/profiles/2',
+          { ...PROFILES[1].board, 3: boardEntry({ x: 0, y: 8 }) },
+        ],
+      ]),
+    )
+  })
+
+  it('switches the board from the profile menu', async () => {
+    const user = userEvent.setup()
+    await renderApp()
+
+    await user.click(screen.getByRole('button', { name: /Control Center/ }))
+    await user.click(
+      within(screen.getByRole('region', { name: 'Profiles' })).getByRole(
+        'button',
+        { name: 'Focus' },
+      ),
+    )
+
+    expect(screen.getAllByRole('heading').map((h) => h.textContent)).toEqual([
+      'Todos',
+    ])
   })
 })

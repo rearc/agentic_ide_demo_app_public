@@ -97,13 +97,14 @@ body {
   border-color: var(--color-text-muted) !important;
 }
 
-/* Thin scrollbars inside cards */
+/* Thin scrollbars inside cards and the library's row of tiles */
 .card-scroll {
   scrollbar-width: thin;
   scrollbar-color: var(--color-hairline-strong) transparent;
 }
 .card-scroll::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 .card-scroll::-webkit-scrollbar-thumb {
   background: var(--color-hairline-strong);

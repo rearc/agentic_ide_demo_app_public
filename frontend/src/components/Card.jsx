@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { DotsSixVerticalIcon } from '@phosphor-icons/react'
+import { DotsSixVerticalIcon, XIcon } from '@phosphor-icons/react'
 import { fetchCardData } from '../api'
 import Icon from './Icon'
 import WeatherCard from './cards/WeatherCard'
@@ -52,6 +52,17 @@ function UnregisteredCard({ card }) {
 
 const UNREGISTERED = { component: UnregisteredCard, needsData: false }
 
+/**
+ * The colour of the card with this `source`, as a CSS value, or undefined for
+ * an unregistered source. Everything drawn in a card's colour (the card, its
+ * library tile) reads it here.
+ */
+export function cardAccent(source) {
+  // `accent` names a colour token in index.css (--color-<accent>).
+  const accent = CARD_REGISTRY[source]?.accent
+  return accent && `var(--color-${accent})`
+}
+
 const STATUS = {
   live: { label: 'Live', className: 'text-live' },
   fallback: {
@@ -92,7 +103,12 @@ function CardStatus({ status, fetchedAt }) {
   )
 }
 
-export default function Card({ card, locked }) {
+/**
+ * One card on the board. In Customize mode (`locked` false) it offers an ×
+ * that calls `onRemove`, and, when `movable`, its header becomes the drag
+ * handle; the stacked board passes `movable={false}` since it cannot drag.
+ */
+export default function Card({ card, locked, movable = true, onRemove }) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -136,9 +152,9 @@ export default function Card({ card, locked }) {
   }, [card.source, entry.needsData, configKey])
 
   const CardContent = entry.component
-  // `accent` names a colour token in index.css (--color-<accent>); an entry
-  // without one (the unregistered card) gets no colour.
-  const accent = entry.accent && `var(--color-${entry.accent})`
+  const accent = cardAccent(card.source)
+  const draggable = !locked && movable
+  const removable = !locked && Boolean(onRemove)
   let status = null
   if (entry.needsData && !loading) {
     if (error) status = 'error'
@@ -158,7 +174,7 @@ export default function Card({ card, locked }) {
         />
       )}
       <div
-        className={`flex items-center gap-2.5 h-11 shrink-0 px-4 border-b border-hairline ${!locked ? `${DRAG_HANDLE_CLASS} cursor-grab active:cursor-grabbing` : ''}`}
+        className={`flex items-center gap-2.5 h-11 shrink-0 pl-4 border-b border-hairline ${removable ? 'pr-2' : 'pr-4'} ${draggable ? `${DRAG_HANDLE_CLASS} cursor-grab active:cursor-grabbing` : ''}`}
       >
         <Icon
           name={card.icon}
@@ -174,10 +190,23 @@ export default function Card({ card, locked }) {
         <span className="flex-1" />
         {status && <CardStatus status={status} fetchedAt={fetchedAt} />}
         {note && <span className="text-xs text-text-secondary">{note}</span>}
-        {!locked && (
+        {draggable && (
           <span className="text-text-muted" title="Drag to move">
             <DotsSixVerticalIcon size={16} aria-hidden />
           </span>
+        )}
+        {/* The button's own inset keeps the × on the 16 px edge the header's
+            padding gives everything else. */}
+        {removable && (
+          <button
+            type="button"
+            onClick={onRemove}
+            aria-label={`Remove "${card.title}"`}
+            title="Remove from this board"
+            className="inline-flex items-center justify-center h-8 w-8 shrink-0 text-text-muted hover:text-text-primary hover:bg-hairline transition-colors"
+          >
+            <XIcon size={16} aria-hidden />
+          </button>
         )}
       </div>
       <div className="flex-1 min-h-0 overflow-auto card-scroll p-4">

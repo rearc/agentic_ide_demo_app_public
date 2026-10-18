@@ -47,9 +47,24 @@ export function cardRecord(overrides = {}) {
     icon: '',
     source: 'placeholder',
     config: {},
-    layout: { x: 0, y: 0, w: 4, h: 4 },
     position: 1,
-    is_active: true,
+    created_at: '2026-10-18T09:00:00+00:00',
+    ...overrides,
+  }
+}
+
+/** One card's place on a board, as the API sends it. */
+export function boardEntry(overrides = {}) {
+  return { x: 0, y: 0, w: 4, h: 4, hidden: false, ...overrides }
+}
+
+/** A profile record as `GET /api/profiles` returns it. */
+export function profileRecord(overrides = {}) {
+  return {
+    id: 1,
+    name: 'Default',
+    board: {},
+    created_at: '2026-10-18T09:00:00+00:00',
     ...overrides,
   }
 }

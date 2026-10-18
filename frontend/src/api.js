@@ -40,13 +40,37 @@ export async function fetchCards() {
   return res.json()
 }
 
-export async function updateCard(id, fields) {
-  const res = await request(`${API_BASE}/cards/${id}`, {
-    method: 'PUT',
-    body: fields,
-    fallback: 'Failed to update card',
+export async function fetchProfiles() {
+  const res = await request(`${API_BASE}/profiles`, {
+    fallback: 'Failed to fetch profiles',
   })
   return res.json()
+}
+
+export async function createProfile(name, board) {
+  const res = await request(`${API_BASE}/profiles`, {
+    method: 'POST',
+    body: { name, board },
+    fallback: 'Failed to create profile',
+  })
+  return res.json()
+}
+
+/** Change a profile's `name` and/or `board`; a board replaces the whole board. */
+export async function updateProfile(id, fields) {
+  const res = await request(`${API_BASE}/profiles/${id}`, {
+    method: 'PATCH',
+    body: fields,
+    fallback: 'Failed to update profile',
+  })
+  return res.json()
+}
+
+export async function deleteProfile(id) {
+  await request(`${API_BASE}/profiles/${id}`, {
+    method: 'DELETE',
+    fallback: 'Failed to delete profile',
+  })
 }
 
 export async function fetchCardData(source, config = {}) {
