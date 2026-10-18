@@ -44,7 +44,7 @@ export default function App() {
   return (
     <IconContext.Provider value={ICON_STYLE}>
       <div className="min-h-screen">
-        <header className="sticky top-0 z-10 border-b border-hairline bg-surface/90 backdrop-blur">
+        <header className="sticky top-0 z-10 border-b-[3px] border-text-primary bg-surface/90 backdrop-blur">
           <div className="max-w-[1600px] mx-auto px-5 py-3.5 flex items-center justify-between gap-4">
             <div className="flex items-center gap-4 min-w-0">
               <AnimatedLabsLockup
