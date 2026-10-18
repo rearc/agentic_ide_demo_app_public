@@ -13,8 +13,9 @@ frontend/dist/
 # Environment
 .env
 
-# Claude Code audit hook output
+# Claude Code local state: the audit hook's log, worktree sessions (claude -w)
 .claude/audit.log
+.claude/worktrees/
 
 # IDE
 .vscode/*

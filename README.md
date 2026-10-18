@@ -8,6 +8,8 @@ A widget dashboard with a React frontend and Flask API backend. Displays data ca
 - **Node.js 22** (Active LTS) — pinned in `frontend/.nvmrc`. Node 20 is end-of-life; use [nvm](https://github.com/nvm-sh/nvm) to match.
 - **npm 9+**
 - **[uv](https://github.com/astral-sh/uv)** — only needed for the random-tools MCP server, not for running the app.
+- **[jq](https://jqlang.org)** — needed by the repo's Claude Code hooks: the safety hook blocks every shell command when `jq` is missing. macOS 15 and later include it; earlier macOS: `brew install jq`; Windows: `winget install jqlang.jq`.
+- **Windows: Git Bash** — the hooks and the status line in `.claude/` are bash scripts. Claude Code on native Windows runs them through Git Bash when it is installed ([Git for Windows](https://git-scm.com/downloads/win)); without it they run in PowerShell, fail, and the safety hook can block tool calls.
 
 ## Environment Variables
 
