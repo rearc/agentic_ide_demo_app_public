@@ -42,7 +42,7 @@ python run.py                  # http://127.0.0.1:5001
 ```bash
 cd frontend
 nvm use                        # Node 22; `nvm install` the first time
-npm install                    # if it reports advisories: `npm audit fix`, never `--force`
+npm install                    # installs exactly what package-lock.json pins
 npm run dev                    # http://localhost:5173, proxies /api to the backend
 ```
 
