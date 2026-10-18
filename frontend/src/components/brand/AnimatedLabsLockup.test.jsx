@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
 import AnimatedLabsLockup from './AnimatedLabsLockup'
+import { mediaQueryList } from '../../test/helpers'
 
 /* Presentational brand mark, so these tests cover the contract rather than the
    drawing: it exposes an accessible name, it drives a requestAnimationFrame
@@ -9,15 +10,7 @@ import AnimatedLabsLockup from './AnimatedLabsLockup'
    reduced motion. */
 
 function stubReducedMotion(matches) {
-  vi.stubGlobal('matchMedia', (query) => ({
-    matches,
-    media: query,
-    addEventListener: () => {},
-    removeEventListener: () => {},
-    addListener: () => {},
-    removeListener: () => {},
-    dispatchEvent: () => false,
-  }))
+  vi.stubGlobal('matchMedia', (query) => mediaQueryList(query, matches))
 }
 
 describe('AnimatedLabsLockup', () => {

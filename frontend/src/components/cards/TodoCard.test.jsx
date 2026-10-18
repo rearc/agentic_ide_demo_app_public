@@ -6,10 +6,7 @@ import TodoCard from './TodoCard'
 import { createTodo, deleteTodo, fetchTodos, updateTodo } from '../../api'
 import { deferred } from '../../test/helpers'
 
-vi.mock('../../api', async (importOriginal) => {
-  const actual = await importOriginal()
-  return Object.fromEntries(Object.keys(actual).map((name) => [name, vi.fn()]))
-})
+vi.mock('../../api')
 
 const CARD = { id: 5 }
 
@@ -21,7 +18,9 @@ function todo(overrides = {}) {
 async function renderCard(items = []) {
   fetchTodos.mockResolvedValue(items)
   const result = render(<TodoCard card={CARD} />)
-  await waitFor(() => expect(fetchTodos).toHaveBeenCalled())
+  await waitFor(() =>
+    expect(screen.queryByRole('status')).not.toBeInTheDocument(),
+  )
   return result
 }
 
@@ -51,51 +50,29 @@ describe('loading todos', () => {
     expect(fetchTodos).toHaveBeenCalledWith(5)
   })
 
-  it('renders the todos it loaded', async () => {
+  it('renders each todo it loaded with its done state', async () => {
     await renderCard([
-      todo({ id: 1, text: 'First' }),
-      todo({ id: 2, text: 'Second' }),
+      todo({ id: 1, text: 'First', done: false }),
+      todo({ id: 2, text: 'Second', done: true }),
     ])
 
-    expect(
-      await screen.findByRole('button', { name: 'First' }),
-    ).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Second' })).toBeInTheDocument()
-  })
-
-  it('gives each todo its own named checkbox', async () => {
-    /* Distinguishable accessible names, so a list with more than one row can
-       still be queried without DOM traversal. */
-    await renderCard([
-      todo({ id: 1, text: 'First' }),
-      todo({ id: 2, text: 'Second' }),
-    ])
-
-    expect(
-      await screen.findByRole('checkbox', { name: /"First"/ }),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole('checkbox', { name: /"Second"/ }),
-    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'First' })).toBeInTheDocument()
+    expect(checkboxFor('First')).not.toBeChecked()
+    expect(checkboxFor('Second')).toBeChecked()
   })
 
   it('shows an empty state when there are no todos', async () => {
     await renderCard([])
 
-    expect(await screen.findByText('No tasks yet.')).toBeInTheDocument()
+    expect(screen.getByText('No tasks yet.')).toBeInTheDocument()
   })
 
   it('shows an error when loading fails', async () => {
     fetchTodos.mockRejectedValue(new Error('Card not found'))
+
     render(<TodoCard card={CARD} />)
 
     expect(await screen.findByText('Card not found')).toBeInTheDocument()
-  })
-
-  it('reflects the done state on the checkbox', async () => {
-    await renderCard([todo({ done: true })])
-
-    expect(await screen.findByRole('checkbox')).toBeChecked()
   })
 })
 
@@ -138,15 +115,6 @@ describe('adding a todo', () => {
     await user.click(screen.getByRole('button', { name: 'Add' }))
 
     expect(createTodo).toHaveBeenCalledWith(5, 'Write tests')
-  })
-
-  it('ignores an empty submission', async () => {
-    const user = userEvent.setup()
-    await renderCard([])
-
-    await user.click(screen.getByRole('button', { name: 'Add' }))
-
-    expect(createTodo).not.toHaveBeenCalled()
   })
 
   it('ignores a whitespace-only submission', async () => {
@@ -208,7 +176,7 @@ describe('toggling a todo', () => {
     await renderCard([todo({ done: true })])
     updateTodo.mockResolvedValue(todo({ done: false }))
 
-    await user.click(await screen.findByRole('checkbox'))
+    await user.click(checkboxFor('A task'))
 
     expect(updateTodo).toHaveBeenCalledWith(1, { done: false })
   })
@@ -250,7 +218,7 @@ describe('toggling a todo', () => {
 describe('editing a todo', () => {
   /** Open a todo's inline editor, found by its accessible name. */
   async function openEditor(user, text) {
-    await user.click(await screen.findByRole('button', { name: text }))
+    await user.click(screen.getByRole('button', { name: text }))
     return screen.getByRole('textbox', { name: `Edit "${text}"` })
   }
 
@@ -363,9 +331,7 @@ describe('deleting a todo', () => {
     ])
     deleteTodo.mockResolvedValue(undefined)
 
-    await user.click(
-      await screen.findByRole('button', { name: 'Delete "First"' }),
-    )
+    await user.click(screen.getByRole('button', { name: 'Delete "First"' }))
 
     expect(deleteTodo).toHaveBeenCalledWith(1)
     await waitFor(() =>
@@ -381,18 +347,15 @@ describe('deleting a todo', () => {
     await renderCard([todo({ text: 'A task' })])
     deleteTodo.mockRejectedValue(new Error('Todo not found'))
 
-    await user.click(
-      await screen.findByRole('button', { name: 'Delete "A task"' }),
-    )
+    await user.click(screen.getByRole('button', { name: 'Delete "A task"' }))
 
     expect(await screen.findByText('Todo not found')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'A task' })).toBeInTheDocument()
   })
 
-  it('closes the editor when the todo being edited is deleted', async () => {
-    /* Otherwise editingId still points at a deleted row, and the editor's blur
-       handler fires an update against it - surfacing a 404 for an action the
-       user never took. */
+  it('deletes the row being edited without committing its edit first', async () => {
+    /* Pressing Delete would otherwise blur the open editor, committing an edit
+       the user never made against the row being deleted. */
     const user = userEvent.setup()
     await renderCard([todo({ id: 1, text: 'A task' })])
     deleteTodo.mockResolvedValue(undefined)

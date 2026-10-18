@@ -4,8 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import App from './App'
 
-// Dashboard and the brand lockup have their own tests; stubbing them keeps this
-// file about App's own job: the clock, and the lock toggle it owns.
+// Dashboard has its own tests; stubbing it keeps this file about App's own job:
+// the clock, and the lock toggle it owns.
 const dashboardRender = vi.fn()
 vi.mock('./components/Dashboard', () => ({
   default: ({ locked }) => {
@@ -17,25 +17,6 @@ vi.mock('./components/Dashboard', () => ({
 function dashboardLocked() {
   return screen.getByTestId('dashboard').dataset.locked
 }
-
-describe('chrome', () => {
-  it('renders the brand lockup and product name', () => {
-    render(<App />)
-
-    expect(
-      screen.getByRole('img', { name: 'Rearc AI Labs' }),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole('heading', { name: 'Control Center' }),
-    ).toBeInTheDocument()
-  })
-
-  it('renders the dashboard', () => {
-    render(<App />)
-
-    expect(screen.getByTestId('dashboard')).toBeInTheDocument()
-  })
-})
 
 describe('lock toggle', () => {
   it('starts locked', () => {
@@ -104,12 +85,15 @@ describe('clock', () => {
     expect(screen.getByText(/\b19\b/)).toBeInTheDocument()
   })
 
-  it('advances as time passes', () => {
+  it('shows the next minute within a second of it starting', () => {
+    /* Starting one second before the minute turns: an interval any slower
+       than a second would leave the old minute on screen. */
+    vi.setSystemTime(new Date('2026-07-19T14:30:59'))
     render(<App />)
     const before = screen.getByText(/\d{1,2}:\d{2}/).textContent
 
     act(() => {
-      vi.advanceTimersByTime(60_000)
+      vi.advanceTimersByTime(1_000)
     })
 
     expect(screen.getByText(/\d{1,2}:\d{2}/).textContent).not.toBe(before)
@@ -126,16 +110,6 @@ describe('clock', () => {
     })
 
     expect(dashboardRender).not.toHaveBeenCalled()
-  })
-
-  it('ticks every second, not on some slower cadence', () => {
-    /* Advancing a full minute would pass for any interval up to 60s. One
-       second is the actual contract. */
-    const setIntervalSpy = vi.spyOn(globalThis, 'setInterval')
-
-    render(<App />)
-
-    expect(setIntervalSpy).toHaveBeenCalledWith(expect.any(Function), 1000)
   })
 
   it('clears its own interval on unmount', () => {

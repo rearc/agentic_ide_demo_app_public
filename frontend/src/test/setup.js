@@ -2,6 +2,8 @@ import '@testing-library/jest-dom/vitest'
 import { cleanup } from '@testing-library/react'
 import { afterEach, beforeEach, vi } from 'vitest'
 
+import { mediaQueryList } from './helpers'
+
 // jsdom does not implement ResizeObserver, which react-grid-layout's
 // useContainerWidth depends on. A no-op stub is enough: layout maths is the
 // library's concern, not ours.
@@ -23,16 +25,7 @@ if (globalThis.SVGElement) {
 }
 
 // Same story for matchMedia, which jsdom also omits.
-globalThis.matchMedia ??= (query) => ({
-  matches: false,
-  media: query,
-  onchange: null,
-  addListener: () => {},
-  removeListener: () => {},
-  addEventListener: () => {},
-  removeEventListener: () => {},
-  dispatchEvent: () => false,
-})
+globalThis.matchMedia ??= (query) => mediaQueryList(query)
 
 beforeEach(() => {
   // No test may reach the network. Every test that expects a request must stub
