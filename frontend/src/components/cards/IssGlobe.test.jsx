@@ -60,18 +60,33 @@ describe('IssGlobe', () => {
 
   /** The land's outline: it changes whenever the globe turns. */
   function landPath() {
-    return globe().querySelectorAll('path')[2].getAttribute('d')
+    return globe().querySelector('[data-layer="land"]').getAttribute('d')
   }
 
   it('says where the station is, and draws globe, land, orbit and station', () => {
     render(<IssGlobe data={DATA} />)
 
     expect(globe()).toHaveAccessibleName(/ISS over .*km up/)
-    const drawn = [...globe().querySelectorAll('path')].filter((p) =>
-      p.getAttribute('d'),
+    expect(landPath()).toBeTruthy()
+    expect(globe().querySelectorAll('.stroke-card-iss').length).toBeGreaterThan(
+      0,
     )
-    expect(drawn).toHaveLength(6)
+    expect(globe().querySelector('[data-station]')).not.toBeNull()
     expect(screen.getByText(/km\/h/)).toBeInTheDocument()
+  })
+
+  it('draws the orbit as a ring around the globe, wider than it', () => {
+    render(<IssGlobe data={DATA} />)
+    // Every point of the ring is the ring's radius from the centre.
+    const radii = [...globe().querySelectorAll('.stroke-card-iss')]
+      .flatMap((p) => p.getAttribute('d').slice(1).split('L'))
+      .map((xy) => {
+        const [x, y] = xy.split(',').map(Number)
+        return Math.hypot(x - 150, y - 150)
+      })
+
+    expect(Math.max(...radii)).toBeGreaterThan(140)
+    expect(Math.max(...radii)).toBeLessThanOrEqual(150)
   })
 
   it('turns when dragged', () => {
