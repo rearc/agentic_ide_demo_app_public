@@ -7,6 +7,7 @@ import QuoteCard from './cards/QuoteCard'
 import SpaceCard from './cards/SpaceCard'
 import PlaceholderCard from './cards/PlaceholderCard'
 import TodoCard from './cards/TodoCard'
+import TimerCard from './cards/TimerCard'
 import LoadingDots from './LoadingDots'
 
 /**
@@ -28,6 +29,7 @@ const CARD_REGISTRY = {
     needsData: false,
   },
   todo: { component: TodoCard, accent: 'card-todo', needsData: false },
+  timer: { component: TimerCard, accent: 'card-timer', needsData: false },
 }
 
 /**

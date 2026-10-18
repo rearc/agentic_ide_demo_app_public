@@ -29,6 +29,7 @@ DEFAULT_BOARD = {
     'placeholder': {'x': 8, 'y': 0, 'w': 4, 'h': 4},
     'space': {'x': 0, 'y': 4, 'w': 6, 'h': 7},
     'todo': {'x': 6, 'y': 4, 'w': 6, 'h': 7},
+    'timer': {'x': 0, 'y': 11, 'w': 4, 'h': 4},
 }
 
 
@@ -79,6 +80,14 @@ def default_cards():
             icon='checklist',
             source='todo',
             position=5,
+        ),
+        Card(
+            slug='timer',
+            title='Timer',
+            description='A countdown timer, with a Pomodoro mode',
+            icon='timer',
+            source='timer',
+            position=6,
         ),
     ]
 

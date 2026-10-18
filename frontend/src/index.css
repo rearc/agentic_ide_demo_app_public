@@ -31,12 +31,14 @@
   --color-rally-red: #cc2f1f;
   --color-rally-raspberry: #c32258;
   --color-rally-navy: #2e73b2;
+  --color-rally-sand: #c9b28a;
 
   --color-card-weather: var(--color-rally-gold);
   --color-card-quote: var(--color-rally-orange);
   --color-card-placeholder: var(--color-rally-red);
   --color-card-space: var(--color-rally-raspberry);
   --color-card-todo: var(--color-rally-navy);
+  --color-card-timer: var(--color-rally-sand);
 
   --color-live: #3ddc84;
   --color-fallback: #f5a524;
@@ -70,6 +72,18 @@ body {
 }
 .animate-card-enter {
   animation: card-enter 0.4s ease-out both;
+}
+
+/* A finished timer pulses in its card's colour until someone clicks it.
+   One cycle a second, well under the three flashes a second that can
+   trigger seizures; with reduced motion it holds the tint instead. */
+@keyframes timer-done {
+  to {
+    background: color-mix(in srgb, var(--color-card-timer) 18%, transparent);
+  }
+}
+.animate-timer-done {
+  animation: timer-done 0.5s ease-in-out infinite alternate;
 }
 
 /* Loading pulse */
@@ -210,6 +224,10 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .animate-card-enter {
     animation: none;
+  }
+  .animate-timer-done {
+    animation: none;
+    background: color-mix(in srgb, var(--color-card-timer) 18%, transparent);
   }
   .library-drawer,
   .library-drawer *,

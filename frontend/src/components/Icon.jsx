@@ -11,6 +11,7 @@ import {
   QuotesIcon,
   SunIcon,
   ThermometerIcon,
+  TimerIcon,
 } from '@phosphor-icons/react'
 
 /**
@@ -27,6 +28,7 @@ export const ICONS = {
   quote: QuotesIcon,
   planet: PlanetIcon,
   checklist: ListChecksIcon,
+  timer: TimerIcon,
   // Weather conditions
   sun: SunIcon,
   cloud: CloudIcon,
