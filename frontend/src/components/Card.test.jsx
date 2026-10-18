@@ -113,18 +113,23 @@ describe('registry dispatch (ADR-008)', () => {
     ).toBeInTheDocument()
   })
 
-  it('falls back to the placeholder for an unregistered source', async () => {
+  it('names the missing source for an unregistered source', async () => {
     render(<Card card={cardRecord({ source: 'not-a-real-source' })} locked />)
 
     expect(
-      await screen.findByText('What should we build here?'),
+      await screen.findByText(
+        /no component is registered for source .not-a-real-source./i,
+      ),
     ).toBeInTheDocument()
+    expect(
+      screen.queryByText('What should we build here?'),
+    ).not.toBeInTheDocument()
   })
 
   it('does not fetch data for an unregistered source', async () => {
     render(<Card card={cardRecord({ source: 'not-a-real-source' })} locked />)
 
-    await screen.findByText('What should we build here?')
+    await screen.findByText(/no component is registered/i)
     expect(fetchCardData).not.toHaveBeenCalled()
   })
 })

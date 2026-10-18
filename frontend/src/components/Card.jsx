@@ -28,12 +28,38 @@ const CARD_REGISTRY = {
   todo: { component: TodoCard, accent: 'card-todo', needsData: false },
 }
 
+/**
+ * Shown for a card whose `source` has no entry in CARD_REGISTRY.
+ *
+ * This registry and the backend's SERVICES agree only through the source
+ * string (ADR-008), so when they drift the card says which source is missing
+ * rather than passing for the "build something here" placeholder.
+ */
+function UnregisteredCard({ card }) {
+  return (
+    <div className="h-full flex flex-col items-center justify-center text-center">
+      <p className="text-sm text-text-secondary">
+        No component is registered for source &ldquo;{card.source}&rdquo;.
+      </p>
+      <p className="text-xs text-text-muted mt-2">
+        Add it to CARD_REGISTRY in Card.jsx.
+      </p>
+    </div>
+  )
+}
+
+const UNREGISTERED = {
+  component: UnregisteredCard,
+  accent: 'card-placeholder',
+  needsData: false,
+}
+
 export default function Card({ card, locked }) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  const entry = CARD_REGISTRY[card.source] || CARD_REGISTRY.placeholder
+  const entry = CARD_REGISTRY[card.source] ?? UNREGISTERED
   const configKey = JSON.stringify(card.config || {})
 
   useEffect(() => {
