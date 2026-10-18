@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useRef, useState } from 'react'
+import { useEffect, useReducer, useState } from 'react'
 import {
   ArrowCounterClockwiseIcon,
   PauseIcon,
@@ -121,12 +121,9 @@ function doneMessage(state) {
     : `Focus done, take a ${phaseMinutes(next.phase)} minute break`
 }
 
-// While the timer flashes, its other controls are disabled and let clicks
-// through to the card, so any click there only acknowledges it.
-const SMALL_BUTTON =
-  'min-h-7 px-1.5 border font-mono text-xs transition-colors disabled:pointer-events-none'
+const SMALL_BUTTON = 'min-h-7 px-1.5 border font-mono text-xs transition-colors'
 
-function ModeToggle({ mode, onMode, disabled }) {
+function ModeToggle({ mode, onMode }) {
   return (
     <div className="inline-flex shrink-0 border border-hairline-strong">
       {[
@@ -137,9 +134,8 @@ function ModeToggle({ mode, onMode, disabled }) {
           key={value}
           type="button"
           aria-pressed={mode === value}
-          disabled={disabled}
           onClick={() => onMode(value)}
-          className={`min-h-8 px-2.5 text-xs font-medium transition-colors disabled:pointer-events-none ${
+          className={`min-h-8 px-2.5 text-xs font-medium transition-colors ${
             mode === value
               ? 'bg-text-primary text-surface'
               : 'text-text-secondary hover:text-text-primary'
@@ -152,7 +148,7 @@ function ModeToggle({ mode, onMode, disabled }) {
   )
 }
 
-function MinutesPicker({ minutes, onMinutes, disabled }) {
+function MinutesPicker({ minutes, onMinutes }) {
   return (
     <div className="flex flex-wrap gap-1">
       {PRESETS.map((m) => (
@@ -161,7 +157,6 @@ function MinutesPicker({ minutes, onMinutes, disabled }) {
           type="button"
           aria-pressed={minutes === m}
           aria-label={`${m} minutes`}
-          disabled={disabled}
           onClick={() => onMinutes(m)}
           className={`${SMALL_BUTTON} ${
             minutes === m
@@ -175,7 +170,6 @@ function MinutesPicker({ minutes, onMinutes, disabled }) {
       <button
         type="button"
         aria-label="One minute less"
-        disabled={disabled}
         onClick={() => onMinutes(minutes - 1)}
         className={`${SMALL_BUTTON} border-hairline text-text-secondary hover:text-text-primary`}
       >
@@ -184,7 +178,6 @@ function MinutesPicker({ minutes, onMinutes, disabled }) {
       <button
         type="button"
         aria-label="One minute more"
-        disabled={disabled}
         onClick={() => onMinutes(minutes + 1)}
         className={`${SMALL_BUTTON} border-hairline text-text-secondary hover:text-text-primary`}
       >
@@ -222,10 +215,6 @@ function PhaseDots({ phase, round }) {
 export default function TimerCard({ onNote }) {
   const [state, dispatch] = useReducer(timerReducer, INITIAL)
   const [now, setNow] = useState(() => Date.now())
-  // The card's main button changes between Start and "done"; keyboard focus
-  // follows it if it was in the card, and is never taken from elsewhere.
-  const focusInCard = useRef(false)
-  const mainButton = useRef(null)
   const running = state.endsAt !== null
   const left = running ? Math.max(0, state.endsAt - now) : state.left
 
@@ -251,10 +240,6 @@ export default function TimerCard({ onNote }) {
     )
   }, [onNote, state.mode, state.round])
 
-  useEffect(() => {
-    if (focusInCard.current) mainButton.current?.focus()
-  }, [state.done])
-
   const progress = state.total ? 1 - left / state.total : 0
 
   return (
@@ -262,11 +247,6 @@ export default function TimerCard({ onNote }) {
     // and the edge bar reach the card's edges.
     <div
       onClick={state.done ? () => dispatch({ type: 'dismiss' }) : undefined}
-      onFocus={() => (focusInCard.current = true)}
-      onBlur={(e) => {
-        if (!e.currentTarget.contains(e.relatedTarget))
-          focusInCard.current = false
-      }}
       data-done={state.done}
       className={`relative -m-4 h-[calc(100%+2rem)] p-4 flex flex-col justify-between gap-3 ${state.done ? 'animate-timer-done cursor-pointer' : ''}`}
     >
@@ -276,62 +256,64 @@ export default function TimerCard({ onNote }) {
         >
           {formatTime(left)}
         </p>
-        <ModeToggle
-          mode={state.mode}
-          onMode={(mode) => dispatch({ type: 'mode', mode })}
-          disabled={state.done}
-        />
+        {/* While it flashes, the only thing to do is acknowledge it. */}
+        {!state.done && (
+          <ModeToggle
+            mode={state.mode}
+            onMode={(mode) => dispatch({ type: 'mode', mode })}
+          />
+        )}
       </div>
       <div className="flex flex-wrap items-end justify-between gap-3">
-        {state.mode === 'timer' ? (
-          <MinutesPicker
-            minutes={state.minutes}
-            onMinutes={(minutes) => dispatch({ type: 'minutes', minutes })}
-            disabled={state.done}
-          />
-        ) : (
+        {state.mode === 'pomodoro' ? (
           <PhaseDots phase={state.phase} round={state.round} />
+        ) : (
+          !state.done && (
+            <MinutesPicker
+              minutes={state.minutes}
+              onMinutes={(minutes) => dispatch({ type: 'minutes', minutes })}
+            />
+          )
         )}
-        <div className="flex gap-1.5">
-          {state.done ? (
-            // No handler of its own: its click reaches the card's, above.
-            // It is here so the keyboard can dismiss too.
+        {/* One main button that changes its label, so keyboard focus stays
+            on it as it goes from Start to "time is up" and back. While it
+            flashes it has no handler of its own: its click reaches the
+            card's, above. */}
+        <div className="ml-auto flex gap-1.5">
+          <button
+            type="button"
+            onClick={
+              state.done
+                ? undefined
+                : () =>
+                    dispatch({
+                      type: running ? 'pause' : 'start',
+                      now: Date.now(),
+                    })
+            }
+            className={`inline-flex items-center gap-1.5 min-h-9 px-3 text-[13px] font-medium text-surface ${
+              state.done
+                ? 'bg-card-timer'
+                : 'bg-text-primary hover:bg-text-primary/90'
+            }`}
+          >
+            {!state.done &&
+              (running ? (
+                <PauseIcon size={16} aria-hidden />
+              ) : (
+                <PlayIcon size={16} aria-hidden />
+              ))}
+            {state.done ? doneMessage(state) : running ? 'Pause' : 'Start'}
+          </button>
+          {!state.done && (
             <button
-              ref={mainButton}
               type="button"
-              className="inline-flex items-center gap-1.5 min-h-9 px-3 text-[13px] font-medium bg-card-timer text-surface"
+              onClick={() => dispatch({ type: 'reset' })}
+              aria-label="Reset"
+              className="inline-flex items-center justify-center min-h-9 min-w-9 border border-hairline-strong text-text-primary hover:border-text-muted"
             >
-              {doneMessage(state)}
+              <ArrowCounterClockwiseIcon size={16} aria-hidden />
             </button>
-          ) : (
-            <>
-              <button
-                ref={mainButton}
-                type="button"
-                onClick={() =>
-                  dispatch({
-                    type: running ? 'pause' : 'start',
-                    now: Date.now(),
-                  })
-                }
-                className="inline-flex items-center gap-1.5 min-h-9 px-3 text-[13px] font-medium bg-text-primary text-surface hover:bg-text-primary/90"
-              >
-                {running ? (
-                  <PauseIcon size={16} aria-hidden />
-                ) : (
-                  <PlayIcon size={16} aria-hidden />
-                )}
-                {running ? 'Pause' : 'Start'}
-              </button>
-              <button
-                type="button"
-                onClick={() => dispatch({ type: 'reset' })}
-                aria-label="Reset"
-                className="inline-flex items-center justify-center min-h-9 min-w-9 border border-hairline-strong text-text-primary hover:border-text-muted"
-              >
-                <ArrowCounterClockwiseIcon size={16} aria-hidden />
-              </button>
-            </>
           )}
         </div>
       </div>

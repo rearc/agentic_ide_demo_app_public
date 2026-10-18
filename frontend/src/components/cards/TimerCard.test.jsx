@@ -104,20 +104,16 @@ describe('while it flashes', () => {
     pass(5 * MINUTE)
   }
 
-  it('takes a click on its other controls as acknowledging it, nothing more', () => {
+  it('hides its other controls, so the only thing to do is acknowledge it', () => {
     render(<TimerCard />)
     finishFiveMinutes()
 
-    press('Pomodoro')
-
-    expect(shown()).toBe('05:00')
-    expect(screen.getByRole('button', { name: 'Timer' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    )
+    expect(screen.queryByRole('button', { name: 'Pomodoro' })).toBeNull()
+    expect(screen.queryByRole('button', { name: '5 minutes' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Reset' })).toBeNull()
   })
 
-  it('moves keyboard focus to its done button, and back to Start after', () => {
+  it('keeps keyboard focus on its main button as it goes from Start to done and back', () => {
     render(<TimerCard />)
     press('5 minutes')
     screen.getByRole('button', { name: 'Start' }).focus()
