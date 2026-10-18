@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 
 // Dashboard and useBoard have their own tests; stubbing them keeps this file
-// about App's own job: the clock, and the lock and library toggles it owns.
+// about App's own job: the clock, and the edit and library controls it owns.
 const dashboardRender = vi.fn()
 vi.mock('./components/Dashboard', () => ({
   default: ({ locked }) => {
@@ -49,15 +49,16 @@ describe('edit mode', () => {
     return screen.queryByRole('region', { name: 'Card library' })
   }
 
-  it('starts locked, with the library closed', () => {
+  function libraryButton() {
+    return screen.queryByRole('button', { name: 'Library' })
+  }
+
+  it('starts locked, with the library closed and no Library button', () => {
     render(<App />)
 
     expect(dashboardLocked()).toBe('true')
     expect(library()).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Edit board' })).toHaveAttribute(
-      'aria-expanded',
-      'false',
-    )
+    expect(libraryButton()).not.toBeInTheDocument()
   })
 
   it('unlocks the dashboard and opens the library with Edit board', async () => {
@@ -68,13 +69,26 @@ describe('edit mode', () => {
 
     expect(dashboardLocked()).toBe('false')
     expect(library()).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Done' })).toHaveAttribute(
-      'aria-expanded',
-      'true',
-    )
+    expect(libraryButton()).toHaveAttribute('aria-expanded', 'true')
   })
 
-  it('locks it and closes the library with Done', async () => {
+  it('folds the library away and back while staying in edit mode', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: 'Edit board' }))
+    await user.click(libraryButton())
+
+    expect(library()).not.toBeInTheDocument()
+    expect(dashboardLocked()).toBe('false')
+    expect(libraryButton()).toHaveAttribute('aria-expanded', 'false')
+
+    await user.click(libraryButton())
+
+    expect(library()).toBeInTheDocument()
+  })
+
+  it('locks the board and closes the library with Done', async () => {
     const user = userEvent.setup()
     render(<App />)
 
@@ -83,6 +97,7 @@ describe('edit mode', () => {
 
     expect(dashboardLocked()).toBe('true')
     expect(library()).not.toBeInTheDocument()
+    expect(libraryButton()).not.toBeInTheDocument()
   })
 
   it('shows the drag hint only while editing', async () => {

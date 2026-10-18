@@ -260,14 +260,21 @@ describe('while editing', () => {
   })
 
   it.each([
-    ['locked', { locked: true }, 'false'],
-    ['unlocked', { locked: false }, 'true'],
-    ['a library card is dragged in', { draggingCardId: 1 }, 'false'],
-  ])('recedes the board only while editing: %s', (_case, props, recede) => {
-    renderDashboard(props)
+    ['library closed', { libraryOpen: false }, 'false'],
+    ['library open', { libraryOpen: true }, 'true'],
+    [
+      'a library card is dragged in',
+      { libraryOpen: true, draggingCardId: 1 },
+      'false',
+    ],
+  ])(
+    'recedes the board only while the library is open: %s',
+    (_case, props, recede) => {
+      renderDashboard(props)
 
-    expect(container().dataset.recede).toBe(recede)
-  })
+      expect(container().dataset.recede).toBe(recede)
+    },
+  )
 
   it('draws the drop preview in the colour of the card being moved', () => {
     renderDashboard({

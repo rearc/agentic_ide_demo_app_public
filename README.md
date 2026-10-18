@@ -92,6 +92,7 @@ frontend/
       Dashboard.jsx     # the grid; renders the board it is handed, saves on every change
       ProfileMenu.jsx   # switch, save as new, rename, delete a profile
       EditButton.jsx    # Edit board / Done: unlocks the cards, opens the library
+      LibraryButton.jsx # folds the library away while editing, and back
       LibraryDrawer.jsx # every card, with search; add or drag one onto the board
       Card.jsx          # CARD_REGISTRY: a card's source picks its widget
       cards/            # one component per card type

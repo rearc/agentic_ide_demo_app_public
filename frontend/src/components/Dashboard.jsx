@@ -107,6 +107,7 @@ export default function Dashboard({
   profileId,
   turn,
   locked,
+  libraryOpen = false,
   loading,
   error,
   draggingCardId,
@@ -270,13 +271,14 @@ export default function Dashboard({
   // appeared only after loading was never measured (the grid kept the hook's
   // 1280 px default and overflowed narrower windows).
   //
-  // While editing, the board recedes (index.css), except during a drag in
-  // from the library, when it must be at full size to drop onto.
+  // While the library is open, the board recedes (index.css), except during
+  // a drag in from it, when it must be at full size to drop onto. With the
+  // library folded away it stays at full size, to be sized as it is seen.
   return (
     <div
       ref={containerRef}
       className="board-recede"
-      data-recede={!locked && !stacked && draggingCardId === null}
+      data-recede={libraryOpen && !stacked && draggingCardId === null}
       style={{ '--drop-color': cardAccent(previewCard?.source) }}
     >
       <div ref={pageRef}>{content}</div>

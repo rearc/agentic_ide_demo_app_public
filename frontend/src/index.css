@@ -188,7 +188,7 @@ body {
   transform: none;
 }
 
-/* While editing, the board recedes so the library comes forward. Pointing
+/* While the library is open, the board recedes so the library comes forward. Pointing
    at the board, or moving or resizing a card on it, brings it back (a
    library drag clears data-recede, Dashboard.jsx). Only where there is a
    pointer to hover with: on touch it would stay dimmed. */

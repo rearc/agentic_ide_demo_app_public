@@ -222,6 +222,21 @@ test('a card dragged from the library lands where it is dropped', async ({
     ])
 })
 
+test('with the library folded away, the board sits where it does when viewed', async ({
+  page,
+}) => {
+  const grid = page.locator('.react-grid-layout')
+  const top = async () => (await grid.boundingBox()).y
+  await expect(page.getByRole('heading', { name: 'Weather' })).toBeVisible()
+  const viewed = await top()
+
+  await page.getByRole('button', { name: 'Edit board' }).click()
+  await expect.poll(top).toBeGreaterThan(viewed)
+
+  await page.getByRole('button', { name: 'Library', exact: true }).click()
+  await expect.poll(top).toBe(viewed)
+})
+
 test('a profile saved from the board keeps its own cards', async ({ page }) => {
   const quote = page.getByRole('heading', { name: 'Daily Quote' })
   const menu = (name) =>
@@ -272,9 +287,15 @@ for (const width of [1280, 760, 390]) {
       ).toBeVisible()
     }
 
-    const overflow = await page.evaluate(
-      () => document.documentElement.scrollWidth - window.innerWidth,
-    )
-    expect(overflow).toBeLessThanOrEqual(0)
+    const overflow = () =>
+      page.evaluate(
+        () => document.documentElement.scrollWidth - window.innerWidth,
+      )
+    expect(await overflow()).toBeLessThanOrEqual(0)
+
+    // The header gains controls while editing; it must still fit.
+    await page.getByRole('button', { name: 'Edit board' }).click()
+    await expect(page.getByRole('button', { name: 'Done' })).toBeVisible()
+    expect(await overflow()).toBeLessThanOrEqual(0)
   })
 }

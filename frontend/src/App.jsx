@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { IconContext } from '@phosphor-icons/react'
 import Dashboard from './components/Dashboard'
 import EditButton from './components/EditButton'
+import LibraryButton from './components/LibraryButton'
 import LibraryDrawer from './components/LibraryDrawer'
 import ProfileMenu from './components/ProfileMenu'
 import ProfilePager from './components/ProfilePager'
@@ -43,9 +44,14 @@ const LIBRARY_ID = 'card-library'
 
 export default function App() {
   const board = useBoard()
-  // Editing is one mode: the cards can be moved, resized and removed, and the
-  // library is open to add more. "Edit board" turns it on, "Done" off.
-  const [editing, setEditing] = useState(false)
+  // 'view': the board is locked. 'library': editing, with the library open
+  // to add and remove cards. 'arrange': editing with the library folded
+  // away, so the board sits where it will when viewed. Edit board opens
+  // 'library', the Library button switches between the two editing modes,
+  // and Done returns to 'view'.
+  const [mode, setMode] = useState('view')
+  const editing = mode !== 'view'
+  const libraryOpen = mode === 'library'
   // Which way the last profile change went: 'next' or 'prev' from the
   // arrows, null from the menu. The board slides in from that side.
   const [turn, setTurn] = useState(null)
@@ -89,17 +95,23 @@ export default function App() {
                   save automatically
                 </span>
               )}
+              {editing && (
+                <LibraryButton
+                  open={libraryOpen}
+                  onToggle={() => setMode(libraryOpen ? 'arrange' : 'library')}
+                  controls={LIBRARY_ID}
+                />
+              )}
               <EditButton
                 editing={editing}
-                onToggle={() => setEditing(!editing)}
-                controls={LIBRARY_ID}
+                onToggle={() => setMode(editing ? 'view' : 'library')}
               />
               <Clock />
             </div>
           </div>
           <LibraryDrawer
             id={LIBRARY_ID}
-            open={editing}
+            open={libraryOpen}
             cards={board.cards}
             board={board.board}
             onAdd={board.showCard}
@@ -115,6 +127,7 @@ export default function App() {
             profileId={board.profile?.id}
             turn={turn}
             locked={!editing}
+            libraryOpen={libraryOpen}
             loading={board.loading}
             error={board.error}
             draggingCardId={board.draggingCardId}
