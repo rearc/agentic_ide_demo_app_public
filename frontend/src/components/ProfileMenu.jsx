@@ -244,7 +244,7 @@ export default function ProfileMenu({
             <span aria-hidden className="hidden lg:inline text-text-muted">
               /
             </span>
-            <span className="max-w-48 truncate font-medium text-text-primary">
+            <span className="max-w-28 sm:max-w-48 truncate font-medium text-text-primary">
               {profile.name}
             </span>
           </>
@@ -255,12 +255,14 @@ export default function ProfileMenu({
           className={`shrink-0 text-text-muted transition-transform ${open ? 'rotate-180' : ''}`}
         />
       </button>
+      {/* On a phone the switcher sits near the right edge, so the menu
+          opens leftwards to stay on screen. */}
       {open && (
         <div
           id="profile-menu"
           role="region"
           aria-label="Profiles"
-          className="absolute left-0 top-full mt-2 w-72 z-20 bg-panel border border-hairline-strong shadow-[0_12px_32px_rgb(0_0_0/0.45)]"
+          className="absolute right-0 sm:right-auto sm:left-0 top-full mt-2 w-72 z-20 bg-panel border border-hairline-strong shadow-[0_12px_32px_rgb(0_0_0/0.45)]"
         >
           <p className="px-3 pt-2.5 pb-1 text-[11px] font-medium uppercase tracking-wider text-text-muted">
             Profiles

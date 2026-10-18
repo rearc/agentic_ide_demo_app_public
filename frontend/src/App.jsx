@@ -79,8 +79,8 @@ export default function App() {
                 tone="navy"
                 title="Rearc AI Labs"
               />
-              <span className="hidden sm:block h-7 w-px shrink-0 bg-hairline-strong" />
-              <div className="hidden sm:flex">
+              <span className="h-7 w-px shrink-0 bg-hairline-strong" />
+              <div className="flex">
                 <ProfileMenu
                   profiles={board.profiles}
                   profile={board.profile}
