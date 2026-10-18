@@ -24,6 +24,6 @@ frontend/dist/
 # OS
 .DS_Store
 
-# APM dependencies (apm_modules/) are intentionally committed
-# so workshop participants get a pre-installed, ready-to-demo experience.
-# Re-run `apm install` to regenerate from apm.yml + apm.lock.yaml if needed.
+# APM's working copies of the kits. Participants never run `apm install`: the
+# deployed primitives in .claude/ are committed, and `apm install` rebuilds this.
+apm_modules/
