@@ -13,7 +13,7 @@
 Do this **off-stage, before the room is watching** — the first thing they should see is the app already running, not a terminal.
 
 1. **Follow the setup in [README.md](../README.md)** — backend venv with an explicit **Python 3.11+** interpreter + `pip install`, and frontend deps (`nvm use` → Node 22, then `npm install`).
-2. **Seed the database:** `cd backend && python seed.py`: the **Default** profile should start with the **five seeded cards** (Weather · Daily Quote · Coming Soon · Space Photo · Todos).
+2. **Seed the database:** `cd backend && python seed.py`: the **Default** profile should start with **seven cards on the board** (Weather · Daylight · Moon · Timer in the top row; ISS · Todos · Coming Soon below), and Daily Quote and Space Photo waiting in the library.
 3. **Run both servers** in two terminals:
    - Backend: `cd backend && python run.py` → `http://127.0.0.1:5001`
    - Frontend: `cd frontend && npm run dev` → `http://localhost:5173`
@@ -28,9 +28,10 @@ Now begin the tour **on the running app** — deliver "The point of the app" bel
 *(Present this with the app open in the browser — point at the cards as you talk.)*
 
 It's a **personal dashboard you run locally and make your own** — a "control
-center." The board holds **cards**: some pull live data (weather, a daily quote,
-NASA's photo of the day), some are self-contained tools (a todo list), and one is
-an empty **"Coming Soon"** slot inviting the next one.
+center." The board holds **cards**: some pull live data (weather, daylight, the space
+station on a globe you can spin), some are self-contained tools (a todo list, a
+timer, the moon's phase), and one is an empty **"Coming Soon"** slot inviting the
+next one. More wait in the library (a daily quote, NASA's photo of the day).
 
 The app is deliberately **small and conventional** — a Flask API, a React SPA, a
 SQLite file. That's the whole point: the interesting part isn't the framework, it's
