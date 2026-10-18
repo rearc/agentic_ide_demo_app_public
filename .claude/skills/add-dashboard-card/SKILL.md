@@ -184,14 +184,14 @@ Card(
 Then give it a place on the "Default" profile's board: add an entry to `DEFAULT_BOARD` in the same file, keyed by the slug:
 
 ```python
-'{slug}': {'x': ?, 'y': ?, 'w': 4, 'h': 4},
+'{slug}': {'x': ?, 'y': ?, 'w': 8, 'h': 8},
 ```
 
 A card's place belongs to a profile, not to the card (the demo app's ADR-019): the seed puts a new default card on "Default" only, and every card is also in the Library, where it can be added to any other profile.
 
 Layout notes:
-- Grid is 12 columns wide. The default cards are `w: 4` (a third); use `w: 6` for half width or `w: 12` for full width.
-- `h: 4` is a good default height. Image-heavy cards (like space) use `h: 7`.
+- Grid is 24 columns wide, in fine steps. The default cards are `w: 8` (a third); use `w: 12` for half width or `w: 24` for full width.
+- `h: 8` is a good default height (208 px). Image-heavy cards (like space) use `h: 14`.
 - Position cards to avoid overlaps: check existing `x, y` values.
 
 Then seed the new card: `cd backend && python seed.py`
