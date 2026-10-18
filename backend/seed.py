@@ -24,17 +24,19 @@ DEFAULT_PROFILE_NAME = 'Default'
 
 # Where each default card sits on the "Default" profile's board, by slug, in
 # grid cells: the board is 24 columns wide, and a row is 19 px plus an 8 px gap
-# (Dashboard.jsx), so 8 by 8 is a third of the width and 208 px tall.
+# (Dashboard.jsx), so 8 by 8 is a third of the width and 208 px tall. Daily
+# Quote and Space Photo start in the library (hidden), at the size they come
+# back at.
 DEFAULT_BOARD = {
-    'weather': {'x': 0, 'y': 0, 'w': 8, 'h': 8},
-    'quote': {'x': 8, 'y': 0, 'w': 8, 'h': 8},
-    'placeholder': {'x': 16, 'y': 0, 'w': 8, 'h': 8},
-    'space': {'x': 0, 'y': 8, 'w': 12, 'h': 14},
-    'todo': {'x': 12, 'y': 8, 'w': 12, 'h': 14},
-    'timer': {'x': 0, 'y': 22, 'w': 8, 'h': 8},
-    'moon': {'x': 8, 'y': 22, 'w': 8, 'h': 8},
-    'daylight': {'x': 16, 'y': 22, 'w': 8, 'h': 8},
-    'iss': {'x': 0, 'y': 30, 'w': 12, 'h': 14},
+    'weather': {'x': 0, 'y': 0, 'w': 6, 'h': 8},
+    'daylight': {'x': 6, 'y': 0, 'w': 5, 'h': 8},
+    'moon': {'x': 11, 'y': 0, 'w': 7, 'h': 8},
+    'timer': {'x': 18, 'y': 0, 'w': 6, 'h': 8},
+    'iss': {'x': 0, 'y': 8, 'w': 6, 'h': 14},
+    'todo': {'x': 6, 'y': 8, 'w': 10, 'h': 14},
+    'placeholder': {'x': 16, 'y': 8, 'w': 8, 'h': 14},
+    'quote': {'x': 0, 'y': 22, 'w': 8, 'h': 8, 'hidden': True},
+    'space': {'x': 8, 'y': 22, 'w': 12, 'h': 14, 'hidden': True},
 }
 
 

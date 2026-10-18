@@ -61,7 +61,7 @@ async function fetchProfiles(request) {
   return response.json()
 }
 
-/** The seeded "Default" profile's entry for the card with `slug`. */
+/** The "Default" profile's entry for the card with `slug`. */
 async function defaultEntry(request, slug) {
   const card = seededCards.find((c) => c.slug === slug)
   const [profile] = await fetchProfiles(request)
@@ -80,16 +80,42 @@ async function deleteAllTodos(request, cardId) {
 // scrolling the page.
 test.use({ viewport: { width: 1280, height: 1000 } })
 
+// The board these specs start from, by slug, every card on it. It is theirs,
+// not the seed's first-load board, so rearranging that board for show breaks
+// no test: the drag tests need Weather, Daily Quote and Coming Soon side by
+// side in the top row, a third of the width each.
+const TEST_BOARD = {
+  weather: { x: 0, y: 0, w: 8, h: 8 },
+  quote: { x: 8, y: 0, w: 8, h: 8 },
+  placeholder: { x: 16, y: 0, w: 8, h: 8 },
+  space: { x: 0, y: 8, w: 12, h: 14 },
+  todo: { x: 12, y: 8, w: 12, h: 14 },
+  timer: { x: 0, y: 22, w: 8, h: 8 },
+  moon: { x: 8, y: 22, w: 8, h: 8 },
+  daylight: { x: 16, y: 22, w: 8, h: 8 },
+  iss: { x: 0, y: 30, w: 12, h: 14 },
+}
+
 let seededCards
 let seededDefault
+let testBoard
 
 test.beforeAll(async ({ request }) => {
   seededCards = await fetchCards(request)
   ;[seededDefault] = await fetchProfiles(request)
+  testBoard = Object.fromEntries(
+    seededCards.map((card) => [
+      card.id,
+      { ...TEST_BOARD[card.slug], hidden: false },
+    ]),
+  )
+  await request.patch(`/api/profiles/${seededDefault.id}`, {
+    data: { board: testBoard },
+  })
 })
 
-// Specs share one database, so each one leaves it as it found it: the seeded
-// "Default" board, no other profile, no todos.
+// Specs share one database, so each one leaves it as it found it: the test
+// board on "Default", no other profile, no todos.
 test.afterEach(async ({ request }) => {
   for (const profile of await fetchProfiles(request)) {
     if (profile.id !== seededDefault.id) {
@@ -97,11 +123,17 @@ test.afterEach(async ({ request }) => {
     }
   }
   await request.patch(`/api/profiles/${seededDefault.id}`, {
-    data: { board: seededDefault.board },
+    data: { board: testBoard },
   })
   for (const card of seededCards) {
     if (card.source === 'todo') await deleteAllTodos(request, card.id)
   }
+})
+
+test.afterAll(async ({ request }) => {
+  await request.patch(`/api/profiles/${seededDefault.id}`, {
+    data: { board: seededDefault.board },
+  })
 })
 
 test.beforeEach(async ({ page }) => {

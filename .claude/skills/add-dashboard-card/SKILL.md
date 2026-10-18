@@ -190,9 +190,10 @@ Then give it a place on the "Default" profile's board: add an entry to `DEFAULT_
 A card's place belongs to a profile, not to the card (the demo app's ADR-019): the seed puts a new default card on "Default" only, and every card is also in the Library, where it can be added to any other profile.
 
 Layout notes:
-- Grid is 24 columns wide, in fine steps. The default cards are `w: 8` (a third); use `w: 12` for half width or `w: 24` for full width.
+- Grid is 24 columns wide, in fine steps. `w: 8` (a third) is a good default width; use `w: 12` for half width or `w: 24` for full width.
 - `h: 8` is a good default height (208 px). Image-heavy cards (like space) use `h: 14`.
-- Position cards to avoid overlaps: check existing `x, y` values.
+- Position cards to avoid overlaps: the simplest free place is `x: 0` with `y` at the bottom of the lowest visible card (its `y + h`).
+- `'hidden': True` in the entry starts the card in the Library instead of on the board, as Daily Quote and Space Photo do.
 
 Then seed the new card: `cd backend && python seed.py`
 

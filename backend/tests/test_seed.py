@@ -57,8 +57,8 @@ def board_by_slug(profile):
 
 
 def default_board():
-    """`DEFAULT_BOARD` as the board serializes it: every entry visible."""
-    return {slug: {**place, 'hidden': False} for slug, place in DEFAULT_BOARD.items()}
+    """`DEFAULT_BOARD` as the board serializes it: visible unless it says hidden."""
+    return {slug: {'hidden': False, **place} for slug, place in DEFAULT_BOARD.items()}
 
 
 def todo_texts():
