@@ -32,11 +32,11 @@
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
     "@vitejs/plugin-react": "^4.4.1",
-    "@vitest/ui": "^4.1.10",
+    "@vitest/ui": "^4.1.12",
     "jsdom": "^29.1.1",
     "prettier": "^3.9.5",
     "tailwindcss": "^4.2.2",
     "vite": "^6.4.1",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.12"
   }
 }
