@@ -23,8 +23,8 @@ Every card is **one row in the `cards` table + one entry in `CARD_REGISTRY`**. C
 
 | Archetype | `needsData` | Data source | Extra backend work |
 |-----------|-------------|-------------|--------------------|
-| **Data card** (weather, quote, space) | `true` | live fetch from `/api/data/<source>` via a backend service | Stages 1–2 (+3 if the API needs a key) |
-| **Static card** (placeholder; a client-only timer, calculator, clock) | `false` | none — rendered entirely in the component | none (skip stages 1–3) |
+| **Data card** (weather, quote, space, daylight, iss) | `true` | live fetch from `/api/data/<source>` via a backend service | Stages 1–2 (+3 if the API needs a key) |
+| **Static card** (timer, moon, placeholder; the moon card is the simplest model to copy) | `false` | none — rendered entirely in the component | none (skip stages 1–3) |
 | **Stateful card** (todo) | `false` | its **own** model, routes, and table — it talks to its own endpoint, **not** `/api/data` | a new SQLAlchemy model + routes blueprint + **an Alembic migration** (skip stages 1–3) |
 
 **All three** still do the frontend, seed and test stages (4 component, 5 `CARD_REGISTRY`, 6 colour and icon, 7 seed row, 8 tests). The difference is only what happens on the backend.
@@ -153,7 +153,7 @@ export default function ExampleCard({ data }) {
 
 ## Stage 6: Choose the Card's Colour and Icon
 
-**Colour.** **Edit** `frontend/src/index.css`. Card colours come in two layers inside the `@theme static { }` block: a palette of named colours (`--color-rally-gold`, `-orange`, `-red`, `-raspberry`, `-navy`), and one colour per card that points at a palette colour. Add your card's:
+**Colour.** **Edit** `frontend/src/index.css`. Card colours come in two layers inside the `@theme static { }` block: a palette of named colours (`--color-rally-gold`, `-orange`, `-red`, `-raspberry`, `-navy`, `-sand`, `-silver`, `-ice`), and one colour per card that points at a palette colour. Add your card's:
 
 ```css
 --color-card-{slug}: var(--color-rally-navy);

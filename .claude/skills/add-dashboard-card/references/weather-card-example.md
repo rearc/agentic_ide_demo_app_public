@@ -4,7 +4,7 @@ The weather card is the fullest data card in the app: a service with config, a s
 
 | Stage | File | What to take from it |
 |---|---|---|
-| 1 Service | `backend/app/services/weather.py` | `fetch(city='San Francisco', **_kwargs)`: a config param with a default. `GEOCODE_URL` and `FORECAST_URL` as module constants. A `_fallback()` helper that returns the success keys plus `'fallback': True`. `@lru_cache` on the geocoding lookup (the tests reset it between runs). |
+| 1 Service | `backend/app/services/weather.py` | `fetch(city='San Francisco', **_kwargs)`: a config param with a default. A `_fallback()` helper that returns the success keys plus `'fallback': True`. The city lookup (`geocode`, with `@lru_cache`, which the tests reset between runs) and both Open-Meteo URLs live in `backend/app/services/open_meteo.py`, shared with the daylight service; a new Open-Meteo card imports them from there. |
 | 2 Route | `backend/app/routes/data.py` | The import line and the `'weather': weather.fetch` entry in `SERVICES`. Query-string params such as `?city=Paris` reach `fetch` as keyword args. |
 | 3 Config | none | Open-Meteo needs no key. For a keyed API, follow `backend/app/services/space.py` (`NASA_API_KEY` via `current_app.config`) and `backend/config.py`. |
 | 4 Component | `frontend/src/components/cards/WeatherCard.jsx` | The fallback branch first, then the data. `useState` for the °C/°F toggle: state the card owns, which most cards don't need. The condition icon is `<Icon name={data.icon} />`: the service sends an icon name (`WEATHER_CODE_ICONS` in `weather.py`) that `Icon.jsx` draws. |
