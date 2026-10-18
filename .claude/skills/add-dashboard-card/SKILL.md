@@ -185,10 +185,9 @@ Card(
     description='{Short description}',
     icon='{emoji}',
     source='{slug}',
-    config={},          # or {'param': 'default_value'} if your service takes params
+    config={'param': 'default_value'},  # only if your service takes params; omit otherwise
     layout={'x': ?, 'y': ?, 'w': 4, 'h': 4},
     position={next_number},
-    is_active=True,
 ),
 ```
 
@@ -226,7 +225,7 @@ New behavior ships with tests (`TEST-1`), and tests never touch the network (`TE
 4. Confirm the new card appears in the grid with:
    - Correct title, icon, and description in the header
    - Data loaded from your service (not a loading spinner or error)
-   - Accent color visible on hover (left edge bar and glow)
+   - Accent color in the top bar, and the glow on hover
 5. Unlock the layout and drag the card — confirm it saves position
 
 ## Quick Checklist
