@@ -211,8 +211,13 @@ export default function DaylightCard({ data }) {
         >
           <span className="text-text-primary">
             {duration(data.daylight_seconds * 1000)}
-          </span>{' '}
-          · {change(data.change_seconds)}
+          </span>
+          {/* On a narrow card the change from yesterday is left to screen
+              readers, so the times beside it stay whole. */}
+          <span className="sr-only @xs:not-sr-only">
+            {' '}
+            · {change(data.change_seconds)}
+          </span>
         </span>
       </p>
     </div>

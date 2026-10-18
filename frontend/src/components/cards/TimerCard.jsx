@@ -248,11 +248,14 @@ export default function TimerCard({ onNote }) {
     <div
       onClick={state.done ? () => dispatch({ type: 'dismiss' }) : undefined}
       data-done={state.done}
-      className={`relative -m-4 h-[calc(100%+2rem)] p-4 flex flex-col justify-between gap-3 ${state.done ? 'animate-timer-done cursor-pointer' : ''}`}
+      className={`@container relative -m-4 h-[calc(100%+2rem)] p-4 flex flex-col justify-between gap-3 ${state.done ? 'animate-timer-done cursor-pointer' : ''}`}
     >
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        {/* The digits shrink on a narrow card to leave the mode switch room
+            beside them (about 10rem with the gap; the digits are about 2.5
+            times as wide as they are tall). */}
         <p
-          className={`text-6xl font-light leading-none tracking-tight tabular-nums ${state.done ? 'text-card-timer' : ''}`}
+          className={`text-[clamp(2.25rem,calc((100cqw-10rem)/2.5),3.75rem)] font-light leading-none tracking-tight tabular-nums ${state.done ? 'text-card-timer' : ''}`}
         >
           {formatTime(left)}
         </p>

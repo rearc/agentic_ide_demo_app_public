@@ -123,13 +123,19 @@ function hhmm(date) {
   })
 }
 
-/** A data card's state in its header: live (with when) or why it is not. */
-function CardStatus({ status, fetchedAt }) {
+/**
+ * A data card's state in its header: live (with when) or why it is not.
+ * While editing, a narrow card drops the time, leaving its title the room
+ * the drag handle and × take.
+ */
+function CardStatus({ status, fetchedAt, editing }) {
   const { label, className, title } = STATUS[status]
   return (
     <>
       {status === 'live' && fetchedAt && (
-        <span className="font-mono text-[11px] text-text-muted tabular-nums">
+        <span
+          className={`font-mono text-[11px] text-text-muted tabular-nums ${editing ? 'hidden @[18rem]:inline' : ''}`}
+        >
           {hhmm(fetchedAt)}
         </span>
       )}
@@ -215,7 +221,7 @@ export default function Card({ card, locked, movable = true, onRemove }) {
         />
       )}
       <div
-        className={`flex items-center gap-2.5 h-11 shrink-0 pl-4 border-b border-hairline ${removable ? 'pr-2' : 'pr-4'} ${draggable ? `${DRAG_HANDLE_CLASS} cursor-grab active:cursor-grabbing` : ''}`}
+        className={`@container flex items-center gap-2.5 h-11 shrink-0 pl-4 border-b border-hairline ${removable ? 'pr-2' : 'pr-4'} ${draggable ? `${DRAG_HANDLE_CLASS} cursor-grab active:cursor-grabbing` : ''}`}
       >
         <Icon
           name={card.icon}
@@ -229,7 +235,13 @@ export default function Card({ card, locked, movable = true, onRemove }) {
           {card.title}
         </h2>
         <span className="flex-1" />
-        {status && <CardStatus status={status} fetchedAt={fetchedAt} />}
+        {status && (
+          <CardStatus
+            status={status}
+            fetchedAt={fetchedAt}
+            editing={draggable || removable}
+          />
+        )}
         {note && <span className="text-xs text-text-secondary">{note}</span>}
         {draggable && (
           <span className="text-text-muted" title="Drag to move">
