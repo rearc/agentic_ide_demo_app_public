@@ -11,7 +11,7 @@ import pytest
 from app.routes.helpers import SQLITE_INT_MAX, SQLITE_INT_MIN
 
 VALID_CARD = {'slug': 'stocks', 'title': 'Stocks', 'source': 'stocks'}
-LAYOUT = {'x': 1, 'y': 2, 'w': 3, 'h': 4}
+PLACE = {'x': 0, 'y': 0, 'w': 4, 'h': 4, 'hidden': False}
 
 
 class TestListCards:
@@ -30,20 +30,12 @@ class TestListCards:
 
         assert slugs == ['first', 'second', 'third']
 
-    def test_excludes_inactive_cards(self, client, make_card):
-        make_card(slug='visible', is_active=True)
-        make_card(slug='hidden', is_active=False)
-
-        slugs = [card['slug'] for card in client.get('/api/cards').get_json()]
-
-        assert slugs == ['visible']
-
     def test_serializes_the_full_card_shape(self, client, card):
         payload = client.get('/api/cards').get_json()[0]
 
         assert set(payload) == {
             'id', 'slug', 'title', 'description', 'icon', 'source',
-            'config', 'layout', 'position', 'is_active', 'created_at',
+            'config', 'position', 'created_at',
         }
 
 
@@ -69,20 +61,21 @@ class TestCreateCard:
 
         assert len(client.get('/api/cards').get_json()) == 1
 
+    def test_created_card_is_on_no_board(self, client, make_profile):
+        """A new card joins the library only; the user places it on a board."""
+        make_profile()
+
+        client.post('/api/cards', json=VALID_CARD)
+
+        assert client.get('/api/profiles').get_json()[0]['board'] == {}
+
     def test_applies_defaults_for_optional_fields(self, client):
         body = client.post('/api/cards', json=VALID_CARD).get_json()
 
         assert body['description'] == ''
         assert body['icon'] == ''
         assert body['config'] == {}
-        assert body['layout'] == {}
         assert body['position'] == 0
-        assert body['is_active'] is True
-
-    def test_stores_a_supplied_layout(self, client):
-        body = client.post('/api/cards', json={**VALID_CARD, 'layout': LAYOUT}).get_json()
-
-        assert body['layout'] == LAYOUT
 
     def test_missing_required_field_returns_400(self, client):
         response = client.post('/api/cards', json={'slug': 'stocks'})
@@ -102,18 +95,15 @@ class TestCreateCard:
 
 
 # A new value for every field an update may change. config repoints the card's
-# data fetch, source is the dispatch key on both registries (ADR-008), position
-# is the dashboard's sort key, and layout is what the dashboard writes when a
-# card is dragged or resized.
+# data fetch, source is the dispatch key on both registries (ADR-008), and
+# position is the library's sort key.
 UPDATES = [
     ('title', 'Renamed'),
     ('description', 'Rewritten'),
     ('icon', 'rain'),
     ('source', 'quote'),
     ('config', {'city': 'Boston', 'units': 'metric'}),
-    ('layout', {'x': 2, 'y': 3, 'w': 6, 'h': 5}),
     ('position', 3),
-    ('is_active', False),
 ]
 
 
@@ -147,6 +137,17 @@ class TestDeleteCard:
 
         assert client.get(f'/api/cards/{card.id}').status_code == 404
 
+    def test_deleted_card_is_removed_from_boards(self, client, make_card, make_profile):
+        """The board rows cascade with the card (DB-12), so no profile keeps
+        an entry for a card that no longer exists."""
+        card, other = make_card(), make_card()
+        make_profile(board={card.id: PLACE, other.id: PLACE})
+
+        client.delete(f'/api/cards/{card.id}')
+
+        board = client.get('/api/profiles').get_json()[0]['board']
+        assert list(board) == [str(other.id)]
+
 
 # One bad value per validated field, plus one per clause of a compound check
 # (TEST-11): '   ' needs the strip, True is a Python int, and an integer must
@@ -155,11 +156,8 @@ BAD_VALUES = [
     ('slug', None), ('title', None), ('source', '   '),
     ('description', 5), ('icon', None),
     ('config', [1]),
-    ('layout', 'x'), ('layout', {'x': 1}), ('layout', {**LAYOUT, 'z': 0}),
-    ('layout', {**LAYOUT, 'w': True}), ('layout', {**LAYOUT, 'h': 1.5}),
     ('position', 'x'), ('position', True),
     ('position', SQLITE_INT_MAX + 1), ('position', SQLITE_INT_MIN - 1),
-    ('is_active', 1),
 ]
 
 

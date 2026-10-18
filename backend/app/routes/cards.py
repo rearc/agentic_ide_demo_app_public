@@ -21,18 +21,6 @@ def _is_object(value):
     return isinstance(value, dict)
 
 
-def _is_layout(value):
-    return (
-        _is_object(value)
-        and set(value) == {'x', 'y', 'w', 'h'}
-        and all(is_sqlite_integer(n) for n in value.values())
-    )
-
-
-def _is_boolean(value):
-    return isinstance(value, bool)
-
-
 # field -> (check, what the field must be). The one place that says what a card's
 # fields hold, shared by create and update.
 FIELD_RULES = {
@@ -42,9 +30,7 @@ FIELD_RULES = {
     'description': (_is_string, 'a string'),
     'icon': (_is_string, 'a string'),
     'config': (_is_object, 'an object'),
-    'layout': (_is_layout, 'an object with integer x, y, w and h'),
     'position': (is_sqlite_integer, 'an integer'),
-    'is_active': (_is_boolean, 'a boolean'),
 }
 OPTIONAL_FIELDS = [f for f in FIELD_RULES if f not in REQUIRED_FIELDS]
 # slug is how the seed recognises a default card (ADR-017), so an update
@@ -66,9 +52,7 @@ def _validate_card_fields(data, fields=FIELD_RULES, required=()):
 
 @cards_bp.route('/cards', methods=['GET'])
 def list_cards():
-    cards = db.session.scalars(
-        db.select(Card).filter_by(is_active=True).order_by(Card.position)
-    )
+    cards = db.session.scalars(db.select(Card).order_by(Card.position))
     return jsonify([card.to_dict() for card in cards])
 
 
@@ -86,7 +70,8 @@ def create_card():
     if db.session.scalars(db.select(Card).filter_by(slug=data['slug'])).first():
         abort(409, f'Card with slug "{data["slug"]}" already exists')
 
-    # Optional fields left out take the model's column defaults.
+    # Optional fields left out take the model's column defaults. A new card is
+    # on no profile's board: it appears in the library only.
     card = Card(
         **{f: data[f] for f in REQUIRED_FIELDS},
         **{f: data[f] for f in OPTIONAL_FIELDS if f in data},

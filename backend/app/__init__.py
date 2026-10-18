@@ -22,9 +22,9 @@ migrate = Migrate()
 def _enforce_sqlite_foreign_keys(dbapi_connection, _connection_record):
     """Turn on foreign key enforcement for each new SQLite connection.
 
-    SQLite ships with foreign keys off, per connection. Without this the
-    `ON DELETE CASCADE` on `todos.card_id` is inert, and deleting a card leaves
-    its todos behind for the next card that reuses the id.
+    SQLite ships with foreign keys off, per connection. Without this every
+    `ON DELETE CASCADE` is inert: deleting a card would leave its todos and board
+    entries behind for the next card that reuses the id.
     """
     if isinstance(dbapi_connection, sqlite3.Connection):
         dbapi_connection.execute('PRAGMA foreign_keys = ON')
@@ -40,10 +40,12 @@ def create_app(config_object: str | type = 'config.Config'):
 
     from app.routes.cards import cards_bp
     from app.routes.data import data_bp
+    from app.routes.profiles import profiles_bp
     from app.routes.todos import todos_bp
 
     app.register_blueprint(cards_bp, url_prefix='/api')
     app.register_blueprint(data_bp, url_prefix='/api')
+    app.register_blueprint(profiles_bp, url_prefix='/api')
     app.register_blueprint(todos_bp, url_prefix='/api')
 
     _register_error_handlers(app)

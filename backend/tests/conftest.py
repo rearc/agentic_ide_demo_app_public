@@ -15,6 +15,8 @@ import responses as responses_lib
 from app import create_app
 from app import db as _db
 from app.models.card import Card
+from app.models.profile import Profile
+from app.models.profile_card import ProfileCard
 from app.models.todo import Todo
 from app.services import quotes, space, weather
 
@@ -111,9 +113,7 @@ def make_card(app):
             'icon': 'cloud-sun',
             'source': 'weather',
             'config': {'city': 'San Francisco'},
-            'layout': {'x': 0, 'y': 0, 'w': 4, 'h': 4},
             'position': 1,
-            'is_active': True,
         }
         fields.update(overrides)
         card = Card(**fields)
@@ -134,6 +134,30 @@ def card(make_card):
 def todo_card(make_card):
     """A card todos may attach to: only cards with source 'todo' qualify."""
     return make_card(slug='todo', source='todo')
+
+
+@pytest.fixture
+def make_profile(app):
+    """Factory for persisted Profile rows.
+
+    `board` maps a card id to its entry, `{x, y, w, h}` plus an optional
+    `hidden`. The default name is sequenced because the column is unique.
+    """
+    names = itertools.count(1)
+
+    def _make(name=None, board=None):
+        profile = Profile(
+            name=name or f'Profile {next(names)}',
+            board_entries=[
+                ProfileCard(card_id=card_id, **entry)
+                for card_id, entry in (board or {}).items()
+            ],
+        )
+        _db.session.add(profile)
+        _db.session.commit()
+        return profile
+
+    return _make
 
 
 @pytest.fixture

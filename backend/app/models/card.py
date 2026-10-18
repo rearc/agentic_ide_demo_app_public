@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from sqlalchemy import JSON, Boolean, DateTime, Integer, String
+from sqlalchemy import JSON, DateTime, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base, isoformat_utc
@@ -18,9 +18,7 @@ class Card(Base):
     icon: Mapped[str] = mapped_column(String(10), default='')
     source: Mapped[str] = mapped_column(String(50), nullable=False)
     config: Mapped[dict | None] = mapped_column(JSON, default=dict)
-    layout: Mapped[dict | None] = mapped_column(JSON, default=dict)
     position: Mapped[int] = mapped_column(Integer, default=0)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(UTC)
     )
@@ -34,8 +32,6 @@ class Card(Base):
             'icon': self.icon,
             'source': self.source,
             'config': self.config,
-            'layout': self.layout,
             'position': self.position,
-            'is_active': self.is_active,
             'created_at': isoformat_utc(self.created_at),
         }

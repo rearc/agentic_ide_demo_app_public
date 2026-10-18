@@ -2,20 +2,20 @@
 
 Seeding is how every demo run reaches its starting state, so a broken seed is a
 broken demo. By default the script is additive and never loses user data;
-`--reset` is the only destructive path (ADR-017, which superseded ADR-014).
+`--reset` is the only destructive path (ADR-017, which superseded ADR-014). The
+default cards' places live on the "Default" profile's board (`DEFAULT_BOARD`).
 
 Every call passes the fixture's app. `seed()` otherwise builds its own, which
 would write to the real `app.db`; and since each in-memory SQLite engine has a
 database of its own, a separately built app would not see this test's schema.
 """
 
-import pytest
-
 from app import db
 from app.models.card import Card
+from app.models.profile import Profile
 from app.models.todo import Todo
 from app.routes.data import SERVICES
-from seed import STARTER_TODO_TEXT, default_cards, seed
+from seed import DEFAULT_BOARD, DEFAULT_PROFILE_NAME, STARTER_TODO_TEXT, default_cards, seed
 
 DEFAULT_SLUGS = [c.slug for c in default_cards()]
 
@@ -36,6 +36,29 @@ def card_with_slug(slug) -> Card:
 
 def has_card(slug) -> bool:
     return db.session.scalars(db.select(Card).filter_by(slug=slug)).first() is not None
+
+
+def profile_named(name) -> Profile:
+    """The profile called `name`; raises if there is none."""
+    return db.session.scalars(db.select(Profile).filter_by(name=name)).one()
+
+
+def profile_names():
+    """Every profile's name, in creation order."""
+    return list(db.session.scalars(db.select(Profile.name).order_by(Profile.id)))
+
+
+def board_by_slug(profile):
+    """`profile`'s board as {slug: entry}, which reads better than card ids."""
+    return {
+        db.session.get_one(Card, entry.card_id).slug: entry.to_dict()
+        for entry in profile.board_entries
+    }
+
+
+def default_board():
+    """`DEFAULT_BOARD` as the board serializes it: every entry visible."""
+    return {slug: {**place, 'hidden': False} for slug, place in DEFAULT_BOARD.items()}
 
 
 def todo_texts():
@@ -67,13 +90,13 @@ class TestSeedContents:
         positions = sorted(c.position for c in all_cards())
         assert positions == list(range(1, len(DEFAULT_SLUGS) + 1))
 
-    def test_every_card_has_a_layout(self, app):
-        """Without a layout the dashboard falls back to a computed grid, which
-        is not the arrangement the demo is designed around."""
+    def test_creates_the_default_profile_holding_every_default_card(self, app):
+        """The arrangement the demo is designed around; a default card missing
+        from DEFAULT_BOARD would fail the seed outright."""
         seed(app)
 
-        for card in all_cards():
-            assert set(card.layout) == {'x', 'y', 'w', 'h'}, card.slug
+        assert profile_names() == [DEFAULT_PROFILE_NAME]
+        assert board_by_slug(profile_named(DEFAULT_PROFILE_NAME)) == default_board()
 
     def test_every_card_icon_is_empty_or_one_the_frontend_draws(
         self, app, frontend_icon_names
@@ -127,22 +150,26 @@ class TestSeedPreservesUserData:
 
         assert 'My own task' in todo_texts()
 
-    @pytest.mark.parametrize(
-        ('field', 'value'),
-        [
-            ('layout', {'x': 9, 'y': 9, 'w': 3, 'h': 3}),
-            ('title', 'My Weather'),
-            ('is_active', False),
-        ],
-    )
-    def test_reseeding_keeps_a_card_the_user_edited(self, app, field, value):
+    def test_reseeding_keeps_a_card_the_user_edited(self, app):
         seed(app)
-        setattr(card_with_slug('weather'), field, value)
+        card_with_slug('weather').title = 'My Weather'
         db.session.commit()
 
         seed(app)
 
-        assert getattr(card_with_slug('weather'), field) == value
+        assert card_with_slug('weather').title == 'My Weather'
+
+    def test_reseeding_keeps_the_board_the_user_arranged(self, app):
+        seed(app)
+        default = profile_named(DEFAULT_PROFILE_NAME)
+        default.board_entries[0].x = 9
+        default.board_entries[1].hidden = True
+        db.session.commit()
+        arranged = board_by_slug(default)
+
+        seed(app)
+
+        assert board_by_slug(profile_named(DEFAULT_PROFILE_NAME)) == arranged
 
     def test_adds_only_the_cards_that_are_missing(self, app):
         """The add-a-card workflow: a new default appears without a full reset."""
@@ -154,6 +181,43 @@ class TestSeedPreservesUserData:
 
         assert created == ['space']
         assert sorted(c.slug for c in all_cards()) == sorted(DEFAULT_SLUGS)
+
+    def test_a_re_added_card_goes_back_on_the_default_profile_only(self, app):
+        seed(app)
+        other = Profile(name='Mine')
+        db.session.add(other)
+        db.session.delete(card_with_slug('space'))
+        db.session.commit()
+
+        seed(app)
+
+        assert board_by_slug(profile_named(DEFAULT_PROFILE_NAME)) == default_board()
+        assert board_by_slug(profile_named('Mine')) == {}
+
+    def test_a_re_added_card_joins_no_board_when_default_is_gone(self, app):
+        """Profiles exist, so the user has arranged their own: the seed neither
+        recreates "Default" nor places the card on a profile it does not own."""
+        seed(app)
+        profile_named(DEFAULT_PROFILE_NAME).name = 'Renamed'
+        db.session.delete(card_with_slug('space'))
+        db.session.commit()
+
+        seed(app)
+
+        assert profile_names() == ['Renamed']
+        assert 'space' not in board_by_slug(profile_named('Renamed'))
+
+    def test_recreates_default_with_every_default_card_when_no_profile_exists(self, app):
+        """Not only the cards this run created: with no profile at all, every
+        default card already present is placed too."""
+        seed(app)
+        db.session.execute(db.delete(Profile))
+        db.session.commit()
+
+        created = seed(app)
+
+        assert created == []
+        assert board_by_slug(profile_named(DEFAULT_PROFILE_NAME)) == default_board()
 
     def test_does_not_re_add_the_starter_todo_after_the_user_clears_it(self, app):
         seed(app)
@@ -176,14 +240,16 @@ class TestResetFlag:
 
         assert [c.slug for c in all_cards()] == DEFAULT_SLUGS
 
-    def test_reset_restores_a_layout_the_user_dragged(self, app):
+    def test_reset_leaves_only_the_default_profile_at_the_default_board(self, app):
         seed(app)
-        card_with_slug('weather').layout = {'x': 9, 'y': 9, 'w': 3, 'h': 3}
+        profile_named(DEFAULT_PROFILE_NAME).board_entries[0].x = 9
+        db.session.add(Profile(name='Mine'))
         db.session.commit()
 
         seed(app, reset=True)
 
-        assert card_with_slug('weather').layout == {'x': 0, 'y': 0, 'w': 4, 'h': 4}
+        assert profile_names() == [DEFAULT_PROFILE_NAME]
+        assert board_by_slug(profile_named(DEFAULT_PROFILE_NAME)) == default_board()
 
     def test_reset_replaces_user_todos_with_the_starter_todo(self, app):
         seed(app)

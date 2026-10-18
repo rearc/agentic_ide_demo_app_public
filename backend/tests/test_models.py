@@ -1,8 +1,9 @@
-"""Tests for the Card and Todo models: what the database enforces and how
-timestamps serialize.
+"""Tests for the models: what the database enforces and how timestamps
+serialize.
 
 Column defaults and the API shape of `to_dict()` are asserted through the
-routes (test_routes_cards.py, test_routes_todos.py), where a client sees them.
+routes (test_routes_cards.py, test_routes_profiles.py, test_routes_todos.py),
+where a client sees them.
 """
 
 from datetime import datetime, timedelta
@@ -12,6 +13,8 @@ from sqlalchemy.exc import IntegrityError
 
 from app import db
 from app.models.card import Card
+from app.models.profile import Profile
+from app.models.profile_card import ProfileCard
 from app.models.todo import Todo
 
 
@@ -51,6 +54,29 @@ class TestCard:
         card = Card(slug='unsaved', title='Unsaved', source='placeholder')
 
         assert card.to_dict()['created_at'] is None
+
+
+class TestProfile:
+    def test_name_must_be_unique(self, make_profile):
+        """The routes check for a duplicate first; this constraint is what holds
+        when two requests race."""
+        make_profile(name='Work')
+        db.session.add(Profile(name='Work'))
+
+        with pytest.raises(IntegrityError):
+            db.session.commit()
+
+        db.session.rollback()
+
+    def test_deleting_a_profile_deletes_its_board_rows(self, card, make_profile):
+        """Left to the database's cascade (DB-12): fails if SQLite's foreign
+        keys are off, since the route deletes only the profile."""
+        profile = make_profile(board={card.id: {'x': 0, 'y': 0, 'w': 4, 'h': 4}})
+
+        db.session.delete(profile)
+        db.session.commit()
+
+        assert db.session.scalars(db.select(ProfileCard)).all() == []
 
 
 class TestTodo:
