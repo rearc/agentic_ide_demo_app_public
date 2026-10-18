@@ -58,9 +58,11 @@ Every suite runs offline. The backend and frontend tests fail on any request the
 | Frontend tests (vitest) | `frontend/` | `npm run test:run` |
 | Frontend formatting (Prettier) | `frontend/` | `npm run lint` |
 | End-to-end (Playwright) | `frontend/` | `npm run test:e2e` |
+| UI check (layout at several widths) | repo root, app running | `node .claude/skills/check-ui/scripts/check-ui.mjs` |
 
 - **The frontend needs Node 22.** On an older Node the suite stops with a message instead of reporting zero tests.
 - **The end-to-end suite** runs the real app on its own ports (5011 and 5183) against a throwaway database (`backend/instance/e2e.db`), so it never touches your dev servers or your data. It needs the backend venv, and Chromium once: `npx playwright install chromium`.
+- **The UI check** is the `check-ui` skill's script: every page state in `frontend/e2e/ui-states.js` at several widths, reported as text (sideways overflow, element positions), accessibility trees and one contact-sheet image in `frontend/test-results/check-ui/`. It reads from the running app and refuses every write, so your data is safe.
 - Why the suites exist and what they are held to: [ADR-016](docs/adr/ADR-016-test-seam-for-agentic-workflows.md) and [`docs/coding_standards.md`](docs/coding_standards.md).
 
 ## Project structure

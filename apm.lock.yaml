@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-10-18T19:31:03.042813+00:00'
+generated_at: '2026-10-18T20:45:56.122090+00:00'
 apm_version: 0.33.0
 dependencies:
 - repo_url: _local/rearc-pocock-kit
@@ -47,6 +47,9 @@ dependencies:
   - .claude/skills/add-dashboard-card
   - .claude/skills/add-dashboard-card/SKILL.md
   - .claude/skills/add-dashboard-card/references/weather-card-example.md
+  - .claude/skills/check-ui
+  - .claude/skills/check-ui/SKILL.md
+  - .claude/skills/check-ui/scripts/check-ui.mjs
   - .claude/skills/coin-flip
   - .claude/skills/coin-flip-code
   - .claude/skills/coin-flip-code/SKILL.md
@@ -91,6 +94,8 @@ dependencies:
     .claude/rules/tailwind.md: sha256:d2192dd3f2d12cf493f56a42152a605c5991bd88a744a0d7c4a0250cf1fd34cd
     .claude/skills/add-dashboard-card/SKILL.md: sha256:3cabe647d96e04f39f5173d543d6bd97be52ce0657908de07dc53e52352b1ccd
     .claude/skills/add-dashboard-card/references/weather-card-example.md: sha256:cea917444b33e26e7133cff05066e5efe45ca91e2c4c7013037e2cdc6ecda24a
+    .claude/skills/check-ui/SKILL.md: sha256:ec68f37f6b5f39ff345bef36cdf9d52b66a40aa240ba7c66b088c0a3602af080
+    .claude/skills/check-ui/scripts/check-ui.mjs: sha256:52dcc5fcab0b9c30eecd302ef13cd83b0a9c1a2cd300606e5746cfd38bb4eee8
     .claude/skills/coin-flip-code/SKILL.md: sha256:77ced8c51b49c4d24a0201ab9ec3286514cbffa6c665a1f5b3d667f33f4a48da
     .claude/skills/coin-flip-code/scripts/flip.py: sha256:76180c7779923387eaa813624ae91e97d7549226f292c783f794dc0992c11f5a
     .claude/skills/coin-flip-true-random/SKILL.md: sha256:a1e4c6c2158a79e25206b02924be0156ce934c8363146b3b2741051b74798124
@@ -1074,6 +1079,33 @@ deployments:
   - ../ai-toolkit/packages/rearc-workshop-demo-kit
   active_owner: ../ai-toolkit/packages/rearc-workshop-demo-kit
   content_hash: sha256:cea917444b33e26e7133cff05066e5efe45ca91e2c4c7013037e2cdc6ecda24a
+- kind: project-relative
+  target: claude
+  value: .claude/skills/check-ui
+  runtime: null
+  scope: project
+  owners:
+  - ../ai-toolkit/packages/rearc-workshop-demo-kit
+  active_owner: ../ai-toolkit/packages/rearc-workshop-demo-kit
+  content_hash: null
+- kind: project-relative
+  target: claude
+  value: .claude/skills/check-ui/SKILL.md
+  runtime: null
+  scope: project
+  owners:
+  - ../ai-toolkit/packages/rearc-workshop-demo-kit
+  active_owner: ../ai-toolkit/packages/rearc-workshop-demo-kit
+  content_hash: sha256:ec68f37f6b5f39ff345bef36cdf9d52b66a40aa240ba7c66b088c0a3602af080
+- kind: project-relative
+  target: claude
+  value: .claude/skills/check-ui/scripts/check-ui.mjs
+  runtime: null
+  scope: project
+  owners:
+  - ../ai-toolkit/packages/rearc-workshop-demo-kit
+  active_owner: ../ai-toolkit/packages/rearc-workshop-demo-kit
+  content_hash: sha256:52dcc5fcab0b9c30eecd302ef13cd83b0a9c1a2cd300606e5746cfd38bb4eee8
 - kind: project-relative
   target: claude
   value: .claude/skills/code-review
