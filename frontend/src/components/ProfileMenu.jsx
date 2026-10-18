@@ -25,18 +25,15 @@ const NAME_MAX = 50
 function NameForm({ initial = '', label, submitLabel, onSubmit, onCancel }) {
   const [name, setName] = useState(initial)
   const [error, setError] = useState(null)
-  const [saving, setSaving] = useState(false)
   const trimmed = name.trim()
 
   async function handleSubmit(e) {
     e.preventDefault()
-    setSaving(true)
     setError(null)
     try {
       await onSubmit(trimmed)
     } catch (err) {
       setError(err.message)
-      setSaving(false)
     }
   }
 
@@ -54,7 +51,7 @@ function NameForm({ initial = '', label, submitLabel, onSubmit, onCancel }) {
         />
         <button
           type="submit"
-          disabled={!trimmed || saving}
+          disabled={!trimmed}
           className={`${QUIET_BUTTON} disabled:opacity-40`}
         >
           {submitLabel}
@@ -194,9 +191,7 @@ export default function ProfileMenu({
   useEffect(() => {
     if (!open) return
     function handlePointer(e) {
-      if (rootRef.current.contains(e.target)) return
-      setOpen(false)
-      setEditing(null)
+      if (!rootRef.current.contains(e.target)) close()
     }
     function handleKey(e) {
       if (e.key !== 'Escape') return

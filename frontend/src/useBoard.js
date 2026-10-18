@@ -202,7 +202,6 @@ export default function useBoard() {
     }
 
     return {
-      replaceProfiles,
       selectProfile,
       saveLayout,
       hideCard,
@@ -213,17 +212,16 @@ export default function useBoard() {
     }
   }, [])
 
-  const { replaceProfiles, ...publicActions } = actions
-
   useEffect(() => {
     Promise.all([api.fetchCards(), api.fetchProfiles()])
       .then(([cardList, profileList]) => {
         setCards(cardList)
-        replaceProfiles(profileList)
+        profilesRef.current = profileList
+        setProfiles(profileList)
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false))
-  }, [replaceProfiles])
+  }, [])
 
   const profile = shownProfile(profiles, shownId)
 
@@ -236,6 +234,6 @@ export default function useBoard() {
     error,
     draggingCardId,
     setDraggingCardId,
-    ...publicActions,
+    ...actions,
   }
 }

@@ -163,6 +163,9 @@ test('a removed card stays off the board, and comes back from the library', asyn
   await page.getByRole('button', { name: 'Library' }).click()
   await page.getByRole('button', { name: 'Add "Weather"' }).click()
   await expect(weather).toBeVisible()
+  await expect
+    .poll(async () => (await defaultEntry(request, 'weather')).hidden)
+    .toBe(false)
 
   await page.reload()
   await expect(weather).toBeVisible()

@@ -22,8 +22,8 @@ function Tile({ card, onBoard, onAdd, onDragStart, onDragEnd }) {
   return (
     <li
       draggable={!onBoard}
-      onDragStart={onBoard ? undefined : handleDragStart}
-      onDragEnd={onBoard ? undefined : onDragEnd}
+      onDragStart={handleDragStart}
+      onDragEnd={onDragEnd}
       className={`${TILE} ${onBoard ? '' : 'cursor-grab active:cursor-grabbing hover:shadow-[0_0_0_1px_var(--color-hairline-strong)]'}`}
     >
       {accent && (
