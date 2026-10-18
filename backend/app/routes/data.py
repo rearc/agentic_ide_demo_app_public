@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, abort, jsonify, request
 
 from app.services import quotes, space, weather
 
@@ -15,7 +15,7 @@ SERVICES = {
 def get_data(source):
     handler = SERVICES.get(source)
     if not handler:
-        return jsonify({'error': f'Unknown source: {source}'}), 404
+        abort(404, f'Unknown source: {source}')
 
     config = request.args.to_dict()
     result = handler(**config)
