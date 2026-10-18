@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-10-18T06:58:41.428749+00:00'
+generated_at: '2026-10-18T07:07:50.291872+00:00'
 apm_version: 0.33.0
 dependencies:
 - repo_url: _local/rearc-pocock-kit
@@ -89,7 +89,7 @@ dependencies:
     .claude/rules/api-conventions.md: sha256:1723ed8589d884bbd17a31f78147fdce9e686177e48543f8329769b15f869633
     .claude/rules/migrations.md: sha256:a900316604e0e2f9189d3881abab052e8c6b248cb9ffd56606d03e44c952dc4b
     .claude/rules/tailwind.md: sha256:102d70697b53bee444fe6f3d53b9552c912b61de6575a33ed0a1b8c3f653c6f5
-    .claude/skills/add-dashboard-card/SKILL.md: sha256:5425ad7875b4dc59b0aaaebebbc10c4b9879506a1897338999833a6fbfaed484
+    .claude/skills/add-dashboard-card/SKILL.md: sha256:a89f242c0d2293e1272a5cbb95e590957eb507b63c92dcb2df0e4f5cc2e02d34
     .claude/skills/add-dashboard-card/references/weather-card-example.md: sha256:0b11749bff8e3ff7434c64ddc20361cf3bff3dff0f3ff3e372508b8663544a2e
     .claude/skills/coin-flip-code/SKILL.md: sha256:77ced8c51b49c4d24a0201ab9ec3286514cbffa6c665a1f5b3d667f33f4a48da
     .claude/skills/coin-flip-code/scripts/flip.py: sha256:76180c7779923387eaa813624ae91e97d7549226f292c783f794dc0992c11f5a
@@ -1064,7 +1064,7 @@ deployments:
   owners:
   - ../ai-toolkit/packages/rearc-workshop-demo-kit
   active_owner: ../ai-toolkit/packages/rearc-workshop-demo-kit
-  content_hash: sha256:5425ad7875b4dc59b0aaaebebbc10c4b9879506a1897338999833a6fbfaed484
+  content_hash: sha256:a89f242c0d2293e1272a5cbb95e590957eb507b63c92dcb2df0e4f5cc2e02d34
 - kind: project-relative
   target: claude
   value: .claude/skills/add-dashboard-card/references/weather-card-example.md

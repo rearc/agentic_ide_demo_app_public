@@ -213,6 +213,8 @@ New behavior ships with tests (`TEST-1`), and tests never touch the network (`TE
 - the success response, with the exact fields the service returns;
 - the fallback when the upstream fails (for example `status=500`): `'fallback': True` and the same keys as success (`SVC-5`).
 
+**Data cards also:** add the new source to `backend/tests/test_routes_data.py`: a `DISPATCH_CASES` entry (a key and value only its healthy response carries) and its URL in the `healthy_upstreams` fixture. That file's dispatch test runs for every source in `SERVICES`, so it fails for the new source until the case exists.
+
 **Frontend:** create `frontend/src/components/cards/{PascalName}Card.test.jsx`, following `QuoteCard.test.jsx`. Render the component with Testing Library and assert what a user sees (`TEST-7`): the data fields, the fallback message, and nothing rendered when `data` is null.
 
 **Verify:** `cd backend && pytest tests/test_services_{slug}.py` and `cd frontend && npm run test:run -- {PascalName}Card` both pass, then the full suites (`pytest`, `npm run test:run`) stay green (`TEST-10`).
@@ -239,4 +241,4 @@ New behavior ships with tests (`TEST-1`), and tests never touch the network (`TE
 | 5 | `frontend/src/components/Card.jsx` | Import component, add to `CARD_REGISTRY` |
 | 6 | `frontend/src/index.css` | Add `--color-card-{slug}` (and `-2`) in `@theme static` |
 | 7 | `backend/seed.py` | Add `Card(...)` entry, run `python seed.py` (additive insert) |
-| 8 | `backend/tests/test_services_{slug}.py` + `frontend/src/components/cards/{PascalName}Card.test.jsx` | Success and fallback paths, network mocked |
+| 8 | `backend/tests/test_services_{slug}.py` + `frontend/src/components/cards/{PascalName}Card.test.jsx` (+ a dispatch case in `test_routes_data.py` for a data card) | Success and fallback paths, network mocked |
