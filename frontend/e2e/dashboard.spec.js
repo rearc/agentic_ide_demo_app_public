@@ -176,6 +176,41 @@ test('a card dragged by its header keeps its new position after a reload', async
   expect(await defaultEntry(request, 'weather')).toEqual(saved)
 })
 
+test('a card widened into its neighbour pushes it sideways when the row has room', async ({
+  page,
+  request,
+}) => {
+  // Free the top row's right third: Weather, Daily Quote, then room.
+  await page.getByRole('button', { name: 'Edit board' }).click()
+  await page
+    .getByRole('button', { name: 'Remove "Coming Soon"', exact: true })
+    .click()
+  await page.getByRole('button', { name: 'Library', exact: true }).click()
+
+  const weather = page
+    .locator('.react-grid-item')
+    .filter({ has: page.getByRole('heading', { name: 'Weather' }) })
+  const handle = weather.locator('.react-resizable-handle')
+  await handle.hover()
+  const box = await handle.boundingBox()
+  const cell = (await weather.boundingBox()).width / 8
+  await page.mouse.down()
+  // Four columns wider: half of Daily Quote's width.
+  await page.mouse.move(box.x + 4 * cell + 2, box.y + 2, { steps: 10 })
+  await page.mouse.up()
+
+  const place = async (slug) => {
+    const { x, y, w } = await defaultEntry(request, slug)
+    return { x, y, w }
+  }
+  await expect
+    .poll(async () => [await place('weather'), await place('quote')])
+    .toEqual([
+      { x: 0, y: 0, w: 12 },
+      { x: 12, y: 0, w: 8 },
+    ])
+})
+
 test('a removed card stays off the board, and comes back from the library', async ({
   page,
   request,
@@ -241,17 +276,23 @@ test('a card dragged from the library lands where it is dropped', async ({
   await page.mouse.up()
 
   await expect(placeholder).toBeVisible()
-  // Dropped on the top-left corner, it takes that spot, and the card that was
-  // there (Weather, 8 rows tall) moves down below it.
+  // Dropped on the top-left corner, it takes that spot. The row has room
+  // (Coming Soon's own place is free), so Weather and Daily Quote each slide
+  // one card width right instead of anything moving down.
   const place = async (slug) => {
     const { x, y, hidden } = await defaultEntry(request, slug)
     return { x, y, hidden }
   }
   await expect
-    .poll(async () => [await place('placeholder'), await place('weather')])
+    .poll(async () => [
+      await place('placeholder'),
+      await place('weather'),
+      await place('quote'),
+    ])
     .toEqual([
       { x: 0, y: 0, hidden: false },
-      { x: 0, y: 8, hidden: false },
+      { x: 8, y: 0, hidden: false },
+      { x: 16, y: 0, hidden: false },
     ])
 })
 

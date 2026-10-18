@@ -91,6 +91,7 @@ frontend/
   src/
     App.jsx             # header (profile menu, Edit board, clock), edit mode
     useBoard.js         # the one owner of board state: library, profiles, shown profile
+    boardLayout.js      # how cards make room when one moves, resizes or is dropped
     api.js              # the only module that calls the backend
     components/
       Dashboard.jsx     # the grid; renders the board it is handed, saves on every change

@@ -1,21 +1,18 @@
-import {
-  GridLayout,
-  useContainerWidth,
-  verticalCompactor,
-} from 'react-grid-layout'
+import { GridLayout, useContainerWidth } from 'react-grid-layout'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { DROPPING_ID, makeCompactor, settleBoard } from '../boardLayout'
 import { placedSize } from '../useBoard'
 import Card, { DRAG_HANDLE_CLASS, cardAccent } from './Card'
 import LoadingDots from './LoadingDots'
 
-// Cards sit MARGIN px apart. Each draws a 1 px outline just outside its box
-// (Card.jsx), so the grid keeps OUTLINE px clear around its edge for it.
 // 24 columns and short rows, so cards move and resize in fine steps: a card
 // 8 by 8 is a third of the width and 208 px tall.
 const COLS = 24
 const ROW_HEIGHT = 19
+// Cards sit MARGIN px apart. Each draws a 1 px outline just outside its box
+// (Card.jsx), so the grid keeps OUTLINE px clear around its edge for it.
 const MARGIN = 8
 const OUTLINE = 1
 
@@ -93,28 +90,6 @@ function buildLayout(cards, board) {
     })
 }
 
-// The id react-grid-layout gives the placeholder for a card dragged in.
-const DROPPING_ID = '__dropping-elem__'
-
-/**
- * The grid's usual vertical compaction, except that a card being dragged in
- * from the library wins any tie for a spot: the cards it covers move down.
- * Without this, a card hovered over the cell where it entered the grid sorts
- * after the card already there and is settled below it, so it lands lower
- * than where it was dropped.
- */
-const dropFirstCompactor = {
-  ...verticalCompactor,
-  compact(layout, cols) {
-    const pin = (static_) => (l) =>
-      l.i === DROPPING_ID ? { ...l, static: static_ } : l
-    // Pinned while the others settle around it, then free to float up like
-    // any card.
-    const settled = verticalCompactor.compact(layout.map(pin(true)), cols)
-    return verticalCompactor.compact(settled.map(pin(false)), cols)
-  },
-}
-
 /**
  * The shown profile's board. It owns no state: `useBoard` hands it the cards,
  * the board and the actions that change them. Every finished move, resize,
@@ -137,6 +112,10 @@ export default function Dashboard({
   const { width, containerRef, mounted } = useContainerWidth()
   // The card being moved or resized on the grid, for the preview's colour.
   const [movingId, setMovingId] = useState(null)
+  // The move in progress, for the layout rules in boardLayout.js: the card
+  // and the board as it was when the move began.
+  const moveRef = useRef(null)
+  const compactor = useMemo(() => makeCompactor(moveRef), [])
   const pageRef = useRef(null)
 
   // A page turn: the board slides in from the side the arrow points to.
@@ -176,16 +155,25 @@ export default function Dashboard({
   // The grid's items include its drop placeholder (DROPPING_ID), which marks
   // where the card was dropped; the card itself is the one being dragged.
   // They are settled once more, because a drop straight onto the cell where
-  // the card entered the grid arrives before the grid has made room.
+  // the card entered the grid arrives before the grid has made room
+  // (boardLayout.js).
   function handleDrop(gridItems) {
+    const move = moveRef.current
+    moveRef.current = null
     if (draggingCardId === null) return
-    const settled = dropFirstCompactor.compact(gridItems, COLS)
+    const settled = settleBoard(gridItems, COLS, move)
     const dropped = settled.find((l) => l.i === DROPPING_ID)
     if (!dropped) return
     showCard(draggingCardId, { x: dropped.x, y: dropped.y }, settled)
   }
 
+  function startMove(layout, item) {
+    moveRef.current = { id: item.i, start: layout.map((l) => ({ ...l })) }
+    setMovingId(item.i)
+  }
+
   function finishMove(gridItems) {
+    moveRef.current = null
     setMovingId(null)
     saveLayout(gridItems)
   }
@@ -240,9 +228,9 @@ export default function Dashboard({
           className="min-h-64"
           width={width}
           layout={layout}
-          compactor={dropFirstCompactor}
-          onDragStart={(_layout, item) => setMovingId(item.i)}
-          onResizeStart={(_layout, item) => setMovingId(item.i)}
+          compactor={compactor}
+          onDragStart={startMove}
+          onResizeStart={startMove}
           onDragStop={finishMove}
           onResizeStop={finishMove}
           onDropDragOver={sizeDropping}

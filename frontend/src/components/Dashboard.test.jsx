@@ -223,7 +223,7 @@ describe('dropping a card from the library', () => {
     expect(grid.onDropDragOver()).toBe(false)
   })
 
-  it('shows the dragged card where it was dropped, moving the card it covers down', () => {
+  it('shows the dragged card where it was dropped, making room for it', () => {
     /* The grid can report a drop onto an occupied cell before it has made
        room (a drop in the cell where the card entered the grid). */
     const { showCard } = renderDashboard({ draggingCardId: 3 })
@@ -234,7 +234,8 @@ describe('dropping a card from the library', () => {
     expect(showCard).toHaveBeenCalledWith(
       3,
       { x: 0, y: 0 },
-      expect.arrayContaining([expect.objectContaining({ i: '1', x: 0, y: 4 })]),
+      // The row has room, so the covered card slides aside (boardLayout.js).
+      expect.arrayContaining([expect.objectContaining({ i: '1', x: 4, y: 0 })]),
     )
   })
 
