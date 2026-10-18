@@ -1,17 +1,21 @@
 """Tests for the seed script.
 
 Seeding is how every demo run reaches its starting state, so a broken seed is a
-broken demo. ADR-014 records that the script is deliberately destructive; these
-tests pin that behavior rather than treating it as a bug.
+broken demo. By default the script is additive and never loses user data;
+`--reset` is the only destructive path (ADR-017, which superseded ADR-014).
 """
 
 import seed as seed_module
-from seed import STARTER_TODO_TEXT
+from seed import STARTER_TODO_TEXT, default_cards
 from app import db
 from app.models.card import Card
 from app.models.todo import Todo
 
-EXPECTED_SLUGS = ['weather', 'quote', 'placeholder', 'space', 'todo']
+DEFAULT_SLUGS = [c.slug for c in default_cards()]
+
+# Cards that never call /api/data/<source>: the todo card owns /api/todos, and
+# the placeholder renders without fetching.
+SOURCES_WITHOUT_A_SERVICE = {'todo', 'placeholder'}
 
 
 def run_seed(app):
@@ -44,16 +48,11 @@ def todo_texts():
 
 
 class TestSeedContents:
-    def test_seeds_the_five_demo_cards(self, app):
-        run_seed(app)
-
-        assert len(all_cards()) == 5
-
-    def test_seeds_the_expected_slugs(self, app):
+    def test_seeds_the_default_cards(self, app):
         run_seed(app)
 
         slugs = [c.slug for c in all_cards()]
-        assert slugs == EXPECTED_SLUGS
+        assert slugs == DEFAULT_SLUGS
 
     def test_every_seeded_card_is_active(self, app):
         run_seed(app)
@@ -64,7 +63,7 @@ class TestSeedContents:
         run_seed(app)
 
         positions = sorted(c.position for c in all_cards())
-        assert positions == [1, 2, 3, 4, 5]
+        assert positions == list(range(1, len(DEFAULT_SLUGS) + 1))
 
     def test_every_card_has_a_layout(self, app):
         """Without a layout the dashboard falls back to a computed grid, which
@@ -98,8 +97,8 @@ class TestSeedSourcesMatchTheDispatchTable:
         run_seed(app)
 
         for card in all_cards():
-            if card.source == 'todo':
-                continue  # the todo card owns its data via /api/todos
+            if card.source in SOURCES_WITHOUT_A_SERVICE:
+                continue
             assert card.source in SERVICES, card.slug
 
 
@@ -110,7 +109,7 @@ class TestSeedPreservesUserData:
         run_seed(app)
         run_seed(app)
 
-        assert len(all_cards()) == 5
+        assert [c.slug for c in all_cards()] == DEFAULT_SLUGS
 
     def test_reseeding_reports_nothing_created_the_second_time(self, app):
         run_seed(app)
@@ -177,7 +176,7 @@ class TestSeedPreservesUserData:
         created = seed_module.seed(app)
 
         assert created == ['space']
-        assert len(all_cards()) == 5
+        assert sorted(c.slug for c in all_cards()) == sorted(DEFAULT_SLUGS)
 
     def test_does_not_re_add_the_starter_todo_after_the_user_clears_it(self, app):
         run_seed(app)
@@ -223,7 +222,7 @@ class TestResetFlag:
             'x': 0, 'y': 0, 'w': 4, 'h': 4,
         }
 
-    def test_reset_leaves_exactly_the_five_default_cards(self, app):
+    def test_reset_leaves_exactly_the_default_cards(self, app):
         run_seed(app)
         db.session.add(Card(slug='custom', title='Added live', source='weather'))
         db.session.commit()
@@ -231,7 +230,7 @@ class TestResetFlag:
         seed_module.seed(app, reset=True)
 
         slugs = [c.slug for c in all_cards()]
-        assert slugs == EXPECTED_SLUGS
+        assert slugs == DEFAULT_SLUGS
 
     def test_reset_restores_the_starter_todo(self, app):
         run_seed(app)

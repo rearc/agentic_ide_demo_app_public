@@ -8,7 +8,6 @@ SERVICES = {
     'weather': weather.fetch,
     'quote': quotes.fetch,
     'space': space.fetch,
-    'placeholder': lambda **_kw: {'message': 'Nothing here yet!'},
 }
 
 

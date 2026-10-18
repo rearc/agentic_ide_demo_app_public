@@ -7,6 +7,10 @@ return a bare list, single resources return the object, errors return
 
 import pytest
 
+BODY_ERROR = {'error': 'Request body must be a JSON object'}
+HUGE_ID = 2**63
+LAYOUT = {'x': 1, 'y': 2, 'w': 3, 'h': 4}
+
 
 class TestListCards:
     def test_returns_a_bare_list_not_an_envelope(self, client, make_card):
@@ -57,7 +61,13 @@ class TestGetCard:
         assert response.get_json()['slug'] == 'weather'
 
     def test_unknown_id_returns_404(self, client):
-        assert client.get('/api/cards/999').status_code == 404
+        response = client.get('/api/cards/999')
+
+        assert response.status_code == 404
+        assert response.get_json()['error'] == 'Card not found'
+
+    def test_id_beyond_the_database_range_returns_404(self, client):
+        assert client.get(f'/api/cards/{HUGE_ID}').status_code == 404
 
 
 class TestCreateCard:
@@ -105,52 +115,19 @@ class TestCreateCard:
         assert response.status_code == 409
         assert 'already exists' in response.get_json()['error']
 
-    def test_empty_json_body_returns_400(self, client):
+    def test_empty_json_body_is_validated_by_the_route(self, client):
         response = client.post('/api/cards', json={})
 
         assert response.status_code == 400
-        assert response.get_json()['error'] == 'Request body is required'
+        assert 'Missing required fields' in response.get_json()['error']
 
-    def test_layout_is_ignored_on_create(self, client):
-        """Known gap: create_card does not read `layout`, though update_card does.
-
-        The supplied layout is silently dropped and the column takes the model's
-        `default=dict`, so the card starts at `{}` and Dashboard falls back to a
-        computed grid position until the first save. Asserted here to pin the
-        current behavior, not to endorse it.
-        """
+    def test_stores_a_supplied_layout(self, client):
         body = client.post(
             '/api/cards',
-            json={
-                'slug': 'stocks',
-                'title': 'Stocks',
-                'source': 'stocks',
-                'layout': {'x': 1, 'y': 2, 'w': 3, 'h': 4},
-            },
+            json={'slug': 'stocks', 'title': 'Stocks', 'source': 'stocks', 'layout': LAYOUT},
         ).get_json()
 
-        assert body['layout'] == {}
-
-    @pytest.mark.xfail(
-        strict=True,
-        reason='create_card does not read `layout`, though update_card does',
-    )
-    def test_create_should_honor_a_supplied_layout(self, client):
-        """The desired behavior. Flips to a failure when the gap is closed,
-        which is the signal to delete the test above."""
-        layout = {'x': 1, 'y': 2, 'w': 3, 'h': 4}
-
-        body = client.post(
-            '/api/cards',
-            json={
-                'slug': 'stocks',
-                'title': 'Stocks',
-                'source': 'stocks',
-                'layout': layout,
-            },
-        ).get_json()
-
-        assert body['layout'] == layout
+        assert body['layout'] == LAYOUT
 
 
 class TestUpdateCard:
@@ -221,11 +198,17 @@ class TestUpdateCard:
     def test_unknown_id_returns_404(self, client):
         assert client.put('/api/cards/999', json={'title': 'X'}).status_code == 404
 
-    def test_empty_json_body_returns_400(self, client, card):
+    def test_empty_json_body_changes_nothing(self, client, card):
         response = client.put(f'/api/cards/{card.id}', json={})
 
-        assert response.status_code == 400
-        assert response.get_json()['error'] == 'Request body is required'
+        assert response.status_code == 200
+        assert response.get_json()['title'] == 'Weather'
+
+    def test_id_beyond_the_database_range_returns_404(self, client):
+        response = client.put(f'/api/cards/{HUGE_ID}', json={'title': 'X'})
+
+        assert response.status_code == 404
+        assert response.get_json()['error'] == 'Card not found'
 
 
 class TestDeleteCard:
@@ -243,6 +226,9 @@ class TestDeleteCard:
     def test_unknown_id_returns_404(self, client):
         assert client.delete('/api/cards/999').status_code == 404
 
+    def test_id_beyond_the_database_range_returns_404(self, client):
+        assert client.delete(f'/api/cards/{HUGE_ID}').status_code == 404
+
 
 class TestCreateCardRejectsBadValues:
     """Presence checks are not type checks: a null or non-string value used to
@@ -254,7 +240,7 @@ class TestCreateCardRejectsBadValues:
         )
 
         assert response.status_code == 400
-        assert 'non-empty strings' in response.get_json()['error']
+        assert response.get_json()['error'] == 'slug must be a non-empty string'
 
     def test_null_field_names_the_offending_fields(self, client):
         response = client.post(
@@ -292,7 +278,7 @@ class TestWriteRoutesRequireAJsonBody:
         response = client.post('/api/cards', data='slug=stocks')
 
         assert response.status_code == 400
-        assert response.get_json() == {'error': 'Request body is required'}
+        assert response.get_json() == BODY_ERROR
 
     def test_post_with_malformed_json_returns_400(self, client):
         response = client.post(
@@ -312,4 +298,53 @@ class TestWriteRoutesRequireAJsonBody:
         response = client.put(f'/api/cards/{card.id}', data='title=Renamed')
 
         assert response.status_code == 400
-        assert response.get_json() == {'error': 'Request body is required'}
+        assert response.get_json() == BODY_ERROR
+
+
+VALID_CARD = {'slug': 'stocks', 'title': 'Stocks', 'source': 'stocks'}
+
+# One bad value per validated field, shared by create and update.
+BAD_VALUES = [
+    ('slug', None), ('title', None), ('source', ''),
+    ('description', 5), ('icon', None),
+    ('config', [1]), ('config', 'x'),
+    ('layout', 'x'), ('layout', {'x': 1}), ('layout', {**LAYOUT, 'w': True}),
+    ('layout', {**LAYOUT, 'h': 1.5}),
+    ('position', 'x'), ('position', True), ('position', HUGE_ID),
+    ('is_active', 1), ('is_active', 'yes'),
+]
+
+
+class TestCardFieldTypes:
+    @pytest.mark.parametrize(('field', 'value'), BAD_VALUES)
+    def test_create_rejects_a_wrongly_typed_field(self, client, field, value):
+        response = client.post('/api/cards', json={**VALID_CARD, field: value})
+
+        assert response.status_code == 400
+        assert response.get_json()['error'].startswith(f'{field} must be')
+
+    @pytest.mark.parametrize(('field', 'value'), BAD_VALUES)
+    def test_update_rejects_a_wrongly_typed_field(self, client, card, field, value):
+        response = client.put(f'/api/cards/{card.id}', json={field: value})
+
+        assert response.status_code == 400
+        assert response.get_json()['error'].startswith(f'{field} must be')
+
+    def test_a_rejected_update_changes_nothing(self, client, card):
+        client.put(f'/api/cards/{card.id}', json={'title': 'Renamed', 'position': 'x'})
+
+        assert client.get(f'/api/cards/{card.id}').get_json()['title'] == 'Weather'
+
+    @pytest.mark.parametrize('body', [[1], 'slug title source', 42, None])
+    def test_a_body_that_is_not_an_object_returns_400_on_create(self, client, body):
+        response = client.post('/api/cards', json=body)
+
+        assert response.status_code == 400
+        assert response.get_json() == BODY_ERROR
+
+    @pytest.mark.parametrize('body', [[1], 'x', 42, None])
+    def test_a_body_that_is_not_an_object_returns_400_on_update(self, client, card, body):
+        response = client.put(f'/api/cards/{card.id}', json=body)
+
+        assert response.status_code == 400
+        assert response.get_json() == BODY_ERROR

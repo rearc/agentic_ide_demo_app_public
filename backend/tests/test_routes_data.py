@@ -45,12 +45,6 @@ class TestDispatch:
         assert response.status_code == 200
         assert response.get_json()['title'] == 'Pillars'
 
-    def test_placeholder_source_needs_no_external_call(self, client):
-        response = client.get('/api/data/placeholder')
-
-        assert response.status_code == 200
-        assert response.get_json() == {'message': 'Nothing here yet!'}
-
     def test_every_registered_source_returns_a_non_empty_object(self, client, http_mock):
         """Guards against a SERVICES entry that is registered but not callable.
 
@@ -113,6 +107,10 @@ class TestUnknownSource:
         response = client.get('/api/data/nonexistent')
 
         assert response.get_json() == {'error': 'Unknown source: nonexistent'}
+
+    def test_the_placeholder_card_has_no_data_source(self, client):
+        """The placeholder card renders without fetching (`needsData: false`)."""
+        assert client.get('/api/data/placeholder').status_code == 404
 
     def test_a_card_source_with_no_service_fails_closed(self, client):
         """Backend and frontend registries are coupled only by the source string.
