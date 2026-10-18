@@ -73,12 +73,19 @@ function settleAround(layout, id, cols) {
  * when the move began (`start`): the other cards are placed from there each
  * time, so a card pushed aside comes back once the mover leaves. A card
  * dragged in from the library is the mover whenever its placeholder is on
- * the board.
+ * the board; its move starts when the drag does (the dashboard sets it), so
+ * the cards it pushed go back if it leaves the board undropped.
  */
 export function settleBoard(layout, cols, move) {
   const dropping = layout.find((l) => l.i === DROPPING_ID)
   const mover = dropping ?? (move && layout.find((l) => l.i === move.id))
-  if (!mover) return verticalCompactor.compact(layout, cols)
+  if (!mover) {
+    // Nothing moving now. If a move is still open (a card dragged in from the
+    // library and out again), the cards go back to where they started.
+    const start = new Map((move?.start ?? []).map((l) => [l.i, l]))
+    const back = layout.map((l) => start.get(l.i) ?? l)
+    return verticalCompactor.compact(back, cols)
+  }
   const others = (move?.start ?? layout).filter(
     (l) => l.i !== mover.i && l.i !== DROPPING_ID,
   )

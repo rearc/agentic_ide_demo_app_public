@@ -141,6 +141,16 @@ export default function Dashboard({
   }, [profileId, turn])
 
   const layout = buildLayout(cards, board)
+
+  // A card dragged in from the library starts a move too: the grid reports
+  // no move start for it, so the board as it is when the drag begins is
+  // kept here, and the move ends with the drag.
+  useEffect(() => {
+    moveRef.current =
+      draggingCardId === null ? null : { id: DROPPING_ID, start: layout }
+    // Only when a library drag starts or ends; `layout` is read as it is then.
+  }, [draggingCardId])
+
   const cardsById = new Map(cards.map((card) => [String(card.id), card]))
   const stacked = width < STACK_BELOW
   const previewCard = cardsById.get(String(movingId ?? draggingCardId))

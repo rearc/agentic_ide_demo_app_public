@@ -77,6 +77,18 @@ describe('settleBoard', () => {
     })
   })
 
+  it('puts the cards back when a card from the library leaves undropped', () => {
+    const board = [card('a', 0, 0, 8, 8), card('b', 8, 0, 8, 8)]
+    // While the placeholder hovered, a and b were pushed right; now it is gone.
+    const pushed = [card('a', 8, 0, 8, 8), card('b', 16, 0, 8, 8)]
+
+    const settled = places(
+      settleBoard(pushed, COLS, { id: DROPPING_ID, start: board }),
+    )
+
+    expect(settled).toEqual({ a: [0, 0, 8, 8], b: [8, 0, 8, 8] })
+  })
+
   it('only compacts upward when nothing is moving', () => {
     const settled = places(settleBoard([card('a', 0, 5, 8, 8)], COLS, null))
 
