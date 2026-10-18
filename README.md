@@ -48,7 +48,7 @@ npm run dev                    # http://localhost:5173, proxies /api to the back
 
 ## Checks
 
-Every suite runs offline: external APIs are mocked, and an unmocked request fails the test.
+Every suite runs offline. The backend and frontend tests fail on any request they did not mock; the end-to-end suite answers the external data APIs in the browser.
 
 | What | Where | Command |
 |---|---|---|
