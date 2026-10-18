@@ -137,7 +137,8 @@ deploy_into "$KIT_ROOT/scripts/statusline.sh" "$CLAUDE_DIR" ".claude/"
 chmod +x "$CLAUDE_DIR/statusline.sh" 2>/dev/null || true
 
 SETTINGS="$CLAUDE_DIR/settings.json"
-STATUSLINE_JSON='{"type":"command","command":".claude/statusline.sh"}'
+# Anchored to the project root so the status line survives a cd in the agent's shell.
+STATUSLINE_JSON='{"type":"command","command":"\"${CLAUDE_PROJECT_DIR}/.claude/statusline.sh\""}'
 if command -v jq >/dev/null 2>&1; then
   tmp="$(mktemp)"
   if [[ -f "$SETTINGS" ]]; then

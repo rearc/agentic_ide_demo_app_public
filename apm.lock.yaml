@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-10-17T05:29:35.217262+00:00'
+generated_at: '2026-10-18T00:17:44.978440+00:00'
 apm_version: 0.33.0
 dependencies:
 - repo_url: _local/rearc-pocock-kit
@@ -40,9 +40,9 @@ dependencies:
   - .claude/hooks/rearc-workshop-demo-kit/scripts/hooks/audit.sh
   - .claude/hooks/rearc-workshop-demo-kit/scripts/hooks/auto-lint.sh
   - .claude/hooks/rearc-workshop-demo-kit/scripts/hooks/guard-shell.sh
+  - .claude/hooks/rearc-workshop-demo-kit/scripts/hooks/test-guard-shell.sh
   - .claude/rules/api-conventions.md
   - .claude/rules/migrations.md
-  - .claude/rules/security-review.md
   - .claude/rules/tailwind.md
   - .claude/skills/add-dashboard-card
   - .claude/skills/add-dashboard-card/SKILL.md
@@ -64,6 +64,8 @@ dependencies:
   - .claude/skills/flip-until-heads/SKILL.md
   - .claude/skills/frontmatter-reference
   - .claude/skills/frontmatter-reference/SKILL.md
+  - .claude/skills/security-checklist
+  - .claude/skills/security-checklist/SKILL.md
   deployed_file_hashes:
     .agents/skills/add-dashboard-card/SKILL.md: sha256:31f8f9074f82796fcc1e57fe8a647aa88c757c6193e0ffce0340cd8a9db4157e
     .agents/skills/add-dashboard-card/references/weather-card-example.md: sha256:d0d96d3fa255ef0272da2febd747f025308331a287434d9d76ae164b33ebf222
@@ -77,28 +79,29 @@ dependencies:
     .agents/skills/flask-api-conventions/SKILL.md: sha256:536f4d69f2f7eaec821a1ada216a1754f859d6e161cb01ab0f0371b5f9637053
     .agents/skills/flip-until-heads/SKILL.md: sha256:006ba460cd59fc48347c0b5f9518fae1eb6a036fcf61be54b560083bd6f98d0f
     .agents/skills/frontmatter-reference/SKILL.md: sha256:c768671d741fd17fd60f09762bc18fca5aacbbae20eebe8d2a60d065813c00dd
-    .claude/agents/_agent-reference.md: sha256:c89bb3e741db30142b87a6719001646e90995165c8bb3cdb898e5405b5e571a2
-    .claude/agents/code-reviewer.md: sha256:fa64e63113f6c951fde9df56a8edb77852e16964e7d53e927905bbde16291381
+    .claude/agents/_agent-reference.md: sha256:2692fe560dfc22c01c32b0fe4cc414ca60631f2fcb3a2da74ff082186b9570dd
+    .claude/agents/code-reviewer.md: sha256:527a81eeb8e52d90829857cffd066798ec3cdcf8c3cd4619b4bd819be6be3423
     .claude/agents/research-assistant.md: sha256:f9c2de8e5462f4507c836500c87736ffb3401b3b1680ecd962a9b03ba1fa3593
-    .claude/hooks/rearc-workshop-demo-kit/scripts/hooks/audit.sh: sha256:94bf0ba6dcb480a0309f57f9455b4475ec33afbea284ff1d785ee545865d66c1
-    .claude/hooks/rearc-workshop-demo-kit/scripts/hooks/auto-lint.sh: sha256:89fac77d5fe8d2f16f76e5abafe1bcc739ea32c4f859f99df6fef24b6a96e10b
-    .claude/hooks/rearc-workshop-demo-kit/scripts/hooks/guard-shell.sh: sha256:524560418087c07d287a7e341f93ac681fbb8d6c3dc0d92d384ce855d5070f2d
+    .claude/hooks/rearc-workshop-demo-kit/scripts/hooks/audit.sh: sha256:cb67e0f380b5fe5033fd829c0753548436cc2b7d566b723a000036bd71f90fac
+    .claude/hooks/rearc-workshop-demo-kit/scripts/hooks/auto-lint.sh: sha256:3b5823acfac3e07752a4526bb3700c25004b8200a615ca0f1384cf32b577ae49
+    .claude/hooks/rearc-workshop-demo-kit/scripts/hooks/guard-shell.sh: sha256:0f16f8599832ab3320694edbb721d33d7dc40cc9e6c6359da651daa4aba4ad8f
+    .claude/hooks/rearc-workshop-demo-kit/scripts/hooks/test-guard-shell.sh: sha256:e7d34b6b73968b710aaba5cbb38387596ab0546edc7e843751c57b569c618020
     .claude/rules/api-conventions.md: sha256:80e680013780417760b175e2f265b6eeda958b39115e665663855d3c5572f943
-    .claude/rules/migrations.md: sha256:e79b9fe669f9fe01de5f9a60d4f47adc740ad8b8c3dcae88cf3387355d66453c
-    .claude/rules/security-review.md: sha256:3d849f5416e4dc23d0b8ce0eab0b9b4edb9923725ca0a2035f4cc73ebcf05058
-    .claude/rules/tailwind.md: sha256:dc061c0192831f8a20ca2b702b198500262f8deb20d555d1ce7f2985f08faafe
-    .claude/skills/add-dashboard-card/SKILL.md: sha256:31f8f9074f82796fcc1e57fe8a647aa88c757c6193e0ffce0340cd8a9db4157e
-    .claude/skills/add-dashboard-card/references/weather-card-example.md: sha256:d0d96d3fa255ef0272da2febd747f025308331a287434d9d76ae164b33ebf222
+    .claude/rules/migrations.md: sha256:a900316604e0e2f9189d3881abab052e8c6b248cb9ffd56606d03e44c952dc4b
+    .claude/rules/tailwind.md: sha256:102d70697b53bee444fe6f3d53b9552c912b61de6575a33ed0a1b8c3f653c6f5
+    .claude/skills/add-dashboard-card/SKILL.md: sha256:12c3669fb82cf402e00362b5099ae0327d975091fb6302d71918dd5dc10085db
+    .claude/skills/add-dashboard-card/references/weather-card-example.md: sha256:50da688d198c43e79d711e87f5d78042369354fff3f1df735a47b8c0eebf6021
     .claude/skills/coin-flip-code/SKILL.md: sha256:77ced8c51b49c4d24a0201ab9ec3286514cbffa6c665a1f5b3d667f33f4a48da
     .claude/skills/coin-flip-code/scripts/flip.py: sha256:76180c7779923387eaa813624ae91e97d7549226f292c783f794dc0992c11f5a
     .claude/skills/coin-flip-true-random/SKILL.md: sha256:2d3ced2328642d28c002b7f3d40bcdf6ed3a51b790d15cb89fc5b5481892964b
     .claude/skills/coin-flip-true-random/scripts/flip.py: sha256:67c9d6a27b3a83447e329d08b55b5a9c0441d942199e1165a63a2563e64c25e1
     .claude/skills/coin-flip/SKILL.md: sha256:b4e7834fc4f070d8e88a0203636e835e3ee67b5fb761a5457e155660e472ed3e
-    .claude/skills/commit-message/SKILL.md: sha256:49fb4a985b3f2315bb65e16de5c055d49c8985141153850a476909cb1304bdaf
+    .claude/skills/commit-message/SKILL.md: sha256:dbd6d778bda1a897ca6d4f07fba6ea1c77d2451587c4f7ff49639f5380c06ebd
     .claude/skills/commit-message/references/commit_conventions.md: sha256:f0164ec9209aba5dd9a0f2c11adf6056fdc8cb51b386d330df0f7660430ad300
-    .claude/skills/flask-api-conventions/SKILL.md: sha256:536f4d69f2f7eaec821a1ada216a1754f859d6e161cb01ab0f0371b5f9637053
+    .claude/skills/flask-api-conventions/SKILL.md: sha256:b420f7a0311f31905a97eb6ee0d73a3731ba6ca2ddb121a8c65ea532cf47e8ee
     .claude/skills/flip-until-heads/SKILL.md: sha256:006ba460cd59fc48347c0b5f9518fae1eb6a036fcf61be54b560083bd6f98d0f
-    .claude/skills/frontmatter-reference/SKILL.md: sha256:c768671d741fd17fd60f09762bc18fca5aacbbae20eebe8d2a60d065813c00dd
+    .claude/skills/frontmatter-reference/SKILL.md: sha256:56a13b318ae4d862b8f0f5dc9a36b8089c9f88dec1d00862183d2132ecec9e8a
+    .claude/skills/security-checklist/SKILL.md: sha256:0bbe4f62680a7d0dd112b909a1616a5773072efcd80fdbcc4791d9c78abb85a9
   source: local
   local_path: ../ai-toolkit/packages/rearc-workshop-demo-kit
   declared_license: MIT
@@ -962,7 +965,7 @@ deployments:
   owners:
   - ../ai-toolkit/packages/rearc-workshop-demo-kit
   active_owner: ../ai-toolkit/packages/rearc-workshop-demo-kit
-  content_hash: sha256:c89bb3e741db30142b87a6719001646e90995165c8bb3cdb898e5405b5e571a2
+  content_hash: sha256:2692fe560dfc22c01c32b0fe4cc414ca60631f2fcb3a2da74ff082186b9570dd
 - kind: project-relative
   target: claude
   value: .claude/agents/code-reviewer.md
@@ -971,7 +974,7 @@ deployments:
   owners:
   - ../ai-toolkit/packages/rearc-workshop-demo-kit
   active_owner: ../ai-toolkit/packages/rearc-workshop-demo-kit
-  content_hash: sha256:fa64e63113f6c951fde9df56a8edb77852e16964e7d53e927905bbde16291381
+  content_hash: sha256:527a81eeb8e52d90829857cffd066798ec3cdcf8c3cd4619b4bd819be6be3423
 - kind: project-relative
   target: claude
   value: .claude/agents/research-assistant.md
@@ -989,7 +992,7 @@ deployments:
   owners:
   - ../ai-toolkit/packages/rearc-workshop-demo-kit
   active_owner: ../ai-toolkit/packages/rearc-workshop-demo-kit
-  content_hash: sha256:94bf0ba6dcb480a0309f57f9455b4475ec33afbea284ff1d785ee545865d66c1
+  content_hash: sha256:cb67e0f380b5fe5033fd829c0753548436cc2b7d566b723a000036bd71f90fac
 - kind: project-relative
   target: claude
   value: .claude/hooks/rearc-workshop-demo-kit/scripts/hooks/auto-lint.sh
@@ -998,7 +1001,7 @@ deployments:
   owners:
   - ../ai-toolkit/packages/rearc-workshop-demo-kit
   active_owner: ../ai-toolkit/packages/rearc-workshop-demo-kit
-  content_hash: sha256:89fac77d5fe8d2f16f76e5abafe1bcc739ea32c4f859f99df6fef24b6a96e10b
+  content_hash: sha256:3b5823acfac3e07752a4526bb3700c25004b8200a615ca0f1384cf32b577ae49
 - kind: project-relative
   target: claude
   value: .claude/hooks/rearc-workshop-demo-kit/scripts/hooks/guard-shell.sh
@@ -1007,7 +1010,16 @@ deployments:
   owners:
   - ../ai-toolkit/packages/rearc-workshop-demo-kit
   active_owner: ../ai-toolkit/packages/rearc-workshop-demo-kit
-  content_hash: sha256:524560418087c07d287a7e341f93ac681fbb8d6c3dc0d92d384ce855d5070f2d
+  content_hash: sha256:0f16f8599832ab3320694edbb721d33d7dc40cc9e6c6359da651daa4aba4ad8f
+- kind: project-relative
+  target: claude
+  value: .claude/hooks/rearc-workshop-demo-kit/scripts/hooks/test-guard-shell.sh
+  runtime: null
+  scope: project
+  owners:
+  - ../ai-toolkit/packages/rearc-workshop-demo-kit
+  active_owner: ../ai-toolkit/packages/rearc-workshop-demo-kit
+  content_hash: sha256:e7d34b6b73968b710aaba5cbb38387596ab0546edc7e843751c57b569c618020
 - kind: project-relative
   target: claude
   value: .claude/rules/api-conventions.md
@@ -1025,16 +1037,7 @@ deployments:
   owners:
   - ../ai-toolkit/packages/rearc-workshop-demo-kit
   active_owner: ../ai-toolkit/packages/rearc-workshop-demo-kit
-  content_hash: sha256:e79b9fe669f9fe01de5f9a60d4f47adc740ad8b8c3dcae88cf3387355d66453c
-- kind: project-relative
-  target: claude
-  value: .claude/rules/security-review.md
-  runtime: null
-  scope: project
-  owners:
-  - ../ai-toolkit/packages/rearc-workshop-demo-kit
-  active_owner: ../ai-toolkit/packages/rearc-workshop-demo-kit
-  content_hash: sha256:3d849f5416e4dc23d0b8ce0eab0b9b4edb9923725ca0a2035f4cc73ebcf05058
+  content_hash: sha256:a900316604e0e2f9189d3881abab052e8c6b248cb9ffd56606d03e44c952dc4b
 - kind: project-relative
   target: claude
   value: .claude/rules/tailwind.md
@@ -1043,7 +1046,7 @@ deployments:
   owners:
   - ../ai-toolkit/packages/rearc-workshop-demo-kit
   active_owner: ../ai-toolkit/packages/rearc-workshop-demo-kit
-  content_hash: sha256:dc061c0192831f8a20ca2b702b198500262f8deb20d555d1ce7f2985f08faafe
+  content_hash: sha256:102d70697b53bee444fe6f3d53b9552c912b61de6575a33ed0a1b8c3f653c6f5
 - kind: project-relative
   target: claude
   value: .claude/skills/add-dashboard-card
@@ -1061,7 +1064,7 @@ deployments:
   owners:
   - ../ai-toolkit/packages/rearc-workshop-demo-kit
   active_owner: ../ai-toolkit/packages/rearc-workshop-demo-kit
-  content_hash: sha256:31f8f9074f82796fcc1e57fe8a647aa88c757c6193e0ffce0340cd8a9db4157e
+  content_hash: sha256:12c3669fb82cf402e00362b5099ae0327d975091fb6302d71918dd5dc10085db
 - kind: project-relative
   target: claude
   value: .claude/skills/add-dashboard-card/references/weather-card-example.md
@@ -1070,7 +1073,7 @@ deployments:
   owners:
   - ../ai-toolkit/packages/rearc-workshop-demo-kit
   active_owner: ../ai-toolkit/packages/rearc-workshop-demo-kit
-  content_hash: sha256:d0d96d3fa255ef0272da2febd747f025308331a287434d9d76ae164b33ebf222
+  content_hash: sha256:50da688d198c43e79d711e87f5d78042369354fff3f1df735a47b8c0eebf6021
 - kind: project-relative
   target: claude
   value: .claude/skills/code-review
@@ -1232,7 +1235,7 @@ deployments:
   owners:
   - ../ai-toolkit/packages/rearc-workshop-demo-kit
   active_owner: ../ai-toolkit/packages/rearc-workshop-demo-kit
-  content_hash: sha256:49fb4a985b3f2315bb65e16de5c055d49c8985141153850a476909cb1304bdaf
+  content_hash: sha256:dbd6d778bda1a897ca6d4f07fba6ea1c77d2451587c4f7ff49639f5380c06ebd
 - kind: project-relative
   target: claude
   value: .claude/skills/commit-message/references/commit_conventions.md
@@ -1340,7 +1343,7 @@ deployments:
   owners:
   - ../ai-toolkit/packages/rearc-workshop-demo-kit
   active_owner: ../ai-toolkit/packages/rearc-workshop-demo-kit
-  content_hash: sha256:536f4d69f2f7eaec821a1ada216a1754f859d6e161cb01ab0f0371b5f9637053
+  content_hash: sha256:b420f7a0311f31905a97eb6ee0d73a3731ba6ca2ddb121a8c65ea532cf47e8ee
 - kind: project-relative
   target: claude
   value: .claude/skills/flip-until-heads
@@ -1403,7 +1406,7 @@ deployments:
   owners:
   - ../ai-toolkit/packages/rearc-workshop-demo-kit
   active_owner: ../ai-toolkit/packages/rearc-workshop-demo-kit
-  content_hash: sha256:c768671d741fd17fd60f09762bc18fca5aacbbae20eebe8d2a60d065813c00dd
+  content_hash: sha256:56a13b318ae4d862b8f0f5dc9a36b8089c9f88dec1d00862183d2132ecec9e8a
 - kind: project-relative
   target: claude
   value: .claude/skills/grill-me
@@ -2340,6 +2343,24 @@ deployments:
   - mattpocock/skills/skills/engineering/resolving-merge-conflicts
   active_owner: mattpocock/skills/skills/engineering/resolving-merge-conflicts
   content_hash: sha256:a1f4f96838f2ed6282eb28abbbf99029cb8fadce552baf53da90a025b8bffddf
+- kind: project-relative
+  target: claude
+  value: .claude/skills/security-checklist
+  runtime: null
+  scope: project
+  owners:
+  - ../ai-toolkit/packages/rearc-workshop-demo-kit
+  active_owner: ../ai-toolkit/packages/rearc-workshop-demo-kit
+  content_hash: null
+- kind: project-relative
+  target: claude
+  value: .claude/skills/security-checklist/SKILL.md
+  runtime: null
+  scope: project
+  owners:
+  - ../ai-toolkit/packages/rearc-workshop-demo-kit
+  active_owner: ../ai-toolkit/packages/rearc-workshop-demo-kit
+  content_hash: sha256:0bbe4f62680a7d0dd112b909a1616a5773072efcd80fdbcc4791d9c78abb85a9
 - kind: project-relative
   target: claude
   value: .claude/skills/setup-matt-pocock-skills

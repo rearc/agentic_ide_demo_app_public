@@ -1,20 +1,16 @@
 #!/usr/bin/env bash
-# rearc/base — optional Claude Code status line meter.
+# statusline.sh - Claude Code status line for the workshop demo app
 #
-# Renders, on one line: context-window usage, subscription rate-limit usage
-# (5-hour + weekly rolling windows), and session cost. Reads the status line
-# JSON that Claude Code pipes on stdin.
+# Renders, on one line: the model, context-window usage, subscription
+# rate-limit usage (5-hour and weekly windows), and session cost. Reads the
+# status line JSON that Claude Code pipes on stdin.
 #
-# Opt-in. rearc/base does NOT enable this on `apm install` (the package stays
-# setup-script-free). It is wired by scripts/setup-statusline.sh, which copies
-# this file to <project>/.claude/statusline.sh and sets the statusLine key in
-# .claude/settings.local.json. See ADR-0032.
+# Deployed by the kit's scripts/setup.sh, which copies it to
+# .claude/statusline.sh and registers it in .claude/settings.json:
+#   "statusLine": { "type": "command",
+#                   "command": "\"${CLAUDE_PROJECT_DIR}/.claude/statusline.sh\"" }
 #
-# Project-scoped on purpose: the workspace .claude/ rides the sbx bind-mount
-# into the microVM, so the meter works inside the sandbox too — handy for
-# watching subscription burn during autonomous runs.
-#
-# Requires: jq (present in the default sbx agent images).
+# Requires: jq.
 
 set -uo pipefail
 

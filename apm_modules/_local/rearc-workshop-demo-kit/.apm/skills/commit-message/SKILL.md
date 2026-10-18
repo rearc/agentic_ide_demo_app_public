@@ -42,10 +42,10 @@ Do not paste huge diffs into the chat unless the user needs them; refer to paths
 
 ### 3. Load project conventions
 
-1. Read the repo’s **`AGENTS.md`** (repo root) for any **commit message** or **changelog** conventions. If none are documented, treat that as “no extra project rules beyond this skill.”
+1. The project's instructions (`CLAUDE.md` and the `AGENTS.md` it imports) are already in your context; use any **commit message** or **changelog** convention they state, without reading them again. If they state none, there are no extra project rules beyond this skill.
 2. Read **`references/commit_conventions.md`** (next to this skill) for the team’s **`Verb: Description`** subject format and body guidance.
 
-Merge: **project-specific** wins if `AGENTS.md` ever conflicts with the reference doc.
+Merge: **project-specific** wins if the project instructions ever conflict with the reference doc.
 
 ### 4. Ask clarifying questions (1–2)
 
@@ -76,5 +76,5 @@ Then **ask explicitly** whether they **approve** the draft, want **edits** (and 
 ## Quick reference
 
 - Staged review: `git diff --staged`
-- Conventions: `references/commit_conventions.md` + `AGENTS.md`
+- Conventions: `references/commit_conventions.md` + the project instructions already in context
 - Output shape: subject (`Verb: Description`) + optional body (why) + user approval before committing

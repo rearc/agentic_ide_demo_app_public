@@ -110,9 +110,9 @@
     // One event can carry MULTIPLE handlers of DIFFERENT types — here: command (x2, real) + http + prompt (illustrative).
     "PreToolUse": [
       { "matcher": "Bash",
-        "hooks": [ { "type": "command", "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/rearc-workshop-demo-kit/scripts/hooks/guard-shell.sh\"" } ] },  // ✅REAL — blocks rm -rf / git reset --hard / DROP TABLE via exit 2
-      { "matcher": ".*",
-        "hooks": [ { "type": "command", "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/rearc-workshop-demo-kit/scripts/hooks/audit.sh\"" } ] },        // ✅REAL — logs EVERY tool call (observe); exit 0
+        "hooks": [ { "type": "command", "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/rearc-workshop-demo-kit/scripts/hooks/guard-shell.sh\"" } ] },  // ✅REAL — blocks rm -rf / force push / git reset --hard / DROP TABLE with permissionDecision: deny
+      { "matcher": "*",
+        "hooks": [ { "type": "command", "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/rearc-workshop-demo-kit/scripts/hooks/audit.sh\"" } ] },        // ✅REAL — logs EVERY tool call to .claude/audit.log (observe); exit 0
       { "matcher": "Bash",                                                                                                       // ILLUSTRATIVE — "http" type: POST payload to a local policy service; its 2xx JSON is the decision
         "hooks": [ { "type": "http", "url": "http://localhost:8080/hooks/pre-tool-use", "timeout": 30,
                      "headers": { "Authorization": "Bearer $POLICY_TOKEN" }, "allowedEnvVars": ["POLICY_TOKEN"] } ] },
@@ -124,8 +124,8 @@
     // matcher: tool name | exit2: shows stderr to Claude (can prompt a retry) | ctrl: updatedToolOutput (rewrite what Claude sees), decision:block, additionalContext
     // use: auto-format / lint after edits, inject validation of a tool's result
     "PostToolUse": [
-      { "matcher": "Edit|Write|MultiEdit",
-        "hooks": [ { "type": "command", "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/rearc-workshop-demo-kit/scripts/hooks/auto-lint.sh\"" } ] }      // ✅REAL — eslint/ruff --fix after edits (automate); exit 0, fail-open
+      { "matcher": "Edit|Write",
+        "hooks": [ { "type": "command", "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/rearc-workshop-demo-kit/scripts/hooks/auto-lint.sh\"" } ] }      // ✅REAL — prettier/ruff after edits (automate); exit 0, fail-open
     ],
 
     // matcher: NONE | exit2: BLOCKS the prompt (Claude never sees it) | ctrl: decision:block+reason, additionalContext (prepended to the prompt)
@@ -155,22 +155,22 @@
     ],
     // matcher: tool name | exit2: ignored | ctrl: retry:true | use: log auto-mode denials, notify an admin, retry with an explanation
     "PermissionDenied": [
-      { "matcher": ".*", "hooks": [ { "type": "command", "command": "echo '(illustrative) log the denied call'" } ] }
+      { "matcher": "*", "hooks": [ { "type": "command", "command": "echo '(illustrative) log the denied call'" } ] }
     ],
     // matcher: tool name | exit2: shows stderr to Claude | ctrl: decision:block, reason | use: coach a recovery strategy after a tool errors
     "PostToolUseFailure": [
-      { "matcher": ".*", "hooks": [ { "type": "command", "command": "echo '(illustrative) suggest a fix on failure'" } ] }
+      { "matcher": "*", "hooks": [ { "type": "command", "command": "echo '(illustrative) suggest a fix on failure'" } ] }
     ],
 
     // === SUBAGENTS ============================================================
 
     // matcher: agent type | exit2: stderr to user only | ctrl: additionalContext | use: track/brief a spawned subagent
     "SubagentStart": [
-      { "matcher": ".*", "hooks": [ { "type": "command", "command": "echo '(illustrative) note subagent spawn'" } ] }
+      { "matcher": "*", "hooks": [ { "type": "command", "command": "echo '(illustrative) note subagent spawn'" } ] }
     ],
     // matcher: agent type | exit2: PREVENTS the subagent stopping | ctrl: decision:block+reason, additionalContext | use: gate subagent completion, aggregate results
     "SubagentStop": [
-      { "matcher": ".*", "hooks": [ { "type": "command", "command": "echo '(illustrative) verify subagent result'" } ] }
+      { "matcher": "*", "hooks": [ { "type": "command", "command": "echo '(illustrative) verify subagent result'" } ] }
     ],
 
     // === SESSION / TURN LIFECYCLE ============================================
@@ -181,7 +181,7 @@
     ],
     // matcher: error type (rate_limit, overloaded, ...) | exit2: ignored | ctrl: side effects only | use: backoff / notify on an API-error turn end
     "StopFailure": [
-      { "matcher": ".*", "hooks": [ { "type": "command", "command": "echo '(illustrative) alert on rate limit'" } ] }
+      { "matcher": "*", "hooks": [ { "type": "command", "command": "echo '(illustrative) alert on rate limit'" } ] }
     ],
 
     // === CONTEXT MANAGEMENT ==================================================

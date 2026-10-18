@@ -15,13 +15,12 @@ keywords:
   - mcp
   - hooks
   - claude-code
-  - copilot
   - apm
 description: |
   Agentic-primitive layer backing the Rearc workshop demo app — a multi-card
-  React + Flask dashboard used in workshops to demonstrate how Claude Code,
-  Copilot, and Cursor pick up project-scoped skills, agents, instructions,
-  hooks, and MCP servers via APM.
+  React + Flask dashboard used in workshops to demonstrate how Claude Code
+  picks up project-scoped skills, agents, rules, hooks, and MCP servers,
+  installed via APM.
 
   APM-native shape (per ADR-0016). All Rearc-authored content lives under
   .apm/; four upstream skills (frontend-design, grill-me, react-best-practices,
@@ -59,11 +58,6 @@ dependencies:
     - vercel-labs/agent-skills/skills/react-best-practices
 
   mcp:
-    # ClickUp removed 2026-07-20: it was a SolutionReach-engagement artifact and
-    # is deprecated. Because APM redeploys this block on every install, leaving it
-    # here silently resurrected the server (and its AGENTS.md prose) in consumer
-    # repos after it had been removed by hand. Do not re-add.
-
     # Context7 documentation-lookup remote MCP. Free tier requires no auth.
     - name: context7
       registry: false

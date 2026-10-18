@@ -3,7 +3,7 @@
   "hooks": {
     "PreToolUse": [
       {
-        "_comment": "TYPE: command  — DETERMINISTIC shell. Exit 0 + JSON on stdout. `systemMessage` prints a USER-VISIBLE line; `additionalContext` injects agent-only context. No block here — the ADVISORY path (contrast guard-shell.sh, which exit-2 BLOCKS). Inline, no script needed.",
+        "_comment": "TYPE: command  — DETERMINISTIC shell. Exit 0 + JSON on stdout. `systemMessage` prints a USER-VISIBLE line; `additionalContext` injects agent-only context. No block here — the ADVISORY path (contrast guard-shell.sh, which BLOCKS with permissionDecision: deny). Inline, no script needed.",
         "matcher": "Bash",
         "hooks": [
           {

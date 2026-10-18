@@ -1,8 +1,8 @@
 # NOTICE — upstream provenance
 
-This package distributes four upstream skills it did not author, pulled from three upstream repos via APM-native per-skill references (per [ADR-0015](../../ADR.md#adr-0015-upstream-skills-are-declared-at-per-skill-subpath-granularity-not-whole-collection)). The skills are *referenced*, not vendored in-tree: APM resolves each reference at consumer `apm install` time, places the upstream content under `apm_modules/<owner>/<repo>/`, and deploys each skill to the selected IDE targets (`.claude/skills/` for Claude, `.agents/skills/` for Copilot per APM #1103). As of APM 0.18.0, targets are chosen explicitly via `-t`/`--target` or `targets:`.
+This package distributes four upstream skills it did not author, pulled from three upstream repos via APM-native per-skill references (per [ADR-0015](../../ADR.md#adr-0015-upstream-skills-are-declared-at-per-skill-subpath-granularity-not-whole-collection)). The skills are *referenced*, not vendored in-tree: APM resolves each reference at consumer `apm install` time, places the upstream content under `apm_modules/<owner>/<repo>/`, and deploys each skill to `.claude/skills/`.
 
-The Rearc-authored content in `.apm/` (agents, instructions, the three per-target hook sets per [ADR-0029](../../ADR.md#adr-0029-rearcworkshop-demo-kit-ships-three-way-per-target-hook-manifests-cursor-hooks-use-native-camelcase-events-and-accept-apms-spurious-casing-warning)) and the local `random-tools` server are original content governed by this repo's `LICENSE` (MIT, per [ADR-0028](../../ADR.md#adr-0028-repository-license-is-mit)); they are **not** covered by this NOTICE. This file records only the four cherry-picked upstream skills.
+The Rearc-authored content in `.apm/` (agents, instructions, skills, hooks) and the local `random-tools` server are original content governed by this repo's `LICENSE` (MIT, per [ADR-0028](../../ADR.md#adr-0028-repository-license-is-mit)); they are **not** covered by this NOTICE. This file records only the four cherry-picked upstream skills.
 
 ## Upstreams (3)
 

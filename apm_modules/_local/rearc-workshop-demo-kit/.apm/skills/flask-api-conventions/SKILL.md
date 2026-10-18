@@ -8,7 +8,7 @@ paths: backend/**
 
 # Flask API conventions
 
-Reference knowledge for the backend. This is **not** a command — it loads automatically when work touches `backend/**` so generated code matches the existing patterns.
+Reference knowledge for the backend. This is **not** a command — it loads automatically when work touches `backend/**` so generated code matches the existing patterns. `docs/coding_standards.md` holds the full rule set with IDs (`SVC-*`, `API-*`); response shapes and status codes are in the `api-conventions` rule.
 
 ## Service layer (`backend/app/services/<name>.py`)
 
@@ -27,12 +27,12 @@ Reference knowledge for the backend. This is **not** a command — it loads auto
 
 - Read secrets via `os.environ.get('KEY', '<sensible-default>')` in the `Config` class — the app must still boot when a key is unset.
 - In a service, reach config with `from flask import current_app` then `current_app.config.get('KEY')`.
-- Never hardcode a key or read one outside `config.py`.
+- Keep keys out of the code and read them only in `config.py`: `.env` is gitignored so real keys never reach the repo, and `TestConfig` pins known values so the tests stay deterministic.
 
-## Migrations
+## Models and migrations
 
-- Only a **stateful** card (its own model + table) needs an Alembic migration; data/static cards do not.
-- Migrations live in `backend/migrations/`; the `todo` feature is the reference implementation.
+- Only a **stateful** card (its own model + table) needs a model change and an Alembic migration; data and static cards do not. The `todo` feature is the reference implementation.
+- How to write the migration is in the path-scoped rule `.claude/rules/migrations.md`, which loads when you touch `backend/app/models/` or `backend/migrations/`.
 
 ## Python baseline
 
