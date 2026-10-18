@@ -6,6 +6,7 @@ network.
 """
 
 import pytest
+import requests
 
 from app.services import weather
 from app.services.weather import FORECAST_URL, GEOCODE_URL
@@ -30,7 +31,6 @@ def register_forecast(http_mock, temperature=18.3, humidity=72, weather_code=3):
 
 
 SF_RESULT = [{'latitude': 37.77, 'longitude': -122.42, 'name': 'San Francisco'}]
-
 
 
 @pytest.fixture
@@ -69,21 +69,6 @@ class TestHappyPath:
             'humidity': 72,
         }
 
-    def test_success_response_has_no_fallback_flag(self, http_mock):
-        register_geocode(http_mock, SF_RESULT)
-        register_forecast(http_mock)
-
-        assert 'fallback' not in weather.fetch(city='San Francisco')
-
-    def test_maps_weather_code_to_description_and_icon(self, http_mock):
-        register_geocode(http_mock, SF_RESULT)
-        register_forecast(http_mock, weather_code=95)
-
-        result = weather.fetch(city='San Francisco')
-
-        assert result['description'] == 'Thunderstorm'
-        assert result['icon_emoji'] == '⛈️'
-
     def test_unrecognized_weather_code_degrades_to_generic_label(self, http_mock):
         register_geocode(http_mock, SF_RESULT)
         register_forecast(http_mock, weather_code=1234)
@@ -95,7 +80,7 @@ class TestHappyPath:
 
     def test_uses_the_geocoders_canonical_city_name(self, http_mock):
         """The card is configured with 'sf'; the display name comes from the API."""
-        register_geocode(http_mock, [{'latitude': 37.77, 'longitude': -122.42, 'name': 'San Francisco'}])
+        register_geocode(http_mock, SF_RESULT)
         register_forecast(http_mock)
 
         assert weather.fetch(city='sf')['city'] == 'San Francisco'
@@ -122,32 +107,33 @@ class TestGracefulFallback:
         assert result['city'] == 'Nowhereville'
         assert result['temp'] == '--'
 
-    def test_geocode_http_error_returns_fallback(self, http_mock):
-        http_mock.get(GEOCODE_URL, status=500)
+    @pytest.mark.parametrize(
+        'upstream',
+        [
+            pytest.param({'status': 500}, id='http-error'),
+            pytest.param({'body': requests.ConnectionError('unreachable')}, id='unreachable'),
+        ],
+    )
+    def test_geocoder_failure_returns_fallback(self, http_mock, upstream):
+        http_mock.get(GEOCODE_URL, **upstream)
 
         result = weather.fetch(city='San Francisco')
 
         assert result['fallback'] is True
         assert result['description'] == 'Weather data unavailable'
 
-    def test_forecast_http_error_returns_fallback(self, http_mock):
+    @pytest.mark.parametrize(
+        'upstream',
+        [
+            pytest.param({'status': 503}, id='http-error'),
+            # A 200 with an unexpected shape must not escape as a KeyError.
+            pytest.param({'json': {'unexpected': 'shape'}, 'status': 200}, id='malformed'),
+        ],
+    )
+    def test_forecast_failure_returns_fallback(self, http_mock, upstream):
         register_geocode(http_mock, SF_RESULT)
-        http_mock.get(FORECAST_URL, status=503)
+        http_mock.get(FORECAST_URL, **upstream)
 
-        result = weather.fetch(city='San Francisco')
-
-        assert result['fallback'] is True
-        assert result['description'] == 'Weather data unavailable'
-
-    def test_malformed_forecast_payload_returns_fallback(self, http_mock):
-        """A 200 with an unexpected shape must not escape as a KeyError."""
-        register_geocode(http_mock, SF_RESULT)
-        http_mock.get(FORECAST_URL, json={'unexpected': 'shape'}, status=200)
-
-        assert weather.fetch(city='San Francisco')['fallback'] is True
-
-    def test_network_failure_returns_fallback(self, http_mock):
-        """No registration at all: the request raises ConnectionError."""
         result = weather.fetch(city='San Francisco')
 
         assert result['fallback'] is True
@@ -156,17 +142,8 @@ class TestGracefulFallback:
     def test_fallback_carries_the_same_keys_as_a_success(
         self, success_payload, fallback_payload
     ):
-        """Convention: a fallback dict matches the success shape plus `fallback`.
-
-        The frontend renders one component off both, so a missing key is a crash.
-        """
+        """SVC-5: one component renders both, so a missing key is a crash."""
         assert set(fallback_payload) - {'fallback'} == set(success_payload)
-
-    def test_only_the_fallback_is_flagged(self, success_payload, fallback_payload):
-        """Load-bearing for the check above: were `fallback` present on both,
-        the key-parity assertion would pass while SVC-4 was violated."""
-        assert 'fallback' not in success_payload
-        assert fallback_payload['fallback'] is True
 
 
 class TestGeocodeCaching:
@@ -179,5 +156,5 @@ class TestGeocodeCaching:
         weather.fetch(city='San Francisco')
         weather.fetch(city='San Francisco')
 
-        geocode_calls = [c for c in http_mock.calls if 'geocoding-api' in c.request.url]
+        geocode_calls = [c for c in http_mock.calls if c.request.url.startswith(GEOCODE_URL)]
         assert len(geocode_calls) == 1

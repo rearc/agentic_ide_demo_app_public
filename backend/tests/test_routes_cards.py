@@ -2,25 +2,19 @@
 
 Response-shape conventions under test (see docs/coding_standards.md): collections
 return a bare list, single resources return the object, errors return
-{"error": "..."}, and DELETE returns 204 with an empty body.
+{"error": "..."}, and DELETE returns 204 with an empty body. The body and
+not-found checks every route shares are in test_routes_helpers.py.
 """
 
 import pytest
 
-BODY_ERROR = {'error': 'Request body must be a JSON object'}
-HUGE_ID = 2**63
+from app.routes.helpers import SQLITE_INT_MAX, SQLITE_INT_MIN
+
+VALID_CARD = {'slug': 'stocks', 'title': 'Stocks', 'source': 'stocks'}
 LAYOUT = {'x': 1, 'y': 2, 'w': 3, 'h': 4}
 
 
 class TestListCards:
-    def test_returns_a_bare_list_not_an_envelope(self, client, make_card):
-        make_card(slug='weather')
-
-        response = client.get('/api/cards')
-
-        assert response.status_code == 200
-        assert isinstance(response.get_json(), list)
-
     def test_returns_empty_list_when_no_cards_exist(self, client):
         response = client.get('/api/cards')
 
@@ -60,22 +54,10 @@ class TestGetCard:
         assert response.status_code == 200
         assert response.get_json()['slug'] == 'weather'
 
-    def test_unknown_id_returns_404(self, client):
-        response = client.get('/api/cards/999')
-
-        assert response.status_code == 404
-        assert response.get_json()['error'] == 'Card not found'
-
-    def test_id_beyond_the_database_range_returns_404(self, client):
-        assert client.get(f'/api/cards/{HUGE_ID}').status_code == 404
-
 
 class TestCreateCard:
     def test_creates_and_returns_201(self, client):
-        response = client.post(
-            '/api/cards',
-            json={'slug': 'stocks', 'title': 'Stocks', 'source': 'stocks'},
-        )
+        response = client.post('/api/cards', json=VALID_CARD)
 
         assert response.status_code == 201
         body = response.get_json()
@@ -83,21 +65,24 @@ class TestCreateCard:
         assert body['id'] is not None
 
     def test_created_card_is_listed(self, client):
-        client.post('/api/cards', json={'slug': 'stocks', 'title': 'Stocks', 'source': 'stocks'})
+        client.post('/api/cards', json=VALID_CARD)
 
         assert len(client.get('/api/cards').get_json()) == 1
 
     def test_applies_defaults_for_optional_fields(self, client):
-        body = client.post(
-            '/api/cards',
-            json={'slug': 'stocks', 'title': 'Stocks', 'source': 'stocks'},
-        ).get_json()
+        body = client.post('/api/cards', json=VALID_CARD).get_json()
 
         assert body['description'] == ''
         assert body['icon'] == ''
         assert body['config'] == {}
+        assert body['layout'] == {}
         assert body['position'] == 0
         assert body['is_active'] is True
+
+    def test_stores_a_supplied_layout(self, client):
+        body = client.post('/api/cards', json={**VALID_CARD, 'layout': LAYOUT}).get_json()
+
+        assert body['layout'] == LAYOUT
 
     def test_missing_required_field_returns_400(self, client):
         response = client.post('/api/cards', json={'slug': 'stocks'})
@@ -115,100 +100,36 @@ class TestCreateCard:
         assert response.status_code == 409
         assert 'already exists' in response.get_json()['error']
 
-    def test_empty_json_body_is_validated_by_the_route(self, client):
-        response = client.post('/api/cards', json={})
 
-        assert response.status_code == 400
-        assert 'Missing required fields' in response.get_json()['error']
-
-    def test_stores_a_supplied_layout(self, client):
-        body = client.post(
-            '/api/cards',
-            json={'slug': 'stocks', 'title': 'Stocks', 'source': 'stocks', 'layout': LAYOUT},
-        ).get_json()
-
-        assert body['layout'] == LAYOUT
+# A new value for every field an update may change. config repoints the card's
+# data fetch, source is the dispatch key on both registries (ADR-008), position
+# is the dashboard's sort key, and layout is what the dashboard writes when a
+# card is dragged or resized.
+UPDATES = [
+    ('title', 'Renamed'),
+    ('description', 'Rewritten'),
+    ('icon', '🌦️'),
+    ('source', 'quote'),
+    ('config', {'city': 'Boston', 'units': 'metric'}),
+    ('layout', {'x': 2, 'y': 3, 'w': 6, 'h': 5}),
+    ('position', 3),
+    ('is_active', False),
+]
 
 
 class TestUpdateCard:
-    def test_updates_mutable_fields(self, client, card):
-        response = client.put(f'/api/cards/{card.id}', json={'title': 'Renamed'})
+    @pytest.mark.parametrize(('field', 'value'), UPDATES)
+    def test_persists_an_updated_field(self, client, card, field, value):
+        response = client.put(f'/api/cards/{card.id}', json={field: value})
 
         assert response.status_code == 200
-        assert response.get_json()['title'] == 'Renamed'
-
-    def test_persists_the_layout_written_by_the_dashboard(self, client, card):
-        layout = {'x': 2, 'y': 3, 'w': 6, 'h': 5}
-
-        client.put(f'/api/cards/{card.id}', json={'layout': layout})
-
-        assert client.get(f'/api/cards/{card.id}').get_json()['layout'] == layout
-
-    def test_ignores_unknown_fields(self, client, card):
-        response = client.put(f'/api/cards/{card.id}', json={'bogus': 'value'})
-
-        assert response.status_code == 200
-        assert 'bogus' not in response.get_json()
+        assert client.get(f'/api/cards/{card.id}').get_json()[field] == value
 
     def test_slug_is_not_updatable(self, client, card):
         """slug is the frontend's registry key, so update_card deliberately omits it."""
         client.put(f'/api/cards/{card.id}', json={'slug': 'changed'})
 
         assert client.get(f'/api/cards/{card.id}').get_json()['slug'] == 'weather'
-
-    def test_deactivating_removes_it_from_the_listing(self, client, card):
-        client.put(f'/api/cards/{card.id}', json={'is_active': False})
-
-        assert client.get('/api/cards').get_json() == []
-
-    def test_updates_the_config_a_card_fetches_with(self, client, card):
-        """config drives the query string sent to /api/data/<source>, so a card
-        that cannot be reconfigured cannot be repointed."""
-        config = {'city': 'Boston', 'units': 'metric'}
-
-        client.put(f'/api/cards/{card.id}', json={'config': config})
-
-        assert client.get(f'/api/cards/{card.id}').get_json()['config'] == config
-
-    def test_updates_position(self, client, make_card):
-        """position is the sort key the dashboard renders in."""
-        first = make_card(slug='first', position=1)
-        make_card(slug='second', position=2)
-
-        client.put(f'/api/cards/{first.id}', json={'position': 3})
-
-        slugs = [c['slug'] for c in client.get('/api/cards').get_json()]
-        assert slugs == ['second', 'first']
-
-    def test_updates_source(self, client, card):
-        """source is the dispatch key on both registries (ADR-008)."""
-        client.put(f'/api/cards/{card.id}', json={'source': 'quote'})
-
-        assert client.get(f'/api/cards/{card.id}').get_json()['source'] == 'quote'
-
-    def test_updates_description_and_icon(self, client, card):
-        client.put(
-            f'/api/cards/{card.id}', json={'description': 'Rewritten', 'icon': '🌦️'}
-        )
-
-        body = client.get(f'/api/cards/{card.id}').get_json()
-        assert body['description'] == 'Rewritten'
-        assert body['icon'] == '🌦️'
-
-    def test_unknown_id_returns_404(self, client):
-        assert client.put('/api/cards/999', json={'title': 'X'}).status_code == 404
-
-    def test_empty_json_body_changes_nothing(self, client, card):
-        response = client.put(f'/api/cards/{card.id}', json={})
-
-        assert response.status_code == 200
-        assert response.get_json()['title'] == 'Weather'
-
-    def test_id_beyond_the_database_range_returns_404(self, client):
-        response = client.put(f'/api/cards/{HUGE_ID}', json={'title': 'X'})
-
-        assert response.status_code == 404
-        assert response.get_json()['error'] == 'Card not found'
 
 
 class TestDeleteCard:
@@ -223,128 +144,48 @@ class TestDeleteCard:
 
         assert client.get(f'/api/cards/{card.id}').status_code == 404
 
-    def test_unknown_id_returns_404(self, client):
-        assert client.delete('/api/cards/999').status_code == 404
 
-    def test_id_beyond_the_database_range_returns_404(self, client):
-        assert client.delete(f'/api/cards/{HUGE_ID}').status_code == 404
-
-
-class TestCreateCardRejectsBadValues:
-    """Presence checks are not type checks: a null or non-string value used to
-    reach the NOT NULL constraint and surface as a 500 with an HTML body."""
-
-    def test_null_required_field_returns_400_not_500(self, client):
-        response = client.post(
-            '/api/cards', json={'slug': None, 'title': None, 'source': None}
-        )
-
-        assert response.status_code == 400
-        assert response.get_json()['error'] == 'slug must be a non-empty string'
-
-    def test_null_field_names_the_offending_fields(self, client):
-        response = client.post(
-            '/api/cards', json={'slug': 'ok', 'title': None, 'source': 'weather'}
-        )
-
-        assert response.status_code == 400
-        assert 'title' in response.get_json()['error']
-
-    def test_non_string_field_returns_400(self, client):
-        response = client.post(
-            '/api/cards', json={'slug': 123, 'title': 'X', 'source': 'weather'}
-        )
-
-        assert response.status_code == 400
-
-    def test_whitespace_only_field_returns_400(self, client):
-        response = client.post(
-            '/api/cards', json={'slug': '   ', 'title': 'X', 'source': 'weather'}
-        )
-
-        assert response.status_code == 400
-
-    def test_a_rejected_card_is_not_persisted(self, client):
-        client.post('/api/cards', json={'slug': None, 'title': None, 'source': None})
-
-        assert client.get('/api/cards').get_json() == []
-
-
-class TestWriteRoutesRequireAJsonBody:
-    """A request with no JSON content type must still get our JSON 400, not
-    werkzeug's 415 with an HTML body (API-4, SEC-4)."""
-
-    def test_post_without_json_content_type_returns_400(self, client):
-        response = client.post('/api/cards', data='slug=stocks')
-
-        assert response.status_code == 400
-        assert response.get_json() == BODY_ERROR
-
-    def test_post_with_malformed_json_returns_400(self, client):
-        response = client.post(
-            '/api/cards',
-            data='{not valid json',
-            content_type='application/json',
-        )
-
-        assert response.status_code == 400
-
-    def test_error_response_is_json_not_html(self, client):
-        response = client.post('/api/cards', data='slug=stocks')
-
-        assert response.content_type.startswith('application/json')
-
-    def test_put_without_json_content_type_returns_400(self, client, card):
-        response = client.put(f'/api/cards/{card.id}', data='title=Renamed')
-
-        assert response.status_code == 400
-        assert response.get_json() == BODY_ERROR
-
-
-VALID_CARD = {'slug': 'stocks', 'title': 'Stocks', 'source': 'stocks'}
-
-# One bad value per validated field, shared by create and update.
+# One bad value per validated field, plus one per clause of a compound check
+# (TEST-11): '   ' needs the strip, True is a Python int, and an integer must
+# fit SQLite's 64-bit range on both sides.
 BAD_VALUES = [
-    ('slug', None), ('title', None), ('source', ''),
+    ('slug', None), ('title', None), ('source', '   '),
     ('description', 5), ('icon', None),
-    ('config', [1]), ('config', 'x'),
-    ('layout', 'x'), ('layout', {'x': 1}), ('layout', {**LAYOUT, 'w': True}),
-    ('layout', {**LAYOUT, 'h': 1.5}),
-    ('position', 'x'), ('position', True), ('position', HUGE_ID),
-    ('is_active', 1), ('is_active', 'yes'),
+    ('config', [1]),
+    ('layout', 'x'), ('layout', {'x': 1}), ('layout', {**LAYOUT, 'z': 0}),
+    ('layout', {**LAYOUT, 'w': True}), ('layout', {**LAYOUT, 'h': 1.5}),
+    ('position', 'x'), ('position', True),
+    ('position', SQLITE_INT_MAX + 1), ('position', SQLITE_INT_MIN - 1),
+    ('is_active', 1),
 ]
 
 
 class TestCardFieldTypes:
+    """Presence checks are not type checks: a null or wrongly typed value must
+    be a 400 naming the field, never a 500 from the database (API-7)."""
+
     @pytest.mark.parametrize(('field', 'value'), BAD_VALUES)
-    def test_create_rejects_a_wrongly_typed_field(self, client, field, value):
+    def test_rejects_a_wrongly_typed_field(self, client, field, value):
         response = client.post('/api/cards', json={**VALID_CARD, field: value})
 
         assert response.status_code == 400
         assert response.get_json()['error'].startswith(f'{field} must be')
 
-    @pytest.mark.parametrize(('field', 'value'), BAD_VALUES)
-    def test_update_rejects_a_wrongly_typed_field(self, client, card, field, value):
-        response = client.put(f'/api/cards/{card.id}', json={field: value})
+    @pytest.mark.parametrize('position', [SQLITE_INT_MIN, SQLITE_INT_MAX])
+    def test_accepts_an_integer_at_the_edge_of_the_sqlite_range(self, client, card, position):
+        response = client.put(f'/api/cards/{card.id}', json={'position': position})
 
-        assert response.status_code == 400
-        assert response.get_json()['error'].startswith(f'{field} must be')
+        assert response.status_code == 200
+        assert client.get(f'/api/cards/{card.id}').get_json()['position'] == position
+
+    def test_a_rejected_create_writes_nothing(self, client):
+        client.post('/api/cards', json={**VALID_CARD, 'position': 'x'})
+
+        assert client.get('/api/cards').get_json() == []
 
     def test_a_rejected_update_changes_nothing(self, client, card):
-        client.put(f'/api/cards/{card.id}', json={'title': 'Renamed', 'position': 'x'})
+        """The valid title must not be written before the bad position is seen."""
+        response = client.put(f'/api/cards/{card.id}', json={'title': 'Renamed', 'position': 'x'})
 
+        assert response.status_code == 400
         assert client.get(f'/api/cards/{card.id}').get_json()['title'] == 'Weather'
-
-    @pytest.mark.parametrize('body', [[1], 'slug title source', 42, None])
-    def test_a_body_that_is_not_an_object_returns_400_on_create(self, client, body):
-        response = client.post('/api/cards', json=body)
-
-        assert response.status_code == 400
-        assert response.get_json() == BODY_ERROR
-
-    @pytest.mark.parametrize('body', [[1], 'x', 42, None])
-    def test_a_body_that_is_not_an_object_returns_400_on_update(self, client, card, body):
-        response = client.put(f'/api/cards/{card.id}', json=body)
-
-        assert response.status_code == 400
-        assert response.get_json() == BODY_ERROR

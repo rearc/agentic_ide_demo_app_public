@@ -34,6 +34,7 @@ def migration_db(tmp_path):
     Built through the real `create_app`, because Flask-Migrate's env.py reads
     the engine off `current_app.extensions['migrate']`. Passing a config class
     rather than a dotted string exercises the other half of the factory seam.
+    Both engines are disposed afterwards, so no connection is left open.
     """
     db_path = tmp_path / 'migration_test.db'
     url = f'sqlite:///{db_path}'
@@ -47,21 +48,17 @@ def migration_db(tmp_path):
     config.set_main_option('script_location', MIGRATIONS_DIR)
     config.set_main_option('sqlalchemy.url', url)
 
+    engine = sa.create_engine(url)
     app = create_app(TmpMigrationConfig)
     with app.app_context():
-        yield config, sa.create_engine(url)
+        yield config, engine
+        db.session.remove()
+        db.engine.dispose()
+    engine.dispose()
 
 
 def table_names(engine):
     return set(sa.inspect(engine).get_table_names())
-
-
-def test_upgrade_creates_the_application_tables(migration_db):
-    config, engine = migration_db
-
-    command.upgrade(config, 'head')
-
-    assert {'cards', 'todos'} <= table_names(engine)
 
 
 def test_upgrade_then_downgrade_leaves_no_application_tables(migration_db):
@@ -76,17 +73,6 @@ def test_upgrade_then_downgrade_leaves_no_application_tables(migration_db):
     assert 'todos' not in remaining
 
 
-def test_chain_can_be_replayed(migration_db):
-    """Up, down, and up again - catches a downgrade that leaves debris behind."""
-    config, engine = migration_db
-
-    command.upgrade(config, 'head')
-    command.downgrade(config, 'base')
-    command.upgrade(config, 'head')
-
-    assert {'cards', 'todos'} <= table_names(engine)
-
-
 def add_card_with_a_todo():
     card = Card(slug='weather', title='Weather', source='weather')
     db.session.add(card)
@@ -96,8 +82,9 @@ def add_card_with_a_todo():
 
 
 def test_chain_replays_over_a_database_holding_data(migration_db):
-    """The tests above run on empty tables; a downgrade or upgrade can also
-    trip over rows that reference each other."""
+    """Up, down, and up again, with rows that reference each other in place:
+    catches a downgrade that leaves debris behind, and a step that trips over
+    existing data."""
     config, engine = migration_db
     command.upgrade(config, 'head')
     add_card_with_a_todo()

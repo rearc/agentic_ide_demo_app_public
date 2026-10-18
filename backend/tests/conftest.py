@@ -22,7 +22,9 @@ def app():
     """A Flask app bound to a fresh in-memory database, with an active app context.
 
     The schema is built and torn down per test, so no test can observe rows
-    written by another.
+    written by another. The engine is disposed last: it holds the in-memory
+    database's connection, which is otherwise left open for the garbage
+    collector (a ResourceWarning per test).
     """
     flask_app = create_app('config.TestConfig')
     with flask_app.app_context():
@@ -30,6 +32,7 @@ def app():
         yield flask_app
         _db.session.remove()
         _db.drop_all()
+        _db.engine.dispose()
 
 
 @pytest.fixture
@@ -123,6 +126,12 @@ def make_card(app):
 def card(make_card):
     """A single persisted Card, for tests that just need one to exist."""
     return make_card(slug='weather')
+
+
+@pytest.fixture
+def todo_card(make_card):
+    """A card todos may attach to: only cards with source 'todo' qualify."""
+    return make_card(slug='todo', source='todo')
 
 
 @pytest.fixture
