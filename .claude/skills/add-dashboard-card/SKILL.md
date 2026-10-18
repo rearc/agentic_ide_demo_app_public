@@ -201,7 +201,7 @@ missing and leaves existing cards and their data untouched, so it is safe to run
 board you care about. Use `python seed.py --reset` **only** when you deliberately want to
 wipe and rebuild the whole board.
 
-**Verify:** `curl http://127.0.0.1:5001/api/cards` lists your new card, and `curl http://127.0.0.1:5001/api/profiles` shows it on the "Default" board.
+**Verify:** `curl http://127.0.0.1:5001/api/cards` lists your new card, and `curl http://127.0.0.1:5001/api/profiles` shows it on the "Default" board (if no profile is named "Default" any more, the card is in the library only).
 
 ## Stage 8: Tests
 
