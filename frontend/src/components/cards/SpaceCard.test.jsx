@@ -50,18 +50,37 @@ describe('SpaceCard', () => {
     it('opens the video safely in a new tab', () => {
       render(<SpaceCard data={{ ...APOD, media_type: 'video' }} />)
 
-      const link = screen.getByRole('link')
+      const link = screen.getByRole('link', { name: /Watch/ })
       expect(link).toHaveAttribute('target', '_blank')
       expect(link).toHaveAttribute('rel', 'noopener noreferrer')
     })
   })
 
-  it('renders neither image nor link when there is no url', () => {
+  it('renders neither image nor video link when there is no url', () => {
     render(<SpaceCard data={{ ...APOD, url: '' }} />)
 
     expect(screen.queryByRole('img')).not.toBeInTheDocument()
-    expect(screen.queryByRole('link')).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('link', { name: /Watch/ }),
+    ).not.toBeInTheDocument()
     expect(screen.getByText('Pillars of Creation')).toBeInTheDocument()
+  })
+
+  it("links the date to that day's APOD page", () => {
+    render(<SpaceCard data={APOD} />)
+
+    expect(screen.getByRole('link', { name: '2026-07-19' })).toHaveAttribute(
+      'href',
+      'https://apod.nasa.gov/apod/ap260719.html',
+    )
+  })
+
+  it('shows no source line when the API gave no date', () => {
+    render(<SpaceCard data={{ ...APOD, date: '' }} />)
+
+    expect(
+      screen.queryByText('NASA Astronomy Picture of the Day'),
+    ).not.toBeInTheDocument()
   })
 
   describe('fallback state (ADR-009)', () => {

@@ -55,6 +55,17 @@ describe('chrome', () => {
     )
   })
 
+  it('shows a note its content sends up, such as the todo count', async () => {
+    fetchTodos.mockResolvedValue([
+      { id: 1, card_id: 1, text: 'One', done: true },
+      { id: 2, card_id: 1, text: 'Two', done: false },
+    ])
+
+    render(<Card card={cardRecord({ source: 'todo' })} locked />)
+
+    expect(await screen.findByText('1 of 2 done')).toBeInTheDocument()
+  })
+
   it('gives an unregistered card no colour', async () => {
     const { container } = render(
       <Card card={cardRecord({ source: 'not-a-real-source' })} locked />,

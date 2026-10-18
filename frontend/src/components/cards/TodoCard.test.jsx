@@ -33,6 +33,31 @@ beforeEach(() => {
   fetchTodos.mockResolvedValue([])
 })
 
+describe('count in the card header', () => {
+  it('reports how many are done, and again after a change', async () => {
+    const onNote = vi.fn()
+    fetchTodos.mockResolvedValue([
+      todo(),
+      todo({ id: 2, text: 'B', done: true }),
+    ])
+    updateTodo.mockResolvedValue(todo({ done: true }))
+    const user = userEvent.setup()
+    render(<TodoCard card={CARD} onNote={onNote} />)
+
+    await waitFor(() => expect(onNote).toHaveBeenLastCalledWith('1 of 2 done'))
+    await user.click(checkboxFor('A task'))
+    expect(onNote).toHaveBeenLastCalledWith('2 of 2 done')
+  })
+
+  it('reports nothing for an empty list', async () => {
+    const onNote = vi.fn()
+    render(<TodoCard card={CARD} onNote={onNote} />)
+
+    await screen.findByText('No tasks yet.')
+    expect(onNote).toHaveBeenLastCalledWith(null)
+  })
+})
+
 describe('loading todos', () => {
   it('shows a loading indicator until the todos arrive', () => {
     fetchTodos.mockReturnValue(new Promise(() => {}))

@@ -97,6 +97,8 @@ export default function Card({ card, locked }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [fetchedAt, setFetchedAt] = useState(null)
+  // A short note a card's content may put in the header (the todo count).
+  const [note, setNote] = useState(null)
 
   const entry = CARD_REGISTRY[card.source] ?? UNREGISTERED
   const configKey = JSON.stringify(card.config || {})
@@ -171,6 +173,7 @@ export default function Card({ card, locked }) {
         </h2>
         <span className="flex-1" />
         {status && <CardStatus status={status} fetchedAt={fetchedAt} />}
+        {note && <span className="text-xs text-text-secondary">{note}</span>}
         {!locked && (
           <span className="text-text-muted" title="Drag to move">
             <DotsSixVerticalIcon size={16} aria-hidden />
@@ -183,7 +186,7 @@ export default function Card({ card, locked }) {
         ) : error ? (
           <p className="text-sm text-danger">{error}</p>
         ) : (
-          <CardContent data={data} card={card} />
+          <CardContent data={data} card={card} onNote={setNote} />
         )}
       </div>
     </div>

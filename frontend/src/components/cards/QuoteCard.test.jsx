@@ -24,20 +24,22 @@ describe('QuoteCard', () => {
     expect(container).toBeEmptyDOMElement()
   })
 
-  it('credits ZenQuotes on a live quote, without an offline mark', () => {
+  it('credits ZenQuotes on a live quote, without a fallback note', () => {
     render(<QuoteCard data={QUOTE} />)
 
     expect(screen.getByRole('link', { name: 'via ZenQuotes' })).toHaveAttribute(
       'href',
       'https://zenquotes.io/',
     )
-    expect(screen.queryByText('(offline)')).not.toBeInTheDocument()
+    expect(screen.queryByText(/did not answer/)).not.toBeInTheDocument()
   })
 
-  it('marks the built-in fallback quote offline instead of crediting ZenQuotes', () => {
+  it('says why it shows the built-in quote instead of crediting ZenQuotes', () => {
     render(<QuoteCard data={{ ...QUOTE, fallback: true }} />)
 
-    expect(screen.getByText('(offline)')).toBeInTheDocument()
+    expect(
+      screen.getByText('ZenQuotes did not answer: showing a built-in quote'),
+    ).toBeInTheDocument()
     expect(screen.queryByRole('link')).not.toBeInTheDocument()
   })
 })

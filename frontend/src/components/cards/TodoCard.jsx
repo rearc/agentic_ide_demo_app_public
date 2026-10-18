@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
+import { XIcon } from '@phosphor-icons/react'
 import LoadingDots from '../LoadingDots'
 import { createTodo, deleteTodo, fetchTodos, updateTodo } from '../../api'
 
-export default function TodoCard({ card }) {
+export default function TodoCard({ card, onNote }) {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -22,6 +23,11 @@ export default function TodoCard({ card }) {
   useEffect(() => {
     load()
   }, [load])
+
+  const doneCount = items.filter((t) => t.done).length
+  useEffect(() => {
+    onNote?.(items.length ? `${doneCount} of ${items.length} done` : null)
+  }, [onNote, doneCount, items.length])
 
   async function handleAdd(e) {
     e.preventDefault()
@@ -106,7 +112,8 @@ export default function TodoCard({ card }) {
   }
 
   return (
-    <div className="flex flex-col gap-3 min-h-0">
+    // Only the list scrolls: the error and the add form stay in view.
+    <div className="h-full flex flex-col gap-3">
       {error && <p className="text-xs text-danger shrink-0">{error}</p>}
       <form onSubmit={handleAdd} className="flex gap-2 shrink-0">
         <input
@@ -124,14 +131,14 @@ export default function TodoCard({ card }) {
           Add
         </button>
       </form>
-      <ul className="space-y-1.5 flex-1 min-h-0 overflow-auto pr-0.5">
+      <ul className="flex-1 min-h-0 overflow-auto card-scroll -mx-1 px-1">
         {items.length === 0 ? (
           <li className="text-sm text-text-muted py-2">No tasks yet.</li>
         ) : (
           items.map((todo) => (
             <li
               key={todo.id}
-              className="flex items-start gap-2 px-1 py-0.5 hover:bg-surface/60"
+              className="flex items-center gap-2.5 py-1 border-b border-hairline last:border-b-0"
             >
               <button
                 type="button"
@@ -139,7 +146,7 @@ export default function TodoCard({ card }) {
                 aria-checked={todo.done}
                 aria-label={`Mark "${todo.text}" ${todo.done ? 'not done' : 'done'}`}
                 onClick={() => toggleDone(todo.id)}
-                className={`mt-0.5 h-4 w-4 shrink-0 rounded border text-[10px] leading-none flex items-center justify-center transition-colors ${
+                className={`h-[18px] w-[18px] shrink-0 border text-[10px] leading-none flex items-center justify-center transition-colors ${
                   todo.done
                     ? 'border-live bg-live text-surface'
                     : 'border-text-muted text-transparent hover:border-text-secondary'
@@ -185,11 +192,11 @@ export default function TodoCard({ card }) {
                 // and surfacing a 404 for an action the user never took.
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => remove(todo.id)}
-                className="shrink-0 p-1 text-text-muted hover:text-danger text-xs"
+                className="shrink-0 grid place-items-center h-7 w-7 text-text-secondary hover:text-danger transition-colors"
                 title="Delete"
                 aria-label={`Delete "${todo.text}"`}
               >
-                ×
+                <XIcon size={16} aria-hidden />
               </button>
             </li>
           ))
