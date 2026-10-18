@@ -8,7 +8,9 @@ cards_bp = Blueprint('cards', __name__)
 
 @cards_bp.route('/cards', methods=['GET'])
 def list_cards():
-    cards = Card.query.filter_by(is_active=True).order_by(Card.position).all()
+    cards = db.session.scalars(
+        db.select(Card).filter_by(is_active=True).order_by(Card.position)
+    )
     return jsonify([card.to_dict() for card in cards])
 
 
@@ -41,7 +43,7 @@ def create_card():
             {'error': f'Fields must be non-empty strings: {", ".join(invalid)}'}
         ), 400
 
-    if Card.query.filter_by(slug=data['slug']).first():
+    if db.session.scalars(db.select(Card).filter_by(slug=data['slug'])).first():
         return jsonify({'error': f'Card with slug "{data["slug"]}" already exists'}), 409
 
     card = Card(

@@ -6,10 +6,10 @@ from typing import Optional
 from sqlalchemy import JSON, Boolean, DateTime, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app import db
+from app.models.base import Base, isoformat_utc
 
 
-class Card(db.Model):
+class Card(Base):
     __tablename__ = 'cards'
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -38,5 +38,5 @@ class Card(db.Model):
             'layout': self.layout,
             'position': self.position,
             'is_active': self.is_active,
-            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'created_at': isoformat_utc(self.created_at),
         }

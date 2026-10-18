@@ -8,20 +8,23 @@ A file database rather than `:memory:` because Alembic opens its own connection,
 and each connection to an in-memory SQLite URI gets a database of its own.
 """
 
+import os
 from pathlib import Path
 
 import pytest
 import sqlalchemy as sa
 from alembic import command
 from alembic.config import Config as AlembicConfig
+from alembic.script import ScriptDirectory
 
-from app import create_app
+from app import create_app, db
 from app.models.card import Card
 from app.models.todo import Todo
 
 # Absolute, so the suite does not depend on the process working directory.
 BACKEND_ROOT = Path(__file__).resolve().parent.parent
 MIGRATIONS_DIR = str(BACKEND_ROOT / 'migrations')
+VERSIONS_DIR = str(BACKEND_ROOT / 'migrations' / 'versions')
 
 
 @pytest.fixture
@@ -82,6 +85,85 @@ def test_chain_can_be_replayed(migration_db):
     command.upgrade(config, 'head')
 
     assert {'cards', 'todos'} <= table_names(engine)
+
+
+def add_card_with_a_todo():
+    card = Card(slug='weather', title='Weather', source='weather')
+    db.session.add(card)
+    db.session.commit()
+    db.session.add(Todo(card_id=card.id, text='A task'))
+    db.session.commit()
+
+
+def test_chain_replays_over_a_database_holding_data(migration_db):
+    """The tests above run on empty tables; a downgrade or upgrade can also
+    trip over rows that reference each other."""
+    config, engine = migration_db
+    command.upgrade(config, 'head')
+    add_card_with_a_todo()
+
+    command.downgrade(config, 'base')
+    command.upgrade(config, 'head')
+
+    assert {'cards', 'todos'} <= table_names(engine)
+
+
+REBUILD_CARDS_MIGRATION = """
+from alembic import op
+
+revision = 'rebuild_cards'
+down_revision = '{down_revision}'
+
+
+def upgrade():
+    with op.batch_alter_table('cards', recreate='always'):
+        pass
+
+
+def downgrade():
+    pass
+"""
+
+
+def add_rebuild_cards_migration(config, directory):
+    """Append to the chain a migration that rebuilds `cards` in batch mode."""
+    head = ScriptDirectory.from_config(config).get_current_head()
+    directory.mkdir()
+    (directory / 'rebuild_cards.py').write_text(
+        REBUILD_CARDS_MIGRATION.format(down_revision=head)
+    )
+    config.set_main_option('path_separator', 'os')
+    config.set_main_option(
+        'version_locations', os.pathsep.join([VERSIONS_DIR, str(directory)])
+    )
+
+
+def test_a_migration_that_rebuilds_cards_keeps_their_todos(migration_db, tmp_path):
+    """Batch mode on SQLite rebuilds a table: copy, drop, rename. Dropping
+    `cards` with foreign keys on would cascade-delete every todo, which is why
+    env.py turns them off for migrations. No migration in the chain rebuilds
+    `cards` while `todos` exists, so this test appends one."""
+    config, _engine = migration_db
+    command.upgrade(config, 'head')
+    add_card_with_a_todo()
+    add_rebuild_cards_migration(config, tmp_path / 'extra_versions')
+
+    command.upgrade(config, 'head')
+
+    assert db.session.scalars(db.select(Todo.text)).all() == ['A task']
+
+
+def test_app_still_enforces_foreign_keys_after_migrating(migration_db):
+    """env.py turns foreign keys off for the migration connection; the pool
+    then hands that same connection to the app, so it must turn them back on."""
+    config, _engine = migration_db
+    command.upgrade(config, 'head')
+    add_card_with_a_todo()
+
+    db.session.execute(db.delete(Card))
+    db.session.commit()
+
+    assert db.session.scalars(db.select(Todo)).all() == []
 
 
 @pytest.mark.parametrize('model', [Card, Todo], ids=lambda m: m.__tablename__)

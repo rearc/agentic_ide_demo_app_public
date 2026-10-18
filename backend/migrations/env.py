@@ -11,7 +11,8 @@ config = context.config
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
-fileConfig(config.config_file_name)
+if config.config_file_name is not None:
+    fileConfig(config.config_file_name)
 logger = logging.getLogger('alembic.env')
 
 
@@ -72,6 +73,21 @@ def run_migrations_offline():
         context.run_migrations()
 
 
+def set_sqlite_foreign_keys(connection, enabled):
+    """Switch SQLite foreign key enforcement on this connection; other databases
+    are left alone.
+
+    SQLite ignores this PRAGMA inside an open transaction, so it runs before
+    Alembic opens one and is committed straight away.
+    """
+    if connection.dialect.name != 'sqlite':
+        return
+    connection.exec_driver_sql(
+        'PRAGMA foreign_keys = ON' if enabled else 'PRAGMA foreign_keys = OFF'
+    )
+    connection.commit()
+
+
 def run_migrations_online():
     """Run migrations in 'online' mode.
 
@@ -97,14 +113,23 @@ def run_migrations_online():
     connectable = get_engine()
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection,
-            target_metadata=get_metadata(),
-            **conf_args
-        )
+        # The app turns foreign keys on for every SQLite connection. A batch
+        # migration rebuilds a table (copy, drop, rename), and dropping `cards`
+        # with enforcement on would cascade-delete every todo. SQLite's own
+        # ALTER TABLE procedure turns enforcement off first. It is back on
+        # afterwards because the pool hands this connection to the app next.
+        set_sqlite_foreign_keys(connection, enabled=False)
+        try:
+            context.configure(
+                connection=connection,
+                target_metadata=get_metadata(),
+                **conf_args
+            )
 
-        with context.begin_transaction():
-            context.run_migrations()
+            with context.begin_transaction():
+                context.run_migrations()
+        finally:
+            set_sqlite_foreign_keys(connection, enabled=True)
 
 
 if context.is_offline_mode():

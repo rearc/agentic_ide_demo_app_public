@@ -33,7 +33,6 @@ def default_cards():
             config={'city': 'San Francisco'},
             layout={'x': 0, 'y': 0, 'w': 4, 'h': 4},
             position=1,
-            is_active=True,
         ),
         Card(
             slug='quote',
@@ -41,10 +40,8 @@ def default_cards():
             description='A little daily inspiration',
             icon='💬',
             source='quote',
-            config={},
             layout={'x': 4, 'y': 0, 'w': 4, 'h': 4},
             position=2,
-            is_active=True,
         ),
         Card(
             slug='placeholder',
@@ -52,10 +49,8 @@ def default_cards():
             description='Your next widget goes here',
             icon='✨',
             source='placeholder',
-            config={},
             layout={'x': 8, 'y': 0, 'w': 4, 'h': 4},
             position=3,
-            is_active=True,
         ),
         Card(
             slug='space',
@@ -63,10 +58,8 @@ def default_cards():
             description='NASA Astronomy Picture of the Day',
             icon='🚀',
             source='space',
-            config={},
             layout={'x': 0, 'y': 4, 'w': 6, 'h': 7},
             position=4,
-            is_active=True,
         ),
         Card(
             slug='todo',
@@ -74,10 +67,8 @@ def default_cards():
             description='Track what needs doing',
             icon='✅',
             source='todo',
-            config={},
             layout={'x': 6, 'y': 4, 'w': 6, 'h': 5},
             position=5,
-            is_active=True,
         ),
     ]
 
@@ -96,11 +87,11 @@ def seed(app=None, reset=False):
     app = app or create_app()
     with app.app_context():
         if reset:
-            Todo.query.delete()
-            Card.query.delete()
+            db.session.execute(db.delete(Todo))
+            db.session.execute(db.delete(Card))
             db.session.commit()
 
-        existing = {slug for (slug,) in db.session.query(Card.slug).all()}
+        existing = set(db.session.scalars(db.select(Card.slug)))
         created = []
         for card in default_cards():
             if card.slug in existing:
@@ -113,7 +104,9 @@ def seed(app=None, reset=False):
         # only alongside a newly created todo card - never re-added to a card
         # whose todos the user has since cleared out.
         if 'todo' in created:
-            todo_card = Card.query.filter_by(slug='todo').first()
+            todo_card = db.session.scalars(
+                db.select(Card).filter_by(slug='todo')
+            ).one()
             db.session.add(Todo(card_id=todo_card.id, text=STARTER_TODO_TEXT))
             db.session.commit()
 
@@ -131,7 +124,9 @@ def _report(created, reset):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description=__doc__.split('\n', maxsplit=1)[0])
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument(
         '--reset',
         action='store_true',

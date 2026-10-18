@@ -2,6 +2,8 @@
 JSON-column behavior that ADR-013 commits the app to.
 """
 
+from datetime import datetime, timedelta
+
 import pytest
 from sqlalchemy.exc import IntegrityError
 
@@ -117,8 +119,16 @@ class TestCardSerialization:
         assert payload['position'] == 1
         assert payload['is_active'] is True
 
-    def test_to_dict_formats_created_at_as_iso8601(self, card):
-        assert card.to_dict()['created_at'] == card.created_at.isoformat()
+    def test_to_dict_gives_created_at_as_iso8601_in_utc(self, card):
+        created_at = datetime.fromisoformat(card.to_dict()['created_at'])
+
+        assert created_at.utcoffset() == timedelta(0)
+        assert created_at.replace(tzinfo=None) == card.created_at
+
+    def test_to_dict_leaves_created_at_null_before_the_card_is_saved(self):
+        card = Card(slug='unsaved', title='Unsaved', source='placeholder')
+
+        assert card.to_dict()['created_at'] is None
 
     def test_to_dict_keys_are_stable(self, card):
         assert set(card.to_dict()) == {
@@ -161,6 +171,13 @@ class TestTodoConstraints:
 
         db.session.rollback()
 
+    def test_card_id_must_name_an_existing_card(self, app):
+        db.session.add(Todo(card_id=999, text='Orphan'))
+        with pytest.raises(IntegrityError):
+            db.session.commit()
+
+        db.session.rollback()
+
     def test_text_is_required(self, app, card):
         db.session.add(Todo(card_id=card.id))
         with pytest.raises(IntegrityError):
@@ -169,60 +186,14 @@ class TestTodoConstraints:
         db.session.rollback()
 
 
-class TestTodoCascadeKnownDefect:
-    """KNOWN DEFECT - deleting a card does not delete its todos.
-
-    `Todo.card_id` declares `ondelete='CASCADE'`, but SQLite ships with
-    `PRAGMA foreign_keys = OFF` and the app never turns it on, so the constraint
-    is inert. The rows below pin the behavior as it actually is today; the
-    `xfail` immediately after states the behavior we want. Fixing it changes
-    runtime behavior, so it is reported rather than patched here.
-    """
-
-    def test_pragma_confirms_foreign_keys_are_not_enforced(self, app):
-        assert db.session.execute(db.text('PRAGMA foreign_keys')).scalar() == 0
-
-    def test_deleting_a_card_orphans_its_todos(self, app, card, make_todo):
-        make_todo(card.id, text='orphan me')
-
-        db.session.delete(card)
-        db.session.commit()
-
-        assert Todo.query.count() == 1
-        assert db.session.get(Card, Todo.query.first().card_id) is None
-
-    def test_orphaned_todos_resurface_on_a_card_that_reuses_the_id(self, app, card, make_todo):
-        """The consequence that makes this more than untidy bookkeeping.
-
-        SQLite reissues a freed rowid, so a later unrelated card can inherit a
-        deleted card's todos.
-        """
-        make_todo(card.id, text='belongs to the deleted card')
-        old_id = card.id
-        db.session.delete(card)
-        db.session.commit()
-
-        replacement = Card(slug='stocks', title='Stocks', source='stocks')
-        db.session.add(replacement)
-        db.session.commit()
-
-        assert replacement.id == old_id
-        inherited = Todo.query.filter_by(card_id=replacement.id).all()
-        assert [t.text for t in inherited] == ['belongs to the deleted card']
-
-    @pytest.mark.xfail(
-        strict=True,
-        reason='ondelete=CASCADE is inert until PRAGMA foreign_keys=ON is set',
-    )
-    def test_deleting_a_card_should_delete_its_todos(self, app, card, make_todo):
-        """The desired behavior. Flips to a failure the moment the bug is fixed,
-        which is the signal to delete the three tests above."""
+class TestTodoCascade:
+    def test_deleting_a_card_deletes_its_todos(self, app, card, make_todo):
         make_todo(card.id)
 
         db.session.delete(card)
         db.session.commit()
 
-        assert Todo.query.count() == 0
+        assert db.session.scalars(db.select(Todo)).all() == []
 
 
 class TestTodoSerialization:
@@ -236,13 +207,14 @@ class TestTodoSerialization:
         assert payload['text'] == 'A task'
         assert payload['done'] is True
 
-    def test_to_dict_formats_timestamps_as_iso8601(self, card, make_todo):
+    @pytest.mark.parametrize('field', ['created_at', 'updated_at'])
+    def test_to_dict_gives_timestamps_as_iso8601_in_utc(self, card, make_todo, field):
         todo = make_todo(card.id)
 
-        payload = todo.to_dict()
+        timestamp = datetime.fromisoformat(todo.to_dict()[field])
 
-        assert payload['created_at'] == todo.created_at.isoformat()
-        assert payload['updated_at'] == todo.updated_at.isoformat()
+        assert timestamp.utcoffset() == timedelta(0)
+        assert timestamp.replace(tzinfo=None) == getattr(todo, field)
 
     def test_to_dict_keys_are_stable(self, card, make_todo):
         todo = make_todo(card.id)

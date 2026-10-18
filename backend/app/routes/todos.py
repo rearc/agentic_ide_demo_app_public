@@ -43,10 +43,8 @@ def list_todos():
     card = db.session.get(Card, card_id)
     if not card:
         return jsonify({'error': 'Card not found'}), 404
-    todos = (
-        Todo.query.filter_by(card_id=card_id)
-        .order_by(Todo.created_at.asc())
-        .all()
+    todos = db.session.scalars(
+        db.select(Todo).filter_by(card_id=card_id).order_by(Todo.created_at.asc())
     )
     return jsonify([t.to_dict() for t in todos])
 
