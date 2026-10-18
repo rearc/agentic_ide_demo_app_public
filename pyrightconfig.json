@@ -1,0 +1,8 @@
+{
+  "venvPath": "backend",
+  "venv": "venv",
+  "typeCheckingMode": "off",
+  "executionEnvironments": [
+    { "root": "backend" }
+  ]
+}
