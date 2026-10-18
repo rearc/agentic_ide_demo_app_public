@@ -10,8 +10,8 @@ Style React components with Tailwind utility classes in `className`. One styling
 ## Rules
 
 - Put static styling in `className`: layout, spacing, colour, typography, borders, plus Tailwind's responsive prefixes (`sm:`, `md:`, `lg:`) and state variants (`hover:`, `focus:`, `disabled:`).
-- Use `style={{}}` only for values Tailwind cannot know at build time: a card's accent passed in as CSS variables (`--a`, `--b`), a gradient or `color-mix()` built from those variables, or a computed value such as a staggered `animationDelay`.
-- Take colours from the `--color-card-*` tokens in `frontend/src/index.css` rather than writing hex values in components, so a card's accent changes in one place.
+- Use `style={{}}` only for values Tailwind cannot know at build time: a card's colour, read from its registry entry as `var(--color-card-<slug>)`, or a computed value such as a staggered `animationDelay`.
+- Take colours from the tokens in `frontend/src/index.css`, never hex values in components. A card's colour is `--color-card-<slug>`, which points at a named palette colour (`--color-rally-*`), so a colour changes in one place.
 - Keep keyframes, global utility classes and third-party overrides (react-grid-layout) in `frontend/src/index.css`. Components do not import CSS files of their own, and the app uses no CSS-in-JS library.
 - When a class list gets long, move it into a variable in the component rather than into a CSS class.
 

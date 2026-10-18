@@ -32,9 +32,9 @@ Apply the `security-checklist` skill, which is preloaded into your context. It l
 - Services return flat dicts (no nested objects), with a consistent key set for both success and fallback
 
 **Frontend (on `frontend/src/**/*.jsx` — see the `tailwind` rule):**
-- Static styling via Tailwind utility classes; `style={{}}` only for values computed at runtime (per-card CSS variables, gradients built from them, staggered delays); no component CSS files, no CSS-in-JS
+- Static styling via Tailwind utility classes; `style={{}}` only for values computed at runtime (a card's colour variable, staggered delays); no component CSS files, no CSS-in-JS
 - New card components wired into `CARD_REGISTRY` in `Card.jsx` with `component`, `accent`, and `needsData`
-- Accent colors defined as `--color-card-{slug}` (and optionally `-2`) in `frontend/src/index.css` under `@theme static`
+- A card's colour defined as `--color-card-{slug}` pointing at a palette colour (`var(--color-rally-*)`) in `frontend/src/index.css` under `@theme static`; its `icon` a name listed in `ICONS` (`frontend/src/components/Icon.jsx`), not an emoji
 
 **Database (see the `migrations` instructions):**
 - Model changes require Alembic migrations — never rely on `create_all()`

@@ -86,10 +86,10 @@ That's the app. Everything below is just the detail of each stop.
 - **[frontend/src/main.jsx](../frontend/src/main.jsx)** — the entry point. Mounts `<App />`. One line to notice: `import './index.css'`.
 - **[frontend/src/App.jsx](../frontend/src/App.jsx)** - the shell: branded header (the animated Rearc AI Labs lockup + the Customize-layout toggle + a live clock) and `<Dashboard/>`. Note the header owns the `locked` state and passes it down. The clock is its own `Clock` component, so its one-second tick re-renders only the clock, not the grid.
 - **[frontend/src/components/Dashboard.jsx](../frontend/src/components/Dashboard.jsx)** — fetches the card list, then renders a **draggable/resizable grid** (`react-grid-layout`). When you unlock and move a card, `handleLayoutChange` PUTs the new `layout` back to the API — that's why your arrangement persists.
-- **[frontend/src/components/Card.jsx](../frontend/src/components/Card.jsx)** - the heart of the frontend. The **`CARD_REGISTRY`** (top of the file) maps a `source` string → `{ component, accent, needsData }`. The generic `Card` wrapper handles the chrome (title, icon, `LoadingDots`, error), and only fetches data when `needsData` is true. A card whose `source` has no registry entry renders `UnregisteredCard`, which names the missing source, so registry drift is visible. **This registry is the extension point.**
+- **[frontend/src/components/Card.jsx](../frontend/src/components/Card.jsx)** - the heart of the frontend. The **`CARD_REGISTRY`** (top of the file) maps a `source` string → `{ component, accent, needsData }`. The generic `Card` wrapper handles the chrome (title, icon, the card's colour, a Live or Fallback status, `LoadingDots`, error), and only fetches data when `needsData` is true. A card whose `source` has no registry entry renders `UnregisteredCard`, which names the missing source, so registry drift is visible. **This registry is the extension point.**
 - **[frontend/src/components/cards/](../frontend/src/components/cards/)** — one component per card type. Open **WeatherCard.jsx** as the example (note the client-side °C/°F toggle — a widget with real state). Contrast with **PlaceholderCard.jsx** (pure static) and **TodoCard.jsx** (its own CRUD against `/api/todos`).
 - **[frontend/src/api.js](../frontend/src/api.js)** - the entire backend contract in one small file, and the only place that calls `fetch`: `fetchCards`, `updateCard`, `fetchCardData`, and the todo calls, all going through one `request()` helper that turns the API's `{"error": ...}` body into the thrown message. Good place to show *"the frontend only knows these endpoints."*
-- **[frontend/src/index.css](../frontend/src/index.css)** — design tokens in Tailwind's `@theme` (surface colors, per-card accent hues). The `--color-card-*` tokens are how each card gets its accent.
+- **[frontend/src/index.css](../frontend/src/index.css)** — design tokens in Tailwind's `@theme`: surface and text colours, a named palette (`--color-rally-*`), and one `--color-card-*` token per card that points at a palette colour. That token is how each card gets its colour.
 
 **The key frontend idea — three kinds of cards.** All are just one entry in `CARD_REGISTRY`; they differ only in *where their data lives*:
 - **Data card** (`needsData: true`) — fetches live data from `/api/data/<source>` through a backend service. Owns no table. *(weather, quote, space)*
@@ -137,7 +137,7 @@ is what makes it safe and fast to extend with an agent.
 | 2 | `backend/app/routes/data.py` | one line in `SERVICES` |
 | 3 | `frontend/src/components/cards/{Name}Card.jsx` | the display component |
 | 4 | `frontend/src/components/Card.jsx` | one line in `CARD_REGISTRY` |
-| 5 | `frontend/src/index.css` | an accent color token |
+| 5 | `frontend/src/index.css` | a card colour token, pointing at a palette colour |
 | 6 | `backend/seed.py` | a seed row so it appears on the board |
 | 7 | *(only if stateful)* an Alembic migration | a new table/column |
 

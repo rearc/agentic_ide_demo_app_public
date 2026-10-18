@@ -183,8 +183,8 @@ talks to an external API.
 - **CSS-3 — Use Tailwind variants** (`sm:`, `hover:`, `focus:`, `disabled:`)
   rather than hand-written pseudo-class CSS.
 - **CSS-4 — Inline `style={{}}` only for runtime values Tailwind cannot express
-  statically** - per-card accent custom properties, computed gradients or
-  `color-mix(...)`, index-driven `animationDelay`. Never for a static value.
+  statically** - a card's colour variable read from its registry entry,
+  index-driven `animationDelay`. Never for a static value.
 - **CSS-5 — Global CSS lives only in `src/index.css`** - `@theme` tokens,
   keyframes, and `react-grid-layout` overrides. Not per-component styling.
 - **CSS-6 — Extract long class lists into a variable,** not into a stylesheet.
