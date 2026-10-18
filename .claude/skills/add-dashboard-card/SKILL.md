@@ -167,7 +167,7 @@ Any colour works: for one the palette lacks, add it to the palette first (`--col
 
 **Edit** `backend/seed.py`
 
-Add a new `Card(...)` entry to the `cards` list:
+Add a new `Card(...)` entry to the list `default_cards()` returns:
 
 ```python
 Card(
@@ -177,10 +177,17 @@ Card(
     icon='{icon-name}',  # a key of ICONS in frontend/src/components/Icon.jsx, or ''
     source='{slug}',
     config={'param': 'default_value'},  # only if your service takes params; omit otherwise
-    layout={'x': ?, 'y': ?, 'w': 4, 'h': 4},
     position={next_number},
 ),
 ```
+
+Then give it a place on the "Default" profile's board: add an entry to `DEFAULT_BOARD` in the same file, keyed by the slug:
+
+```python
+'{slug}': {'x': ?, 'y': ?, 'w': 4, 'h': 4},
+```
+
+A card's place belongs to a profile, not to the card (the demo app's ADR-019): the seed puts a new default card on "Default" only, and every card is also in the Library, where it can be added to any other profile.
 
 Layout notes:
 - Grid is 12 columns wide. The default cards are `w: 4` (a third); use `w: 6` for half width or `w: 12` for full width.
@@ -194,7 +201,7 @@ missing and leaves existing cards and their data untouched, so it is safe to run
 board you care about. Use `python seed.py --reset` **only** when you deliberately want to
 wipe and rebuild the whole board.
 
-**Verify:** `curl http://127.0.0.1:5001/api/cards` — your new card should appear in the list.
+**Verify:** `curl http://127.0.0.1:5001/api/cards` lists your new card, and `curl http://127.0.0.1:5001/api/profiles` shows it on the "Default" board.
 
 ## Stage 8: Tests
 
@@ -221,7 +228,7 @@ New behavior ships with tests (`TEST-1`), and tests never touch the network (`TE
    - Correct title and icon in the header (the description shows when hovering the title)
    - Data loaded from your service (not a loading spinner or error), and `Live` in the header for a data card
    - The card's colour in the tab beside the header and on its icon
-5. Unlock the layout and drag the card — confirm it saves position
+5. Unlock the layout and drag the card: confirm it keeps its position after a reload. Open the Library: the card is listed, marked "On board"
 
 ## Quick Checklist
 
@@ -233,5 +240,5 @@ New behavior ships with tests (`TEST-1`), and tests never touch the network (`TE
 | 4 | `frontend/src/components/cards/{PascalName}Card.jsx` | Create display component |
 | 5 | `frontend/src/components/Card.jsx` | Import component, add to `CARD_REGISTRY` |
 | 6 | `frontend/src/index.css` (+ `frontend/src/components/Icon.jsx` for a new icon) | Add `--color-card-{slug}` pointing at a palette colour; pick or add an icon name |
-| 7 | `backend/seed.py` | Add `Card(...)` entry, run `python seed.py` (additive insert) |
+| 7 | `backend/seed.py` | Add a `Card(...)` entry and its place in `DEFAULT_BOARD`, run `python seed.py` (additive insert) |
 | 8 | `backend/tests/test_services_{slug}.py` + `frontend/src/components/cards/{PascalName}Card.test.jsx` (+ a dispatch case in `test_routes_data.py` for a data card, or `SOURCES_WITHOUT_A_SERVICE` in `test_seed.py` for a static or stateful one) | Success and fallback paths, network mocked |

@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-10-18T18:09:40.113097+00:00'
+generated_at: '2026-10-18T18:51:07.345172+00:00'
 apm_version: 0.33.0
 dependencies:
 - repo_url: _local/rearc-pocock-kit
@@ -89,8 +89,8 @@ dependencies:
     .claude/rules/api-conventions.md: sha256:1723ed8589d884bbd17a31f78147fdce9e686177e48543f8329769b15f869633
     .claude/rules/migrations.md: sha256:a900316604e0e2f9189d3881abab052e8c6b248cb9ffd56606d03e44c952dc4b
     .claude/rules/tailwind.md: sha256:d2192dd3f2d12cf493f56a42152a605c5991bd88a744a0d7c4a0250cf1fd34cd
-    .claude/skills/add-dashboard-card/SKILL.md: sha256:7975ae50feb1b71e39e1648cabd2b592a2a625027e12c36e5db201051c6732c5
-    .claude/skills/add-dashboard-card/references/weather-card-example.md: sha256:f922eaed913f36ccfb4017e3eeb9411d6cf16c2f26658260f4b0983850b341ef
+    .claude/skills/add-dashboard-card/SKILL.md: sha256:2ac62d42b84a6f47ef58d8914682c5535acdb9bd67b578cca9a7a77c7e12ea0d
+    .claude/skills/add-dashboard-card/references/weather-card-example.md: sha256:cea917444b33e26e7133cff05066e5efe45ca91e2c4c7013037e2cdc6ecda24a
     .claude/skills/coin-flip-code/SKILL.md: sha256:77ced8c51b49c4d24a0201ab9ec3286514cbffa6c665a1f5b3d667f33f4a48da
     .claude/skills/coin-flip-code/scripts/flip.py: sha256:76180c7779923387eaa813624ae91e97d7549226f292c783f794dc0992c11f5a
     .claude/skills/coin-flip-true-random/SKILL.md: sha256:a1e4c6c2158a79e25206b02924be0156ce934c8363146b3b2741051b74798124
@@ -1064,7 +1064,7 @@ deployments:
   owners:
   - ../ai-toolkit/packages/rearc-workshop-demo-kit
   active_owner: ../ai-toolkit/packages/rearc-workshop-demo-kit
-  content_hash: sha256:7975ae50feb1b71e39e1648cabd2b592a2a625027e12c36e5db201051c6732c5
+  content_hash: sha256:2ac62d42b84a6f47ef58d8914682c5535acdb9bd67b578cca9a7a77c7e12ea0d
 - kind: project-relative
   target: claude
   value: .claude/skills/add-dashboard-card/references/weather-card-example.md
@@ -1073,7 +1073,7 @@ deployments:
   owners:
   - ../ai-toolkit/packages/rearc-workshop-demo-kit
   active_owner: ../ai-toolkit/packages/rearc-workshop-demo-kit
-  content_hash: sha256:f922eaed913f36ccfb4017e3eeb9411d6cf16c2f26658260f4b0983850b341ef
+  content_hash: sha256:cea917444b33e26e7133cff05066e5efe45ca91e2c4c7013037e2cdc6ecda24a
 - kind: project-relative
   target: claude
   value: .claude/skills/code-review
