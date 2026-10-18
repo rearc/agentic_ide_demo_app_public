@@ -1,7 +1,7 @@
 import { act, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import Dashboard from './Dashboard'
+import Dashboard, { STACK_BELOW } from './Dashboard'
 import { DRAG_HANDLE_CLASS } from './Card'
 import { fetchCards, updateCard } from '../api'
 import { cardRecord } from '../test/helpers'
@@ -19,6 +19,7 @@ const grid = vi.hoisted(() => ({
   onLayoutChange: null,
   emitOnMount: false,
   mountLayout: null,
+  width: 1200,
 }))
 
 vi.mock('react-grid-layout', async () => {
@@ -48,7 +49,7 @@ vi.mock('react-grid-layout', async () => {
       )
     },
     useContainerWidth: () => ({
-      width: 1200,
+      width: grid.width,
       containerRef: { current: null },
       mounted: true,
     }),
@@ -74,6 +75,7 @@ beforeEach(() => {
   grid.onLayoutChange = null
   grid.emitOnMount = false
   grid.mountLayout = null
+  grid.width = 1200
   updateCard.mockResolvedValue({})
 })
 
@@ -365,6 +367,43 @@ describe('persisting layout changes', () => {
 
       expect(updateCard).not.toHaveBeenCalled()
     })
+  })
+})
+
+describe('narrow container', () => {
+  const CARDS = [
+    cardRecord({ id: 1, title: 'Right', layout: { x: 6, y: 0, w: 6, h: 4 } }),
+    cardRecord({ id: 2, title: 'Below', layout: { x: 0, y: 4, w: 12, h: 3 } }),
+    cardRecord({ id: 3, title: 'Left', layout: { x: 0, y: 0, w: 6, h: 4 } }),
+  ]
+
+  it('stacks the cards in grid order instead of rendering the grid', async () => {
+    grid.width = STACK_BELOW - 1
+
+    await renderDashboard({ cards: CARDS })
+
+    expect(screen.queryByTestId('grid')).not.toBeInTheDocument()
+    expect(screen.getAllByRole('heading').map((h) => h.textContent)).toEqual([
+      'Left',
+      'Right',
+      'Below',
+    ])
+  })
+
+  it('keeps the grid at the stacking width itself', async () => {
+    grid.width = STACK_BELOW
+
+    await renderDashboard({ cards: CARDS })
+
+    expect(screen.getByTestId('grid')).toBeInTheDocument()
+  })
+
+  it('offers no drag handle on a stacked card, even when unlocked', async () => {
+    grid.width = STACK_BELOW - 1
+
+    await renderDashboard({ locked: false, cards: CARDS })
+
+    expect(document.querySelector(`.${DRAG_HANDLE_CLASS}`)).toBeNull()
   })
 })
 

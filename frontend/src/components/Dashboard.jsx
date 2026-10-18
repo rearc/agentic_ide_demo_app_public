@@ -6,6 +6,22 @@ import { fetchCards, updateCard } from '../api'
 import Card, { DRAG_HANDLE_CLASS } from './Card'
 import LoadingDots from './LoadingDots'
 
+// Panels sit 1 px apart; each draws a 1 px outline into that gap (Card.jsx),
+// so neighbours share one hairline.
+const ROW_HEIGHT = 52
+const MARGIN = 1
+
+// Below this container width the grid's columns get too narrow to read, so
+// the cards stack in one column instead, in grid order, without dragging.
+// It matches Tailwind's `md` breakpoint less the page padding (App.jsx), where
+// the header hides the customize button.
+export const STACK_BELOW = 728
+
+/** A card's stacked height: the height its grid rows would give it. */
+function stackedHeight(h) {
+  return h * ROW_HEIGHT + (h - 1) * MARGIN
+}
+
 function buildLayout(cards) {
   return cards.map((card, i) => ({
     i: String(card.id),
@@ -80,48 +96,65 @@ export default function Dashboard({ locked }) {
     [locked, cards],
   )
 
-  if (loading) {
-    return <LoadingDots label="Loading dashboard" size="md" className="py-24" />
-  }
+  const layout = buildLayout(cards)
+  const stacked = width < STACK_BELOW
 
-  if (error) {
-    return (
+  let content
+  if (loading) {
+    content = (
+      <LoadingDots label="Loading dashboard" size="md" className="py-24" />
+    )
+  } else if (error) {
+    content = (
       <div className="text-center py-24">
-        <p className="text-text-secondary text-lg">Unable to load dashboard</p>
-        <p className="text-text-muted text-sm mt-2">{error}</p>
-        <p className="text-text-muted text-sm mt-1">
+        <p className="text-text-primary text-lg">Unable to load dashboard</p>
+        <p className="text-text-secondary text-sm mt-2">{error}</p>
+        <p className="text-text-secondary text-sm mt-1">
           Make sure the backend is running on port 5001
         </p>
       </div>
     )
+  } else if (stacked) {
+    const inGridOrder = [...layout].sort((a, b) => a.y - b.y || a.x - b.x)
+    content = (
+      <div className="flex flex-col" style={{ gap: MARGIN, padding: MARGIN }}>
+        {inGridOrder.map((item) => (
+          <div key={item.i} style={{ height: stackedHeight(item.h) }}>
+            <Card card={cards.find((c) => String(c.id) === item.i)} locked />
+          </div>
+        ))}
+      </div>
+    )
+  } else if (mounted) {
+    content = (
+      <GridLayout
+        width={width}
+        layout={layout}
+        onLayoutChange={handleLayoutChange}
+        gridConfig={{
+          cols: 12,
+          rowHeight: ROW_HEIGHT,
+          margin: [MARGIN, MARGIN],
+        }}
+        dragConfig={{ enabled: !locked, handle: `.${DRAG_HANDLE_CLASS}` }}
+        resizeConfig={{ enabled: !locked }}
+      >
+        {cards.map((card, i) => (
+          <div
+            key={String(card.id)}
+            className="animate-card-enter"
+            style={{ animationDelay: `${i * 0.06}s` }}
+          >
+            <Card card={card} locked={locked} />
+          </div>
+        ))}
+      </GridLayout>
+    )
   }
 
-  const layout = buildLayout(cards)
-
-  return (
-    <div>
-      <div ref={containerRef}>
-        {mounted && (
-          <GridLayout
-            width={width}
-            layout={layout}
-            onLayoutChange={handleLayoutChange}
-            gridConfig={{ cols: 12, rowHeight: 40, margin: [16, 16] }}
-            dragConfig={{ enabled: !locked, handle: `.${DRAG_HANDLE_CLASS}` }}
-            resizeConfig={{ enabled: !locked }}
-          >
-            {cards.map((card, i) => (
-              <div
-                key={String(card.id)}
-                className="animate-card-enter"
-                style={{ animationDelay: `${i * 0.08}s` }}
-              >
-                <Card card={card} locked={locked} />
-              </div>
-            ))}
-          </GridLayout>
-        )}
-      </div>
-    </div>
-  )
+  // The container is rendered from the first paint, loading included:
+  // useContainerWidth measures it once, on mount, and a container that
+  // appeared only after loading was never measured (the grid kept the hook's
+  // 1280 px default and overflowed narrower windows).
+  return <div ref={containerRef}>{content}</div>
 }

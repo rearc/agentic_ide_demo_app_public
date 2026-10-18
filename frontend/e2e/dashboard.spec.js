@@ -8,7 +8,7 @@ const DATA = {
     // 18.3 C is 64.94 F: shows 65° and 18°. (A flat 18 would show 64°.)
     temp: 18.3,
     description: 'partly cloudy',
-    icon_emoji: '⛅',
+    icon: 'cloud-sun',
     humidity: 60,
   },
   quote: { text: 'Mocked quote for the test.', author: 'Test Author' },
@@ -132,3 +132,22 @@ test('a card dragged by its header keeps its new position after a reload', async
   const after = (await fetchCards(request)).find((c) => c.slug === 'weather')
   expect(after.layout).toEqual(saved)
 })
+
+for (const width of [1280, 760, 390]) {
+  test(`the board fits a ${width} px window without scrolling sideways`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 })
+    await page.reload()
+    for (const card of seededCards) {
+      await expect(
+        page.getByRole('heading', { name: card.title }),
+      ).toBeVisible()
+    }
+
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - window.innerWidth,
+    )
+    expect(overflow).toBeLessThanOrEqual(0)
+  })
+}

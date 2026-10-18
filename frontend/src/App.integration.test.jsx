@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
 import App from './App'
 import { cardRecord, jsonResponse } from './test/helpers'
@@ -46,7 +46,7 @@ const CARDS = [
     id: 5,
     title: 'Todos',
     source: 'todo',
-    layout: { x: 6, y: 4, w: 6, h: 5 },
+    layout: { x: 6, y: 4, w: 6, h: 7 },
   }),
 ]
 
@@ -58,7 +58,7 @@ const DATA = {
     city: 'San Francisco',
     temp: 18.3,
     description: 'Overcast',
-    icon_emoji: '☁️',
+    icon: 'cloud',
     humidity: 72,
   },
   quote: {
@@ -94,6 +94,22 @@ function stubBackend({ todos = [], failingSource } = {}) {
     )
   })
 }
+
+// jsdom lays nothing out, so every element is 0 px wide and the dashboard
+// would stack its cards. The board under test is a desktop-width one.
+const offsetWidth = Object.getOwnPropertyDescriptor(
+  HTMLElement.prototype,
+  'offsetWidth',
+)
+beforeAll(() => {
+  Object.defineProperty(HTMLElement.prototype, 'offsetWidth', {
+    configurable: true,
+    get: () => 1200,
+  })
+})
+afterAll(() => {
+  Object.defineProperty(HTMLElement.prototype, 'offsetWidth', offsetWidth)
+})
 
 /** Render the app against the stub and wait for every card to finish loading. */
 async function renderApp(backend) {
