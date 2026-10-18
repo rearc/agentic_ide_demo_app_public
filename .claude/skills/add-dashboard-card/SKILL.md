@@ -229,6 +229,7 @@ New behavior ships with tests (`TEST-1`), and tests never touch the network (`TE
    - Data loaded from your service (not a loading spinner or error), and `Live` in the header for a data card
    - The card's colour in the tab beside the header and on its icon
 5. Choose "Edit board" and drag the card: confirm it keeps its position after a reload. The library that opens lists the card, marked "On board"
+6. Check the new card at phone, tablet and desktop widths with the `check-ui` skill (the card must be on the board): no line may report the page scrolling sideways, and the contact sheet shows the card's title and content readable at each width
 
 ## Quick Checklist
 

@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-10-18T20:45:56.122090+00:00'
+generated_at: '2026-10-18T20:51:47.913534+00:00'
 apm_version: 0.33.0
 dependencies:
 - repo_url: _local/rearc-pocock-kit
@@ -92,7 +92,7 @@ dependencies:
     .claude/rules/api-conventions.md: sha256:1723ed8589d884bbd17a31f78147fdce9e686177e48543f8329769b15f869633
     .claude/rules/migrations.md: sha256:a900316604e0e2f9189d3881abab052e8c6b248cb9ffd56606d03e44c952dc4b
     .claude/rules/tailwind.md: sha256:d2192dd3f2d12cf493f56a42152a605c5991bd88a744a0d7c4a0250cf1fd34cd
-    .claude/skills/add-dashboard-card/SKILL.md: sha256:3cabe647d96e04f39f5173d543d6bd97be52ce0657908de07dc53e52352b1ccd
+    .claude/skills/add-dashboard-card/SKILL.md: sha256:1991c6abbeb9031637ab5d5c83bf951e4350945118e25a2e47d061a46015c9f8
     .claude/skills/add-dashboard-card/references/weather-card-example.md: sha256:cea917444b33e26e7133cff05066e5efe45ca91e2c4c7013037e2cdc6ecda24a
     .claude/skills/check-ui/SKILL.md: sha256:ec68f37f6b5f39ff345bef36cdf9d52b66a40aa240ba7c66b088c0a3602af080
     .claude/skills/check-ui/scripts/check-ui.mjs: sha256:52dcc5fcab0b9c30eecd302ef13cd83b0a9c1a2cd300606e5746cfd38bb4eee8
@@ -1069,7 +1069,7 @@ deployments:
   owners:
   - ../ai-toolkit/packages/rearc-workshop-demo-kit
   active_owner: ../ai-toolkit/packages/rearc-workshop-demo-kit
-  content_hash: sha256:3cabe647d96e04f39f5173d543d6bd97be52ce0657908de07dc53e52352b1ccd
+  content_hash: sha256:1991c6abbeb9031637ab5d5c83bf951e4350945118e25a2e47d061a46015c9f8
 - kind: project-relative
   target: claude
   value: .claude/skills/add-dashboard-card/references/weather-card-example.md
