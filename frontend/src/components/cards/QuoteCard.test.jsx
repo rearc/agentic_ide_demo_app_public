@@ -35,4 +35,19 @@ describe('QuoteCard', () => {
 
     expect(screen.getByText('(offline)')).toBeInTheDocument()
   })
+
+  it('credits ZenQuotes with a link on a live quote', () => {
+    render(<QuoteCard data={QUOTE} />)
+
+    expect(screen.getByRole('link', { name: 'via ZenQuotes' })).toHaveAttribute(
+      'href',
+      'https://zenquotes.io/',
+    )
+  })
+
+  it('does not credit ZenQuotes for the built-in fallback quote', () => {
+    render(<QuoteCard data={{ ...QUOTE, fallback: true }} />)
+
+    expect(screen.queryByRole('link')).not.toBeInTheDocument()
+  })
 })

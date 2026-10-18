@@ -13,14 +13,27 @@ export default function QuoteCard({ data }) {
         </span>
         <span className="relative">{data.text}</span>
       </blockquote>
-      <p className="mt-4 pt-3 border-t border-border-subtle/60 text-xs text-text-muted tracking-wide uppercase">
-        {data.author}
-        {data.fallback && (
-          <span className="ml-2 normal-case tracking-normal opacity-50">
-            (offline)
-          </span>
+      <div className="mt-4 pt-3 border-t border-border-subtle/60 flex items-baseline justify-between gap-2 text-xs text-text-muted">
+        <p className="tracking-wide uppercase">
+          {data.author}
+          {data.fallback && (
+            <span className="ml-2 normal-case tracking-normal opacity-50">
+              (offline)
+            </span>
+          )}
+        </p>
+        {/* ZenQuotes' free tier requires a link back to it. */}
+        {!data.fallback && (
+          <a
+            href="https://zenquotes.io/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="shrink-0 hover:text-text-secondary transition-colors"
+          >
+            via ZenQuotes
+          </a>
         )}
-      </p>
+      </div>
     </div>
   )
 }
