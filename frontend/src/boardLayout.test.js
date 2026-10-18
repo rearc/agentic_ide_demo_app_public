@@ -51,6 +51,18 @@ describe('settleBoard', () => {
     expect(settled).toEqual({ a: [0, 0, 6, 8], b: [6, 0, 6, 8] })
   })
 
+  it('tries the other side when the side a card is mostly on has no room', () => {
+    // b is mostly left of the mover, but the grid's left edge leaves no room.
+    const board = [card('b', 0, 0, 8, 8)]
+    const layout = [...board, card('mover', 2, 0, 8, 8)]
+
+    const settled = places(
+      settleBoard(layout, COLS, { id: 'mover', start: board }),
+    )
+
+    expect(settled.b).toEqual([10, 0, 8, 8])
+  })
+
   it('puts a card pushed aside back once the mover leaves', () => {
     // The move began with the row as it is; daylight first grew, then shrank.
     const settled = places(moving('daylight', { w: 4 }))

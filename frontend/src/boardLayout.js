@@ -33,10 +33,10 @@ function slide(card, x, cards, cols, fixed) {
 
 /**
  * Make room for `mover` beside it where the row allows: each card it covers
- * slides right (or left, if the card started to its left) just far enough,
- * pushing its own neighbours along, so long as nothing leaves the grid.
- * Cards there is no room for stay put, for the vertical compaction to move
- * down.
+ * slides to the side it is mostly on (and to the other side if that has no
+ * room) just far enough, pushing its own neighbours along, so long as
+ * nothing leaves the grid. Cards there is no room for stay put, for the
+ * vertical compaction to move down.
  */
 function makeRoomBeside(mover, cards, cols) {
   const fixed = new Map([[mover.i, mover]])
@@ -45,9 +45,13 @@ function makeRoomBeside(mover, cards, cols) {
     .sort((a, b) => a.x - b.x)
   for (const card of covered) {
     if (fixed.has(card.i)) continue
-    const toRight = card.x >= mover.x
-    const x = toRight ? mover.x + mover.w : mover.x - card.w
-    const places = slide(card, x, cards, cols, fixed)
+    const rightX = mover.x + mover.w
+    const leftX = mover.x - card.w
+    const mostlyRight = card.x + card.w / 2 >= mover.x + mover.w / 2
+    const [first, second] = mostlyRight ? [rightX, leftX] : [leftX, rightX]
+    const places =
+      slide(card, first, cards, cols, fixed) ??
+      slide(card, second, cards, cols, fixed)
     if (places) for (const [i, place] of places) fixed.set(i, place)
   }
   return cards.map((card) => fixed.get(card.i) ?? card)
