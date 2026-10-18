@@ -48,7 +48,8 @@ production-grade"; that is a decision, not a defect.
 - **API-2 — Single resource** returns the object: `jsonify(obj.to_dict())`.
 - **API-3 — Collection** returns a bare list:
   `jsonify([obj.to_dict() for obj in items])`.
-- **API-4 — Error** returns `{"error": "<message>"}` with a matching status code.
+- **API-4 - Error** returns `{"error": "<message>"}` with a matching status code,
+  through the app factory's error handlers (`API-10`).
 - **API-5 — DELETE** returns an empty body with `204`.
 - **API-6 — Status codes** are used as follows:
 
@@ -68,12 +69,21 @@ production-grade"; that is a decision, not a defect.
   referenced rows exist, and return `400`/`404` before touching the session.
 - **API-8 — Serialize through `to_dict()`.** Routes must not hand-build response
   dicts; the model owns its wire shape.
+- **API-9 - Request checks live in `routes/helpers.py`.** A route reads its JSON
+  body with `json_object_body()` and loads a row by id with `get_or_404()`
+  (which also treats an id beyond SQLite's 64-bit range as not found), and
+  checks integers with `is_sqlite_integer()`. Do not re-implement these per
+  route module.
+- **API-10 - Every error answers JSON.** A route signals a failure with
+  `abort(status, message)`; the handlers registered in `app/__init__.py` turn
+  every HTTP error (a 404 or 405 included) and every unhandled exception into
+  `{"error": ...}`. Never let an HTML error page or a bare traceback out.
 
 ```python
 # GOOD
 @cards_bp.route('/cards/<int:card_id>', methods=['DELETE'])
 def delete_card(card_id):
-    card = db.get_or_404(Card, card_id)
+    card = get_or_404(Card, card_id, 'Card not found')
     db.session.delete(card)
     db.session.commit()
     return '', 204
@@ -115,7 +125,8 @@ talks to an external API.
 
 ## 5. Models & migrations (`DB`)
 
-- **DB-1 — Explicit `__tablename__`** on every model.
+- **DB-1 - Explicit `__tablename__`** on every model, which subclasses the typed
+  `Base` in `app/models/base.py` (`DB-11`).
 - **DB-2 — Explicit column constraints:** `nullable`, `unique`, `index`,
   `default` are stated, not left implicit.
 - **DB-3 — Every model change gets an Alembic migration.** Never rely on
@@ -131,7 +142,16 @@ talks to an external API.
   has no mutation tracking, so `card.config['x'] = 1` is silently not persisted.
   Write `card.config = {**card.config, 'x': 1}`.
 - **DB-10 — Every model exposes `to_dict()`** returning its API shape, with
-  datetimes as ISO-8601 strings.
+  datetimes as ISO-8601 strings that carry their UTC offset (`isoformat_utc`).
+- **DB-11 - SQLAlchemy 2.0 style.** Models are `Mapped[...]` columns on `Base`,
+  and queries go through `db.session.scalars(db.select(...))` or
+  `db.session.get(...)`. Never `Model.query`, which the type checker cannot
+  follow (Pyright runs in standard mode and must report 0 errors).
+- **DB-12 - Let the database cascade.** A child table declares
+  `ForeignKey(..., ondelete='CASCADE')` and the code deletes only the parent.
+  This works because the app enforces SQLite foreign keys on every connection;
+  migrations switch them off for their batch operations, so do not rely on
+  enforcement inside a migration.
 
 ## 6. React components (`FE`)
 
@@ -220,9 +240,15 @@ same standard as the code it covers.
   whose environment the test cannot provide; do not mock the code under test.
 - **TEST-9 — Pin known defects rather than deleting the test.** Assert the
   current behavior with a docstring naming it a defect, or mark the desired
-  behavior `xfail(strict=True)` so it flips to a failure when fixed.
-- **TEST-10 — Both suites must be green before commit.** See README for the
-  commands.
+  behavior `xfail(strict=True)` so it flips to a failure when fixed. This
+  applies to a defect on a `defect/<exercise>` branch; `main` carries no known
+  defects (ADR-018), so a defect found on `main` is fixed there with a test that
+  fails without the fix, not pinned.
+- **TEST-10 - Both suites, the linters and the type check must be green before
+  commit.** Backend `pytest`, `ruff check .` (from `backend/`) and `pyright` (from
+  the repo root); frontend `npm run test:run` and `npm run lint` (from
+  `frontend/`). `npm run test:e2e` runs the Playwright suite against the real
+  app. See README for the setup.
 - **TEST-11 — Test each half of a compound condition.** For a guard like
   `if (a || !b) return`, a test where `a` and `!b` are both true proves neither
   clause is load-bearing: either one can be deleted and the suite stays green.
@@ -237,12 +263,16 @@ same standard as the code it covers.
 
 ```python
 # GOOD - one behavior, named for it, failure path covered
-def test_geocode_http_error_returns_fallback(self, http_mock):
-    http_mock.get(GEOCODE_URL, status=500)
+# (backend/tests/test_services_weather.py)
+def test_unknown_city_returns_located_fallback(self, http_mock):
+    register_geocode(http_mock, [])
 
-    result = weather.fetch(city='San Francisco')
+    result = weather.fetch(city='Nowhereville')
 
     assert result['fallback'] is True
+    assert result['description'] == 'Could not find location: Nowhereville'
+    assert result['city'] == 'Nowhereville'
+    assert result['temp'] == '--'
 ```
 
 ---
