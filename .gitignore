@@ -13,6 +13,9 @@ frontend/dist/
 # Environment
 .env
 
+# Claude Code audit hook output
+.claude/audit.log
+
 # IDE
 .vscode/*
 .idea/

@@ -1,6 +1,7 @@
 {
   "permissions": {
     "deny": [
+      "Read(.env)",
       "Read(./secrets/**)",
       "Read(./docs/reference/claude_md_examples/**)"
     ]
