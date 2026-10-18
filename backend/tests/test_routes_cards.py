@@ -125,11 +125,14 @@ class TestUpdateCard:
         assert response.status_code == 200
         assert client.get(f'/api/cards/{card.id}').get_json()[field] == value
 
-    def test_slug_is_not_updatable(self, client, card):
-        """slug is the frontend's registry key, so update_card deliberately omits it."""
-        client.put(f'/api/cards/{card.id}', json={'slug': 'changed'})
+    @pytest.mark.parametrize('slug', ['changed', 5])
+    def test_slug_is_ignored_on_update(self, client, card, slug):
+        """slug is how the seed recognises a default card (ADR-017), so an update
+        ignores it, whatever its value, rather than rejecting the request."""
+        response = client.put(f'/api/cards/{card.id}', json={'slug': slug})
 
-        assert client.get(f'/api/cards/{card.id}').get_json()['slug'] == 'weather'
+        assert response.status_code == 200
+        assert response.get_json()['slug'] == 'weather'
 
 
 class TestDeleteCard:

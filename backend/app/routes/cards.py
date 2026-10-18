@@ -47,16 +47,19 @@ FIELD_RULES = {
     'is_active': (_is_boolean, 'a boolean'),
 }
 OPTIONAL_FIELDS = [f for f in FIELD_RULES if f not in REQUIRED_FIELDS]
-# slug is the frontend's registry key, so an update never changes it.
+# slug is how the seed recognises a default card (ADR-017), so an update
+# never changes it and ignores whatever is sent for it.
 UPDATABLE_FIELDS = [f for f in FIELD_RULES if f != 'slug']
 
 
-def _validate_card_fields(data, required=()):
-    """Answer 400 for a missing required field or a wrongly typed one (API-7)."""
+def _validate_card_fields(data, fields=FIELD_RULES, required=()):
+    """Answer 400 for a missing required field or a wrongly typed one among
+    `fields`, the fields this request may set (API-7)."""
     missing = [f for f in required if f not in data]
     if missing:
         abort(400, f'Missing required fields: {", ".join(missing)}')
-    for field, (is_valid, expected) in FIELD_RULES.items():
+    for field in fields:
+        is_valid, expected = FIELD_RULES[field]
         if field in data and not is_valid(data[field]):
             abort(400, f'{field} must be {expected}')
 
@@ -97,7 +100,7 @@ def create_card():
 def update_card(card_id):
     card = get_or_404(Card, card_id, 'Card not found')
     data = json_object_body()
-    _validate_card_fields(data)
+    _validate_card_fields(data, fields=UPDATABLE_FIELDS)
 
     for field in UPDATABLE_FIELDS:
         if field in data:
