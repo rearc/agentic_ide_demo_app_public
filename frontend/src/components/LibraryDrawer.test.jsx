@@ -89,27 +89,96 @@ describe('tiles', () => {
 })
 
 describe('search', () => {
+  function search() {
+    return screen.getByRole('searchbox', { name: 'Search cards' })
+  }
+
   it('filters the tiles by title as you type, ignoring case', async () => {
     const user = userEvent.setup()
     renderDrawer()
 
-    await user.type(
-      screen.getByRole('searchbox', { name: 'Search cards' }),
-      'QUO',
-    )
+    await user.type(search(), 'QUO')
 
     expect(screen.getAllByRole('listitem')).toHaveLength(1)
-    expect(screen.getByText('Daily Quote')).toBeInTheDocument()
+    expect(screen.getByRole('listitem')).toHaveTextContent('Daily Quote')
+  })
+
+  it('matches descriptions too', async () => {
+    const user = userEvent.setup()
+    renderDrawer({
+      cards: [
+        cardRecord({ id: 1, title: 'Build Status', description: 'CI runs' }),
+        cardRecord({ id: 2, title: 'Notes', description: 'A scratch pad' }),
+      ],
+    })
+
+    await user.type(search(), 'ci')
+
+    expect(screen.getByRole('listitem')).toHaveTextContent('Build Status')
+  })
+
+  it('counts the cards, and the matches while filtering', async () => {
+    const user = userEvent.setup()
+    renderDrawer()
+
+    expect(screen.getByText('3 · 1 on board')).toBeInTheDocument()
+
+    await user.type(search(), 'quo')
+
+    expect(screen.getByText('1 of 3')).toBeInTheDocument()
+  })
+
+  it('clears with its own button', async () => {
+    const user = userEvent.setup()
+    renderDrawer()
+
+    await user.type(search(), 'zzz')
+    await user.click(screen.getByRole('button', { name: 'Clear search' }))
+
+    expect(search()).toHaveValue('')
+    expect(screen.getAllByRole('listitem')).toHaveLength(3)
   })
 
   it('says when no card matches', async () => {
     const user = userEvent.setup()
     renderDrawer()
 
-    await user.type(screen.getByRole('searchbox'), 'zzz')
+    await user.type(search(), 'zzz')
 
     expect(screen.queryByRole('listitem')).not.toBeInTheDocument()
     expect(screen.getByText('No cards match "zzz".')).toBeInTheDocument()
+  })
+})
+
+describe('order and the "To add" switch', () => {
+  function titles() {
+    return screen
+      .getAllByRole('listitem')
+      .map((li) => li.querySelector('.font-semibold').textContent)
+  }
+
+  it('puts cards already on the board last, each group in library order', () => {
+    renderDrawer()
+
+    expect(titles()).toEqual(['Daily Quote', 'Todos', 'Weather'])
+  })
+
+  it('shows only the cards that can be added', async () => {
+    const user = userEvent.setup()
+    renderDrawer()
+
+    await user.click(screen.getByRole('button', { name: 'To add' }))
+
+    expect(titles()).toEqual(['Daily Quote', 'Todos'])
+  })
+
+  it('says when every card is on the board', async () => {
+    const user = userEvent.setup()
+    renderDrawer({ cards: [CARDS[0]] })
+
+    await user.click(screen.getByRole('button', { name: 'To add' }))
+
+    expect(screen.getByText('Every card is on the board.')).toBeInTheDocument()
   })
 })
 

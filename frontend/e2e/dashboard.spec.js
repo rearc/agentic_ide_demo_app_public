@@ -53,6 +53,11 @@ async function deleteAllTodos(request, cardId) {
   }
 }
 
+// Taller than the default 720 px: with the library open the sticky header is
+// over 200 px, and the drag tests need their drop points clear of it without
+// scrolling the page.
+test.use({ viewport: { width: 1280, height: 1000 } })
+
 let seededCards
 let seededDefault
 

@@ -215,3 +215,9 @@ body {
     transition: none !important;
   }
 }
+
+/* The library's search clears with its own button (LibraryDrawer.jsx), not
+   the browser's blue one. */
+.library-search::-webkit-search-cancel-button {
+  display: none;
+}
