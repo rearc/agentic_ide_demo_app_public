@@ -1,6 +1,6 @@
 ---
 name: add-dashboard-card
-description: Step-by-step workflow for adding a new dashboard card to this Flask + React app, covering backend service, route wiring, frontend component, card registry, accent color, database seeding, and tests.
+description: Step-by-step workflow for adding a new dashboard card to this Flask + React app, covering backend service, route wiring, frontend component, card registry, card colour and icon, database seeding, and tests.
 when_to_use: "Use when the user wants to add a new card, widget, or tile to the dashboard, or wire a new data source into the app."
 argument-hint: "[slug] [source]"
 arguments: [slug, source]
@@ -27,7 +27,7 @@ Every card is **one row in the `cards` table + one entry in `CARD_REGISTRY`**. C
 | **Static card** (placeholder; a client-only timer, calculator, clock) | `false` | none — rendered entirely in the component | none (skip stages 1–3) |
 | **Stateful card** (todo) | `false` | its **own** model, routes, and table — it talks to its own endpoint, **not** `/api/data` | a new SQLAlchemy model + routes blueprint + **an Alembic migration** (skip stages 1–3) |
 
-**All three** still do the frontend, seed and test stages (4 component, 5 `CARD_REGISTRY`, 6 accent color, 7 seed row, 8 tests). The difference is only what happens on the backend.
+**All three** still do the frontend, seed and test stages (4 component, 5 `CARD_REGISTRY`, 6 colour and icon, 7 seed row, 8 tests). The difference is only what happens on the backend.
 
 Cost, cheapest → most work: **static → data → stateful.** Only a **stateful** card requires a **database migration** — that's the difficulty cliff, so prefer static or data cards unless the widget genuinely must persist its own data. The built-in `todo` card is the reference implementation of the stateful pattern (see `backend/app/models/todo.py`, `backend/app/routes/todos.py`, and its migration).
 
@@ -110,7 +110,8 @@ Rules:
 - Default export a function component that receives `{ data, card }` props
 - Return `null` when there is no data yet (`FE-4`), then handle `data.fallback` — render a fallback message
 - Use Tailwind classes from the project theme: `text-text-primary`, `text-text-secondary`, `text-text-muted`, `text-xs`, `text-sm`, etc.
-- The parent `Card.jsx` handles data fetching, loading, and error states. Most cards need no local state (`QuoteCard`, `SpaceCard`); add `useState` only for UI the card owns, as `WeatherCard` does for its °C/°F toggle
+- The parent `Card.jsx` draws the frame (title, icon, colour, and a Live or Fallback status for data cards) and handles data fetching, loading, and error states. Most cards need no local state (`QuoteCard`, `SpaceCard`); add `useState` only for UI the card owns, as `WeatherCard` does for its °C/°F toggle
+- Optional: `CardFooter` (`frontend/src/components/CardFooter.jsx`) adds a strip along the card's bottom for a short note, such as where the data comes from or why it is a fallback (`QuoteCard`, `SpaceCard`). Most cards have none
 - Keep it simple: render the data fields from your service
 
 ```jsx
@@ -119,8 +120,8 @@ export default function ExampleCard({ data }) {
 
   if (data.fallback) {
     return (
-      <div className="text-center py-4">
-        <p className="text-sm text-text-muted">{data.field_b}</p>
+      <div className="h-full flex items-center justify-center text-center">
+        <p className="text-sm text-text-secondary">{data.field_b}</p>
       </div>
     )
   }
@@ -150,27 +151,17 @@ export default function ExampleCard({ data }) {
 
    Set `needsData: false` only if the card renders static content with no backend data fetch.
 
-## Stage 6: Add the Accent Color
+## Stage 6: Choose the Card's Colour and Icon
 
-**Edit** `frontend/src/index.css`
-
-Add the card's color variables inside the `@theme static { }` block, alongside the existing card colors:
+**Colour.** **Edit** `frontend/src/index.css`. Card colours come in two layers inside the `@theme static { }` block: a palette of named colours (`--color-rally-gold`, `-orange`, `-red`, `-raspberry`, `-navy`), and one colour per card that points at a palette colour. Add your card's:
 
 ```css
---color-card-{slug}: #hexvalue;
---color-card-{slug}-2: #hexvalue;   /* optional second accent for the card's gradients */
+--color-card-{slug}: var(--color-rally-navy);
 ```
 
-`Card.jsx` reads both: the first is the card's accent, the second blends with it in the header bar and glow (it falls back to the first when absent). `static` keeps Tailwind from dropping variables that are only used through `var()`.
+Any colour works: for one the palette lacks, add it to the palette first (`--color-rally-teal: #2bb3a3;`) and point at that. Components never use a palette colour or a hex value directly; the registry's `accent: 'card-{slug}'` (Stage 5) names your card colour, and `Card.jsx` shows it as a tab beside the header and on the icon. `static` keeps Tailwind from dropping variables that are only used through `var()`.
 
-Pick a color that is visually distinct from the existing ones:
-- weather: `#fbbf24` (amber), second `#fb7185`
-- quote: `#f472b6` (pink), second `#a78bfa`
-- space: `#22d3ee` (cyan), second `#6366f1`
-- placeholder: `#818cf8` (indigo), second `#22d3ee`
-- todo: `#34d399` (emerald), second `#22d3ee`
-
-Good options for new cards: red (`#ef4444`), violet (`#8b5cf6`), lime (`#84cc16`), sky (`#0ea5e9`), orange (`#fb923c`).
+**Icon.** Icons are names, not emoji: the card's `icon` (Stage 7) is a key of `ICONS` in `frontend/src/components/Icon.jsx`, which maps each name to a [Phosphor](https://phosphoricons.com) icon. Use an existing name, or add one: import the icon (`import { RocketIcon } from '@phosphor-icons/react'`) and add `rocket: RocketIcon` to `ICONS`. Keep the name to 10 characters (the `icon` column's size). An empty icon is allowed and shows none. A backend test (`test_seed.py`) fails on a seeded icon name `ICONS` does not list.
 
 ## Stage 7: Seed the Card into the Database
 
@@ -183,7 +174,7 @@ Card(
     slug='{slug}',
     title='{Title}',
     description='{Short description}',
-    icon='{emoji}',
+    icon='{icon-name}',  # a key of ICONS in frontend/src/components/Icon.jsx, or ''
     source='{slug}',
     config={'param': 'default_value'},  # only if your service takes params; omit otherwise
     layout={'x': ?, 'y': ?, 'w': 4, 'h': 4},
@@ -193,7 +184,7 @@ Card(
 
 Layout notes:
 - Grid is 12 columns wide. The default cards are `w: 4` (a third); use `w: 6` for half width or `w: 12` for full width.
-- `h: 4` is a good default height. Image-heavy cards (like space) use `h: 6`.
+- `h: 4` is a good default height. Image-heavy cards (like space) use `h: 7`.
 - Position cards to avoid overlaps: check existing `x, y` values.
 
 Then seed the new card: `cd backend && python seed.py`
@@ -227,9 +218,9 @@ New behavior ships with tests (`TEST-1`), and tests never touch the network (`TE
 2. Frontend is running: `cd frontend && npm run dev`
 3. Open `http://localhost:5173` in a browser
 4. Confirm the new card appears in the grid with:
-   - Correct title, icon, and description in the header
-   - Data loaded from your service (not a loading spinner or error)
-   - Accent color in the top bar, and the glow on hover
+   - Correct title and icon in the header (the description shows when hovering the title)
+   - Data loaded from your service (not a loading spinner or error), and `Live` in the header for a data card
+   - The card's colour in the tab beside the header and on its icon
 5. Unlock the layout and drag the card — confirm it saves position
 
 ## Quick Checklist
@@ -241,6 +232,6 @@ New behavior ships with tests (`TEST-1`), and tests never touch the network (`TE
 | 3 | `.env` + `backend/config.py` | Add API key (if needed) |
 | 4 | `frontend/src/components/cards/{PascalName}Card.jsx` | Create display component |
 | 5 | `frontend/src/components/Card.jsx` | Import component, add to `CARD_REGISTRY` |
-| 6 | `frontend/src/index.css` | Add `--color-card-{slug}` (and `-2`) in `@theme static` |
+| 6 | `frontend/src/index.css` (+ `frontend/src/components/Icon.jsx` for a new icon) | Add `--color-card-{slug}` pointing at a palette colour; pick or add an icon name |
 | 7 | `backend/seed.py` | Add `Card(...)` entry, run `python seed.py` (additive insert) |
 | 8 | `backend/tests/test_services_{slug}.py` + `frontend/src/components/cards/{PascalName}Card.test.jsx` (+ a dispatch case in `test_routes_data.py` for a data card, or `SOURCES_WITHOUT_A_SERVICE` in `test_seed.py` for a static or stateful one) | Success and fallback paths, network mocked |
