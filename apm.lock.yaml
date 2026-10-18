@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-10-18T03:41:09.755493+00:00'
+generated_at: '2026-10-18T06:47:15.192681+00:00'
 apm_version: 0.33.0
 dependencies:
 - repo_url: _local/rearc-pocock-kit
@@ -82,11 +82,11 @@ dependencies:
     .claude/agents/_agent-reference.md: sha256:2692fe560dfc22c01c32b0fe4cc414ca60631f2fcb3a2da74ff082186b9570dd
     .claude/agents/code-reviewer.md: sha256:527a81eeb8e52d90829857cffd066798ec3cdcf8c3cd4619b4bd819be6be3423
     .claude/agents/research-assistant.md: sha256:f9c2de8e5462f4507c836500c87736ffb3401b3b1680ecd962a9b03ba1fa3593
-    .claude/hooks/rearc-workshop-demo-kit/scripts/hooks/audit.sh: sha256:cb67e0f380b5fe5033fd829c0753548436cc2b7d566b723a000036bd71f90fac
+    .claude/hooks/rearc-workshop-demo-kit/scripts/hooks/audit.sh: sha256:0eb044bb28f58756cea7438c210552e60488063263010e34eab5cea76233e53e
     .claude/hooks/rearc-workshop-demo-kit/scripts/hooks/auto-lint.sh: sha256:3b5823acfac3e07752a4526bb3700c25004b8200a615ca0f1384cf32b577ae49
     .claude/hooks/rearc-workshop-demo-kit/scripts/hooks/guard-shell.sh: sha256:0f16f8599832ab3320694edbb721d33d7dc40cc9e6c6359da651daa4aba4ad8f
     .claude/hooks/rearc-workshop-demo-kit/scripts/hooks/test-guard-shell.sh: sha256:e7d34b6b73968b710aaba5cbb38387596ab0546edc7e843751c57b569c618020
-    .claude/rules/api-conventions.md: sha256:80e680013780417760b175e2f265b6eeda958b39115e665663855d3c5572f943
+    .claude/rules/api-conventions.md: sha256:1723ed8589d884bbd17a31f78147fdce9e686177e48543f8329769b15f869633
     .claude/rules/migrations.md: sha256:a900316604e0e2f9189d3881abab052e8c6b248cb9ffd56606d03e44c952dc4b
     .claude/rules/tailwind.md: sha256:102d70697b53bee444fe6f3d53b9552c912b61de6575a33ed0a1b8c3f653c6f5
     .claude/skills/add-dashboard-card/SKILL.md: sha256:12c3669fb82cf402e00362b5099ae0327d975091fb6302d71918dd5dc10085db
@@ -992,7 +992,7 @@ deployments:
   owners:
   - ../ai-toolkit/packages/rearc-workshop-demo-kit
   active_owner: ../ai-toolkit/packages/rearc-workshop-demo-kit
-  content_hash: sha256:cb67e0f380b5fe5033fd829c0753548436cc2b7d566b723a000036bd71f90fac
+  content_hash: sha256:0eb044bb28f58756cea7438c210552e60488063263010e34eab5cea76233e53e
 - kind: project-relative
   target: claude
   value: .claude/hooks/rearc-workshop-demo-kit/scripts/hooks/auto-lint.sh
@@ -1028,7 +1028,7 @@ deployments:
   owners:
   - ../ai-toolkit/packages/rearc-workshop-demo-kit
   active_owner: ../ai-toolkit/packages/rearc-workshop-demo-kit
-  content_hash: sha256:80e680013780417760b175e2f265b6eeda958b39115e665663855d3c5572f943
+  content_hash: sha256:1723ed8589d884bbd17a31f78147fdce9e686177e48543f8329769b15f869633
 - kind: project-relative
   target: claude
   value: .claude/rules/migrations.md
@@ -4215,6 +4215,15 @@ deployments:
   - mattpocock/skills/skills/productivity/writing-great-skills
   active_owner: mattpocock/skills/skills/productivity/writing-great-skills
   content_hash: sha256:b3c555d2654ec61aed78f8435f583c6a0cd6bf980d71317724682ad20075c33d
+- kind: uri
+  target: mcp
+  value: random-tools
+  runtime: claude
+  scope: project
+  owners:
+  - .
+  active_owner: .
+  content_hash: null
 mcp_servers:
 - context7
 - random-tools
@@ -4230,11 +4239,13 @@ mcp_configs:
     args:
     - run
     - --with
-    - mcp[cli]
+    - mcp[cli]>=2,<3
     - mcp-servers/random-tools-mcp/server.py
     registry: false
     command: uv
-mcp_target_servers: {}
+mcp_target_servers:
+  claude:
+  - random-tools
 mcp_config_provenance:
   context7: rearc/workshop-demo-kit
   random-tools: rearc/workshop-demo-kit

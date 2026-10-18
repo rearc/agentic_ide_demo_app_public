@@ -5,8 +5,9 @@
 # Appends one JSON line per tool call to .claude/audit.log in the project
 # (gitignored). Each line records when, which session, which tool, and what it
 # touched: the command for Bash, the file path for file tools, the URL or query
-# for web tools, the pattern for searches. File contents, edit text and tool
-# output are never logged, and obvious secrets in commands are masked.
+# for web tools, the pattern for searches, the skill or subagent name for Skill
+# and Agent calls. File contents, edit text and tool output are never logged,
+# and obvious secrets in commands are masked.
 #
 # Wired in .claude/settings.json:
 #   "PreToolUse": [{ "matcher": "*", "hooks": [{ "type": "command",
@@ -38,7 +39,7 @@ jq -c --arg time "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" '
     tool: .tool_name,
     target: (
       .tool_input
-      | (.command // .file_path // .notebook_path // .url // .query // .pattern // .description // null)
+      | (.command // .file_path // .notebook_path // .url // .query // .pattern // .skill // .subagent_type // .description // null)
       | if type == "string" then mask | .[0:500] else . end
     )
   }

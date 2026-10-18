@@ -1,8 +1,8 @@
 import random
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
-mcp = FastMCP("random-tools")
+mcp = MCPServer("random-tools")
 
 
 @mcp.tool()
