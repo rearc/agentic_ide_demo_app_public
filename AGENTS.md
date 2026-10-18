@@ -2,7 +2,7 @@
 
 **Default guidance for any contributor** using an agent in this repo: how things are structured, how to run them, and where to make changes. Prefer the **source of truth in code** over narrative docs when they disagree.
 
-**Enforceable conventions live in `.claude/rules/`, not here** — API response shapes (`api-conventions`), styling (`tailwind`, path-scoped to `frontend/**`), DB migrations (`migrations`, path-scoped to `backend/**`), and the security checklist (`security-review`). This file is **orientation, setup, and non-obvious gotchas**; the rules are the authority for conventions, so this file points to them rather than restating them.
+**Enforceable conventions live in `.claude/rules/`, not here** — API response shapes (`api-conventions`), styling (`tailwind`, loaded for React components in `frontend/src/`), and DB migrations (`migrations`, loaded for `backend/app/models/` and `backend/migrations/`). The full rule set with IDs is `docs/coding_standards.md`; the `security-checklist` skill covers security review. This file is **orientation, setup, and non-obvious gotchas**; the rules are the authority for conventions, so this file points to them rather than restating them.
 
 ## What this project is
 
@@ -97,7 +97,7 @@ Adding a card is a multi-step workflow — use the **`add-dashboard-card` skill*
 
 - **Scope:** Change only what the task requires; prefer small, reviewable diffs unless the task explicitly calls for a larger refactor.
 - **Verify behavior:** After backend changes, ensure `flask --app run.py db upgrade` and seeds/migrations still make sense. After frontend changes, run `npm run dev` and confirm `/api` proxy matches the Flask port.
-- **Secrets & security:** governed by **`.claude/rules/security-review`** (authority — not restated here).
+- **Secrets & security:** secrets live in `.env` and are read only in `backend/config.py`; the **`security-checklist`** skill lists what to check when reviewing a change.
 - **Documentation:** If you change ports, proxy targets, or env vars, update `README.md` in the same change when practical.
 
 ## MCP servers
