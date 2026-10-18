@@ -28,15 +28,6 @@ DISPATCH_CASES = {
 }
 
 
-@pytest.fixture(autouse=True)
-def clear_iss_cache():
-    """The ISS service's module-level cache is not an lru_cache, so conftest
-    does not reset it (TEST-3)."""
-    iss._cached, iss._cached_at, iss._failed_at = None, 0.0, None
-    yield
-    iss._cached, iss._cached_at, iss._failed_at = None, 0.0, None
-
-
 @pytest.fixture
 def healthy_upstreams(http_mock):
     """Every upstream API answering successfully."""

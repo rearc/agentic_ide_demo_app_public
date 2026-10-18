@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test'
 
+const NOW_SECONDS = Math.floor(Date.now() / 1000)
+
 // The browser never reaches the real data APIs: each source is answered here,
 // so the suite runs offline. Cards and todos still hit the real backend.
 const DATA = {
@@ -20,14 +22,15 @@ const DATA = {
     date: '2026-01-01',
     media_type: 'image',
   },
+  // Times around now, so the card shows a day in progress (its live state),
+  // not "yesterday's times": sunrise two hours ago, sunset in three.
   daylight: {
     city: 'San Francisco',
     timezone: 'America/Los_Angeles',
-    // 1 January 2026, 07:25 and 17:01 in San Francisco (UTC-8).
-    sunrise: 1767281100,
-    sunset: 1767315660,
-    tomorrow_sunrise: 1767367500,
-    daylight_seconds: 34560,
+    sunrise: NOW_SECONDS - 2 * 3600,
+    sunset: NOW_SECONDS + 3 * 3600,
+    tomorrow_sunrise: NOW_SECONDS + 21 * 3600,
+    daylight_seconds: 5 * 3600,
     change_seconds: 25,
   },
   iss: {
@@ -116,7 +119,7 @@ test('every seeded card renders its title and its mocked data', async ({
   await expect(page.getByText('partly cloudy')).toBeVisible()
   await expect(page.getByText('Mocked quote for the test.')).toBeVisible()
   await expect(page.getByRole('img', { name: 'Mocked Nebula' })).toBeVisible()
-  await expect(page.getByText('9h 36m')).toBeVisible()
+  await expect(page.getByText('of light left')).toBeVisible()
   await expect(page.getByRole('img', { name: /^ISS over/ })).toBeVisible()
 })
 

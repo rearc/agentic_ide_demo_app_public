@@ -19,8 +19,8 @@ from seed import DEFAULT_BOARD, DEFAULT_PROFILE_NAME, STARTER_TODO_TEXT, default
 
 DEFAULT_SLUGS = [c.slug for c in default_cards()]
 
-# Cards that never call /api/data/<source>: the todo card owns /api/todos, and
-# the placeholder renders without fetching.
+# Cards that never call /api/data/<source>: the todo card owns /api/todos;
+# the placeholder, timer and moon cards work in the browser alone.
 SOURCES_WITHOUT_A_SERVICE = {'todo', 'placeholder', 'timer', 'moon'}
 
 

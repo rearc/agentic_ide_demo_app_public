@@ -46,6 +46,8 @@ npm install                    # installs exactly what package-lock.json pins
 npm run dev                    # http://localhost:5173, proxies /api to the backend
 ```
 
+One dependency is held back on purpose, an exception to ADR-012's latest versions: `satellite.js` stays on 6.x (the ISS card's orbit maths). Version 7 adds WebAssembly builds that `vite build` cannot bundle.
+
 ## Checks
 
 Every suite runs offline. The backend and frontend tests fail on any request they did not mock; the end-to-end suite answers the external data APIs in the browser.

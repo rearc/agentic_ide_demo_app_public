@@ -16,14 +16,6 @@ BODY = f'ISS (ZARYA)             \n{LINE1}\n{LINE2}\n'
 HOUR = 60 * 60
 
 
-@pytest.fixture(autouse=True)
-def clear_tle_cache():
-    """The cache is module-level, so it would leak between tests (TEST-3)."""
-    iss._cached, iss._cached_at, iss._failed_at = None, 0.0, None
-    yield
-    iss._cached, iss._cached_at, iss._failed_at = None, 0.0, None
-
-
 @pytest.fixture
 def clock(monkeypatch):
     """A controllable time.monotonic: set `clock.now`."""

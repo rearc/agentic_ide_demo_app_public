@@ -7,15 +7,10 @@ sunrise, sunset and daylight duration of yesterday, today and tomorrow.
 import pytest
 import requests
 
-from app.services import daylight, open_meteo
+from app.services import daylight
 from app.services.open_meteo import FORECAST_URL, GEOCODE_URL
 
 SF_RESULT = [{'latitude': 37.77, 'longitude': -122.42, 'name': 'San Francisco'}]
-
-
-@pytest.fixture(autouse=True)
-def clear_geocode_cache():
-    open_meteo.geocode.cache_clear()
 
 
 def fallback(city, description):

@@ -18,7 +18,7 @@ from app.models.card import Card
 from app.models.profile import Profile
 from app.models.profile_card import ProfileCard
 from app.models.todo import Todo
-from app.services import quotes, space, weather
+from app.services import iss, open_meteo, quotes, space, weather
 
 
 @pytest.fixture
@@ -67,7 +67,7 @@ def _cached_callables():
     """
     return [
         obj
-        for module in (weather, quotes, space)
+        for module in (weather, quotes, space, open_meteo)
         for obj in vars(module).values()
         if _is_cached(obj)
     ]
@@ -86,14 +86,22 @@ def _is_cached(obj):
         return False
 
 
+def _reset_iss_cache():
+    """The ISS service keeps its orbit data in module-level values, not an
+    lru_cache, because the data expires (iss.py says why)."""
+    iss._cached, iss._cached_at, iss._failed_at = None, 0.0, None
+
+
 @pytest.fixture(autouse=True)
 def clear_service_caches():
     """Reset every service-layer cache around each test (TEST-3)."""
     for cached in _cached_callables():
         cached.cache_clear()
+    _reset_iss_cache()
     yield
     for cached in _cached_callables():
         cached.cache_clear()
+    _reset_iss_cache()
 
 
 @pytest.fixture
