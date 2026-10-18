@@ -6,10 +6,11 @@ import { fetchCards, updateCard } from '../api'
 import Card, { DRAG_HANDLE_CLASS } from './Card'
 import LoadingDots from './LoadingDots'
 
-// Panels sit 1 px apart; each draws a 1 px outline into that gap (Card.jsx),
-// so neighbours share one hairline.
-const ROW_HEIGHT = 52
-const MARGIN = 1
+// Cards sit MARGIN px apart. Each draws a 1 px outline just outside its box
+// (Card.jsx), so the grid keeps OUTLINE px clear around its edge for it.
+const ROW_HEIGHT = 46
+const MARGIN = 8
+const OUTLINE = 1
 
 // Below this container width the grid's columns get too narrow to read, so
 // the cards stack in one column instead, in grid order, without dragging.
@@ -117,7 +118,7 @@ export default function Dashboard({ locked }) {
   } else if (stacked) {
     const inGridOrder = [...layout].sort((a, b) => a.y - b.y || a.x - b.x)
     content = (
-      <div className="flex flex-col" style={{ gap: MARGIN, padding: MARGIN }}>
+      <div className="flex flex-col" style={{ gap: MARGIN, padding: OUTLINE }}>
         {inGridOrder.map((item) => (
           <div key={item.i} style={{ height: stackedHeight(item.h) }}>
             <Card card={cards.find((c) => String(c.id) === item.i)} locked />
@@ -135,6 +136,7 @@ export default function Dashboard({ locked }) {
           cols: 12,
           rowHeight: ROW_HEIGHT,
           margin: [MARGIN, MARGIN],
+          containerPadding: [OUTLINE, OUTLINE],
         }}
         dragConfig={{ enabled: !locked, handle: `.${DRAG_HANDLE_CLASS}` }}
         resizeConfig={{ enabled: !locked }}

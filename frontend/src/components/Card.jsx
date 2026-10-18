@@ -144,8 +144,8 @@ export default function Card({ card, locked }) {
   }
 
   return (
-    // The outline draws into the 1 px gap the grid leaves, so neighbouring
-    // panels share a single hairline.
+    // The hairline is an outline just outside the box, so the colour tab
+    // sits flush with the card's left edge.
     <div className="relative h-full flex flex-col bg-panel shadow-[0_0_0_1px_var(--color-hairline)]">
       {accent && (
         <span
