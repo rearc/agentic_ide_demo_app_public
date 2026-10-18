@@ -103,6 +103,7 @@ export default function App() {
             cards={board.cards}
             board={board.board}
             onAdd={board.showCard}
+            onRemove={board.hideCard}
             onDragStart={board.setDraggingCardId}
             onDragEnd={() => board.setDraggingCardId(null)}
           />

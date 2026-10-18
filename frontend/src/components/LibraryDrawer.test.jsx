@@ -24,6 +24,7 @@ function renderDrawer(props = {}) {
     cards: CARDS,
     board: BOARD,
     onAdd: vi.fn(),
+    onRemove: vi.fn(),
     onDragStart: vi.fn(),
     onDragEnd: vi.fn(),
     ...props,
@@ -76,6 +77,17 @@ describe('tiles', () => {
     expect(tile('Todos').querySelector('[data-icon]').style.color).toBe(
       'var(--color-card-todo)',
     )
+  })
+
+  it('takes a card off the board from its tile', async () => {
+    const user = userEvent.setup()
+    const { onRemove } = renderDrawer()
+
+    await user.click(
+      screen.getByRole('button', { name: 'Remove "Weather" from the board' }),
+    )
+
+    expect(onRemove).toHaveBeenCalledWith(1)
   })
 
   it('adds a card to the board with its Add button', async () => {

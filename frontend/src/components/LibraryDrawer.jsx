@@ -4,6 +4,7 @@ import {
   CaretRightIcon,
   CheckIcon,
   MagnifyingGlassIcon,
+  MinusIcon,
   PlusIcon,
   XIcon,
 } from '@phosphor-icons/react'
@@ -35,9 +36,19 @@ function Highlighted({ text, needle, accent }) {
 /**
  * One library card: its title and description. A card not on the board can
  * be dragged onto the grid or added with its "+"; one already there is
- * dimmed and checked.
+ * dimmed, and its check turns into a "-" that takes it off the board when
+ * pointed at or focused (always, on a touch screen, where nothing hovers).
  */
-function Tile({ card, onBoard, needle, order, onAdd, onDragStart, onDragEnd }) {
+function Tile({
+  card,
+  onBoard,
+  needle,
+  order,
+  onAdd,
+  onRemove,
+  onDragStart,
+  onDragEnd,
+}) {
   const accent = cardAccent(card.source)
 
   function handleDragStart(e) {
@@ -89,13 +100,25 @@ function Tile({ card, onBoard, needle, order, onAdd, onDragStart, onDragEnd }) {
         )}
       </span>
       {onBoard ? (
-        <span
-          className="grid place-items-center shrink-0 w-[30px] h-[30px] text-text-muted"
-          title="On board"
+        <button
+          type="button"
+          onClick={() => onRemove(card.id)}
+          aria-label={`Remove "${card.title}" from the board`}
+          title="On board: remove"
+          className="group grid place-items-center shrink-0 w-[30px] h-[30px] border border-transparent text-text-muted hover:border-hairline-strong hover:text-text-primary focus-visible:border-hairline-strong focus-visible:text-text-primary pointer-coarse:border-hairline-strong transition-colors"
         >
-          <CheckIcon size={15} aria-hidden />
+          <CheckIcon
+            size={15}
+            aria-hidden
+            className="group-hover:hidden group-focus-visible:hidden pointer-coarse:hidden"
+          />
+          <MinusIcon
+            size={15}
+            aria-hidden
+            className="hidden group-hover:block group-focus-visible:block pointer-coarse:block"
+          />
           <span className="sr-only">On board</span>
-        </span>
+        </button>
       ) : (
         <button
           type="button"
@@ -202,7 +225,7 @@ function Shelf({ children }) {
 /**
  * The card library, under the header's row: a search field, a count and an
  * "All / To add" switch, and every card as a tile on a two-row shelf that
- * scrolls sideways. Cards already on the board go last. It stays mounted so
+ * scrolls sideways, each adding or removing its card. Cards already on the board go last. It stays mounted so
  * it can animate open and closed (index.css); closed, it is inert and hidden
  * from assistive technology.
  */
@@ -212,6 +235,7 @@ export default function LibraryDrawer({
   cards,
   board,
   onAdd,
+  onRemove,
   onDragStart,
   onDragEnd,
 }) {
@@ -324,6 +348,7 @@ export default function LibraryDrawer({
                       needle={needle}
                       order={i + 1}
                       onAdd={onAdd}
+                      onRemove={onRemove}
                       onDragStart={onDragStart}
                       onDragEnd={onDragEnd}
                     />

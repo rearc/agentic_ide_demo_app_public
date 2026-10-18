@@ -155,7 +155,9 @@ test('a removed card stays off the board, and comes back from the library', asyn
 }) => {
   const weather = page.getByRole('heading', { name: 'Weather' })
   await page.getByRole('button', { name: 'Edit board' }).click()
-  await page.getByRole('button', { name: 'Remove "Weather"' }).click()
+  await page
+    .getByRole('button', { name: 'Remove "Weather"', exact: true })
+    .click()
   await expect(weather).toHaveCount(0)
   await expect
     .poll(async () => (await defaultEntry(request, 'weather')).hidden)
@@ -174,6 +176,16 @@ test('a removed card stays off the board, and comes back from the library', asyn
 
   await page.reload()
   await expect(weather).toBeVisible()
+
+  // The library's tile takes it off the board again.
+  await page.getByRole('button', { name: 'Edit board' }).click()
+  await page
+    .getByRole('button', { name: 'Remove "Weather" from the board' })
+    .click()
+  await expect(weather).toHaveCount(0)
+  await expect
+    .poll(async () => (await defaultEntry(request, 'weather')).hidden)
+    .toBe(true)
 })
 
 test('a card dragged from the library lands where it is dropped', async ({
@@ -182,7 +194,9 @@ test('a card dragged from the library lands where it is dropped', async ({
 }) => {
   const placeholder = page.getByRole('heading', { name: 'Coming Soon' })
   await page.getByRole('button', { name: 'Edit board' }).click()
-  await page.getByRole('button', { name: 'Remove "Coming Soon"' }).click()
+  await page
+    .getByRole('button', { name: 'Remove "Coming Soon"', exact: true })
+    .click()
   await expect(placeholder).toHaveCount(0)
 
   const tile = page
@@ -224,7 +238,9 @@ test('a profile saved from the board keeps its own cards', async ({ page }) => {
   await expect(menu('Focus')).toBeVisible()
 
   await page.getByRole('button', { name: 'Edit board' }).click()
-  await page.getByRole('button', { name: 'Remove "Daily Quote"' }).click()
+  await page
+    .getByRole('button', { name: 'Remove "Daily Quote"', exact: true })
+    .click()
   await expect(quote).toHaveCount(0)
 
   await menu('Focus').click()
