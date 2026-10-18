@@ -13,7 +13,7 @@
 Do this **off-stage, before the room is watching** — the first thing they should see is the app already running, not a terminal.
 
 1. **Follow the setup in [README.md](../README.md)** — backend venv with an explicit **Python 3.11+** interpreter + `pip install`, and frontend deps (`nvm use` → Node 22, then `npm install`).
-2. **Seed the database:** `cd backend && python seed.py` — the board should start with the **five seeded cards** (Weather · Daily Quote · Coming Soon · Space Photo · Todos).
+2. **Seed the database:** `cd backend && python seed.py`: the **Default** profile should start with the **five seeded cards** (Weather · Daily Quote · Coming Soon · Space Photo · Todos).
 3. **Run both servers** in two terminals:
    - Backend: `cd backend && python run.py` → `http://127.0.0.1:5001`
    - Frontend: `cd frontend && npm run dev` → `http://localhost:5173`
@@ -48,17 +48,18 @@ which is exactly what makes it a good codebase to extend live with an agent.
   Vite dev server ──proxy /api──►  Flask API (127.0.0.1:5001)
                                       │
                     ┌─────────────────┼───────────────────┐
-                    ▼                 ▼                    ▼
-             /api/cards        /api/data/<source>     /api/todos
-            (card records)   (live data per source)  (todo items)
-                    │                 │                    │
-                    ▼                 ▼                    ▼
-              SQLite (app.db)   external APIs         SQLite (app.db)
-             via SQLAlchemy    (Open-Meteo, NASA…)   via SQLAlchemy
+          ┌─────────┬─────────┴────────┬─────────────────┐
+          ▼         ▼                  ▼                 ▼
+   /api/cards  /api/profiles   /api/data/<source>   /api/todos
+  (the library) (named boards) (live data per source) (todo items)
+          │         │                  │                 │
+          ▼         ▼                  ▼                 ▼
+     SQLite (app.db) via SQLAlchemy  external APIs   SQLite (app.db)
+                                    (Open-Meteo, NASA…) via SQLAlchemy
 ```
 
 Two things to hold in your head:
-1. **A card record** (title, icon, where it sits on the grid) lives in the database.
+1. **A card record** (title, icon, source, config) lives in the database, and every card is in the **library**. **Where** a card sits is not on the card: a **profile** (a named board) holds each card's place.
 2. **A card's live data** is fetched separately, on demand, by *source*.
 
 ---
@@ -68,10 +69,10 @@ Two things to hold in your head:
 Walk this end-to-end once; it touches every layer. *"How does the Weather card get on screen?"*
 
 1. **Browser loads the SPA.** [frontend/src/main.jsx](../frontend/src/main.jsx) mounts [App.jsx](../frontend/src/App.jsx), which renders the header and [Dashboard.jsx](../frontend/src/components/Dashboard.jsx).
-2. **Dashboard asks for the cards.** It calls `fetchCards()` in [frontend/src/api.js](../frontend/src/api.js) → `GET /api/cards`.
+2. **The app asks for the cards and the profiles.** `useBoard()` ([frontend/src/useBoard.js](../frontend/src/useBoard.js)) calls `fetchCards()` and `fetchProfiles()` in [frontend/src/api.js](../frontend/src/api.js) → `GET /api/cards` and `GET /api/profiles`.
 3. **Vite proxies `/api` to Flask.** See the proxy in [frontend/vite.config.js](../frontend/vite.config.js) (→ `127.0.0.1:5001`).
-4. **Flask returns the card records.** [backend/app/routes/cards.py](../backend/app/routes/cards.py) `list_cards()` reads active cards from SQLite (`db.session.scalars(db.select(Card)...)`), ordered by `position`.
-5. **Dashboard lays them out.** It builds a grid from each card's saved `layout` JSON and renders one [Card.jsx](../frontend/src/components/Card.jsx) per record.
+4. **Flask returns the card records.** [backend/app/routes/cards.py](../backend/app/routes/cards.py) `list_cards()` reads every card from SQLite (`db.session.scalars(db.select(Card)...)`), ordered by `position`.
+5. **Dashboard lays them out.** `App` hands it the cards and the shown profile's board; it builds a grid from each visible board entry (`x`, `y`, `w`, `h`) and renders one [Card.jsx](../frontend/src/components/Card.jsx) per card on the board.
 6. **Each Card picks its component.** `Card.jsx` looks up `card.source` in the **`CARD_REGISTRY`** to find which React component to render and whether it `needsData`.
 7. **Data cards fetch their data.** For Weather, `Card.jsx` calls `fetchCardData('weather', config)` → `GET /api/data/weather`.
 8. **Flask dispatches by source.** [backend/app/routes/data.py](../backend/app/routes/data.py) looks up `'weather'` in its **`SERVICES`** map (an unknown source answers a JSON 404) and calls [backend/app/services/weather.py](../backend/app/services/weather.py), which calls the Open-Meteo API and returns clean JSON (with a graceful fallback if the API is down).
@@ -84,11 +85,13 @@ That's the app. Everything below is just the detail of each stop.
 ## Frontend (open these in order)
 
 - **[frontend/src/main.jsx](../frontend/src/main.jsx)** — the entry point. Mounts `<App />`. One line to notice: `import './index.css'`.
-- **[frontend/src/App.jsx](../frontend/src/App.jsx)** - the shell: branded header (the animated Rearc AI Labs lockup + the Customize-layout toggle + a live clock) and `<Dashboard/>`. Note the header owns the `locked` state and passes it down. The clock is its own `Clock` component, so its one-second tick re-renders only the clock, not the grid.
-- **[frontend/src/components/Dashboard.jsx](../frontend/src/components/Dashboard.jsx)** — fetches the card list, then renders a **draggable/resizable grid** (`react-grid-layout`). When you unlock and move a card, `handleLayoutChange` PUTs the new `layout` back to the API — that's why your arrangement persists.
+- **[frontend/src/App.jsx](../frontend/src/App.jsx)** - the shell: branded header (the animated Rearc AI Labs lockup, the profile menu, the Library button, the Customize-layout toggle and a live clock) and `<Dashboard/>`. Note `App` owns the `locked` state and passes it down, and takes everything else from `useBoard()`. The clock is its own `Clock` component, so its one-second tick re-renders only the clock, not the grid.
+- **[frontend/src/components/Dashboard.jsx](../frontend/src/components/Dashboard.jsx)** - renders the cards and board it is handed as a **draggable/resizable grid** (`react-grid-layout`); it fetches nothing. When you unlock and finish a drag, a resize, a removal (the × on each card in Customize mode) or a drop from the library, it calls `saveLayout`, `hideCard` or `showCard` from `useBoard`, which PATCH the profile's board back to the API, which is why your arrangement persists.
+- **[frontend/src/useBoard.js](../frontend/src/useBoard.js)** - the one owner of board state: the card library, the profiles, and which profile is shown (remembered per browser in `localStorage`). Its writes are optimistic and sent to the server one at a time, each replacing the whole board; a failed write reloads the profiles so the screen returns to what was saved.
+- **Profiles and the library** - [ProfileMenu.jsx](../frontend/src/components/ProfileMenu.jsx), [LibraryButton.jsx](../frontend/src/components/LibraryButton.jsx) and [LibraryDrawer.jsx](../frontend/src/components/LibraryDrawer.jsx). The header reads "Control Center / <profile>"; the name is a menu to switch profiles, save the shown board as a new one, rename or delete (never the last). The Library button in the centre opens a drawer of every card, with search: Add a card, or drag it onto the grid, and Customize mode turns on. A removed card is only hidden on that profile, so it comes back at its last size and its todos survive.
 - **[frontend/src/components/Card.jsx](../frontend/src/components/Card.jsx)** - the heart of the frontend. The **`CARD_REGISTRY`** (top of the file) maps a `source` string → `{ component, accent, needsData }`. The generic `Card` wrapper handles the chrome (title, icon, the card's colour, a Live or Fallback status, `LoadingDots`, error), and only fetches data when `needsData` is true. A card whose `source` has no registry entry renders `UnregisteredCard`, which names the missing source, so registry drift is visible. **This registry is the extension point.**
 - **[frontend/src/components/cards/](../frontend/src/components/cards/)** — one component per card type. Open **WeatherCard.jsx** as the example (note the client-side °C/°F toggle — a widget with real state). Contrast with **PlaceholderCard.jsx** (pure static) and **TodoCard.jsx** (its own CRUD against `/api/todos`).
-- **[frontend/src/api.js](../frontend/src/api.js)** - the entire backend contract in one small file, and the only place that calls `fetch`: `fetchCards`, `updateCard`, `fetchCardData`, and the todo calls, all going through one `request()` helper that turns the API's `{"error": ...}` body into the thrown message. Good place to show *"the frontend only knows these endpoints."*
+- **[frontend/src/api.js](../frontend/src/api.js)** - the entire backend contract in one small file, and the only place that calls `fetch`: `fetchCards`, the profile calls (`fetchProfiles`, `createProfile`, `updateProfile`, `deleteProfile`), `fetchCardData`, and the todo calls, all going through one `request()` helper that turns the API's `{"error": ...}` body into the thrown message. Good place to show *"the frontend only knows these endpoints."*
 - **[frontend/src/index.css](../frontend/src/index.css)** — design tokens in Tailwind's `@theme`: surface and text colours, a named palette (`--color-rally-*`), and one `--color-card-*` token per card that points at a palette colour. That token is how each card gets its colour.
 
 **The key frontend idea — three kinds of cards.** All are just one entry in `CARD_REGISTRY`; they differ only in *where their data lives*:
@@ -103,9 +106,10 @@ That last distinction is the whole cost story of adding a card: static is cheape
 ## Backend (open these in order)
 
 - **[backend/run.py](../backend/run.py)** — starts the dev server on **port 5001**. Tiny; it just builds the app and runs it.
-- **[backend/app/__init__.py](../backend/app/__init__.py)** - the **app factory**. Creates the Flask app, wires SQLAlchemy + Migrate + CORS, and registers three blueprints all under `/api`. It also turns SQLite foreign keys on for every connection, and registers the error handlers that answer every error, even a 404 or an unhandled exception, as `{"error": ...}` JSON. This is the map of the backend.
+- **[backend/app/__init__.py](../backend/app/__init__.py)** - the **app factory**. Creates the Flask app, wires SQLAlchemy + Migrate + CORS, and registers four blueprints (cards, data, profiles, todos) all under `/api`. It also turns SQLite foreign keys on for every connection, and registers the error handlers that answer every error, even a 404 or an unhandled exception, as `{"error": ...}` JSON. This is the map of the backend.
 - **[backend/config.py](../backend/config.py)** — configuration: the SQLite URL (`app.db`) and env-driven secrets (loads the repo-root `.env`).
-- **[backend/app/routes/cards.py](../backend/app/routes/cards.py)** - CRUD for card *records* (`/api/cards`). Note `list_cards` filters `is_active` and orders by `position`; `update_card` (PUT) is what saves layout changes. One `FIELD_RULES` table says what each card field must hold, and create and update both check against it.
+- **[backend/app/routes/cards.py](../backend/app/routes/cards.py)** - CRUD for card *records* (`/api/cards`). Note `list_cards` returns every card, ordered by `position`; a card carries no layout, so a new card is on no board until added. One `FIELD_RULES` table says what each card field must hold, and create and update both check against it.
+- **[backend/app/routes/profiles.py](../backend/app/routes/profiles.py)** - `/api/profiles`: list, create, `PATCH` (rename and/or replace the whole `board`), delete. A board is an object keyed by card id, `{"3": {"x": 0, "y": 0, "w": 4, "h": 4, "hidden": false}}`; an unknown card id is a 400, a duplicate name a 409, and the last profile cannot be deleted (409).
 - **[backend/app/routes/helpers.py](../backend/app/routes/helpers.py)** - the request checks every route module shares: `json_object_body()` (the body must be a JSON object), `get_or_404()` and `is_sqlite_integer()`. Each bad request calls `abort`, and the app factory's handlers turn it into the JSON error.
 - **[backend/app/routes/data.py](../backend/app/routes/data.py)** — the **`SERVICES` dispatch table**. `GET /api/data/<source>` looks up `<source>` and calls its handler. Adding a data source = adding one line here. (This is the backend twin of the frontend's `CARD_REGISTRY`.)
 - **[backend/app/services/weather.py](../backend/app/services/weather.py)** — a representative **service**: call an external API, return a flat dict, and **always** return a fallback dict on failure so a dead API never breaks the UI. `quotes.py` and `space.py` follow the same shape.
@@ -118,10 +122,11 @@ That last distinction is the whole cost story of adding a card: static is cheape
 ## Database layer
 
 - **[backend/app/models/base.py](../backend/app/models/base.py)** - the typed `Base` every model subclasses (instead of `db.Model`), so Pyright can check the models. Queries use `db.session.scalars(db.select(...))`, never `Model.query`.
-- **[backend/app/models/card.py](../backend/app/models/card.py)** — the `Card` model. Point out `config` and `layout` are **JSON columns** (flexible per-card settings and grid position), and `to_dict()` is exactly what the API returns.
+- **[backend/app/models/card.py](../backend/app/models/card.py)** - the `Card` model. Point out `config` is a **JSON column** (flexible per-card settings), that the card has no position on the grid (ADR-019), and that `to_dict()` is exactly what the API returns.
+- **[backend/app/models/profile.py](../backend/app/models/profile.py)** and **[profile_card.py](../backend/app/models/profile_card.py)** - a `Profile` is a named board; each `ProfileCard` row is one card's `x`, `y`, `w`, `h` and `hidden` on it, keyed by profile and card, with both foreign keys `ON DELETE CASCADE`, so the database removes a board entry when its card or profile goes (ADR-019).
 - **[backend/app/models/todo.py](../backend/app/models/todo.py)** - the `Todo` model, with a foreign key to `cards` (`ON DELETE CASCADE`) - deleting the todo card removes its items. That works because the app factory turns SQLite foreign keys on (SQLite has them off by default); migrations run with them off.
-- **[backend/migrations/versions/](../backend/migrations/versions/)** — the schema's history as **Alembic migrations**: initial cards table → add `layout` column → add todos table. Schema changes go through here, never `create_all()`.
-- **[backend/seed.py](../backend/seed.py)** — inserts any of the starting cards that are missing. Additive and safe to re-run: cards, todos and layout changes are preserved (ADR-017). ⚠️ `python seed.py --reset` is the destructive path — it wipes the `cards` and `todos` tables first, so anything added at runtime is lost.
+- **[backend/migrations/versions/](../backend/migrations/versions/)** - the schema's history as **Alembic migrations**: initial cards table → add `layout` column → add todos table → move card layouts into profiles (drops `layout` and `is_active`). Schema changes go through here, never `create_all()`.
+- **[backend/seed.py](../backend/seed.py)** - inserts any of the starting cards that are missing, and creates the **Default** profile from `DEFAULT_BOARD` when there is no profile. Additive and safe to re-run: cards, todos, profiles and board changes are preserved, and a missing default card goes back on Default only (ADR-017, ADR-019). ⚠️ `python seed.py --reset` is the destructive path: it wipes the `cards`, `profiles` and `todos` tables first, so anything added at runtime is lost.
 
 ---
 
@@ -138,7 +143,7 @@ is what makes it safe and fast to extend with an agent.
 | 3 | `frontend/src/components/cards/{Name}Card.jsx` | the display component |
 | 4 | `frontend/src/components/Card.jsx` | one line in `CARD_REGISTRY` |
 | 5 | `frontend/src/index.css` | a card colour token, pointing at a palette colour |
-| 6 | `backend/seed.py` | a seed row so it appears on the board |
+| 6 | `backend/seed.py` | a seed row, and its place in `DEFAULT_BOARD` so it appears on the Default board (every card is in the library regardless) |
 | 7 | *(only if stateful)* an Alembic migration | a new table/column |
 
 Steps 1–2 are **backend-only** and only needed for *data* cards; a self-contained
@@ -153,6 +158,6 @@ that's what an agent follows to build a card end-to-end.
 
 - **Ports:** frontend `5173`, backend `5001`. The frontend proxies `/api` to the backend, so the browser only ever talks to `5173`.
 - **Two-kinds-of-cards** is the mental model that makes everything click — lead with it.
-- **`seed.py` is safe to re-run mid-demo** — it only adds missing default cards. It is `seed.py --reset` that wipes the board, so don't reach for that flag if you've added cards you want to keep.
+- **`seed.py` is safe to re-run mid-demo**: it only adds missing default cards. It is `seed.py --reset` that wipes the cards, profiles and todos, so don't reach for that flag if you've added cards you want to keep.
 - **Graceful fallbacks:** every data service returns a fallback on failure, so a flaky conference network degrades a card instead of breaking the page.
 - **Where to start a live "add a card":** the empty **Coming Soon** card is the invitation — pick a new widget and walk the 7 touchpoints above.

@@ -35,7 +35,7 @@ python seed.py
 python run.py                  # http://127.0.0.1:5001
 ```
 
-`python seed.py` only adds the default cards that are missing, so it is safe to re-run. `python seed.py --reset` wipes all cards and todos and restores the default board (ADR-017).
+`python seed.py` only adds the default cards that are missing, so it is safe to re-run. `python seed.py --reset` wipes all cards, profiles and todos and restores the default board and the "Default" profile (ADR-017, ADR-019).
 
 ### Frontend
 
@@ -69,9 +69,10 @@ Every suite runs offline. The backend and frontend tests fail on any request the
 backend/
   app/
     __init__.py         # app factory: blueprints, JSON error handlers, SQLite foreign keys on
-    models/             # Base (typed declarative base), Card, Todo
+    models/             # Base (typed declarative base), Card, Todo, Profile, ProfileCard
     routes/
       cards.py          # /api/cards
+      profiles.py       # /api/profiles (named boards: which cards, where)
       todos.py          # /api/todos (the todo card's items)
       data.py           # /api/data/<source>: SERVICES maps a source to its service
       helpers.py        # request checks every route uses
@@ -79,15 +80,19 @@ backend/
   migrations/           # Alembic
   tests/
   config.py             # Config, TestConfig, E2EConfig
-  seed.py               # default cards (additive; --reset wipes)
+  seed.py               # default cards, DEFAULT_BOARD and the Default profile (additive; --reset wipes)
   run.py                # dev server entry point and logging setup
 
 frontend/
   src/
-    App.jsx             # header, clock, layout lock
+    App.jsx             # header (profile menu, Library button, clock), layout lock
+    useBoard.js         # the one owner of board state: library, profiles, shown profile
     api.js              # the only module that calls the backend
     components/
-      Dashboard.jsx     # the grid; saves a card's layout when it moves
+      Dashboard.jsx     # the grid; renders the board it is handed, saves on every change
+      ProfileMenu.jsx   # switch, save as new, rename, delete a profile
+      LibraryButton.jsx # opens the library drawer
+      LibraryDrawer.jsx # every card, with search; add or drag one onto the board
       Card.jsx          # CARD_REGISTRY: a card's source picks its widget
       cards/            # one component per card type
   e2e/                  # Playwright suite
@@ -103,11 +108,15 @@ docs/
 
 | Method | Path | What it does |
 |---|---|---|
-| GET | `/api/cards` | List active cards, in position order |
+| GET | `/api/cards` | List every card (the library), in position order |
 | GET | `/api/cards/:id` | Get one card |
-| POST | `/api/cards` | Create a card (`slug`, `title`, `source` required) |
+| POST | `/api/cards` | Create a card (`slug`, `title`, `source` required); it is on no board until added |
 | PUT | `/api/cards/:id` | Update a card's fields (not its `slug`) |
-| DELETE | `/api/cards/:id` | Delete a card and its todos |
+| DELETE | `/api/cards/:id` | Delete a card, its todos and its place on every board |
+| GET | `/api/profiles` | List profiles, each with its `board`: card id to `{x, y, w, h, hidden}` |
+| POST | `/api/profiles` | Create a profile (`name` required, optional `board`); `409` on a duplicate name |
+| PATCH | `/api/profiles/:id` | Rename it and/or replace its whole `board` (`name`, `board`); `400` for an unknown card id |
+| DELETE | `/api/profiles/:id` | Delete a profile; `409` for the last one |
 | GET | `/api/data/:source` | Live data for a data card; query parameters pass to its service |
 | GET | `/api/todos?card_id=:id` | List a todo card's items |
 | POST | `/api/todos` | Add an item (`card_id`, `text`) |
@@ -118,7 +127,7 @@ Successes return the object or a bare list; errors return `{"error": "<message>"
 
 ## Adding a card
 
-Use the `add-dashboard-card` skill (`.claude/skills/add-dashboard-card/`). A card is a row in `cards`, an entry in `CARD_REGISTRY` (`frontend/src/components/Card.jsx`) and, for a card with live data, an entry in `SERVICES` (`backend/app/routes/data.py`). The two registries agree only through the card's `source` string (ADR-008); a card whose source has no frontend entry says so on the dashboard.
+Use the `add-dashboard-card` skill (`.claude/skills/add-dashboard-card/`). A card is a row in `cards` (it appears in the library at once; a seeded card's place on the "Default" board goes in `DEFAULT_BOARD` in `backend/seed.py`), an entry in `CARD_REGISTRY` (`frontend/src/components/Card.jsx`) and, for a card with live data, an entry in `SERVICES` (`backend/app/routes/data.py`). The two registries agree only through the card's `source` string (ADR-008); a card whose source has no frontend entry says so on the dashboard.
 
 ## MCP servers
 

@@ -20,11 +20,11 @@ Run the ones that cover what you changed, and show their output before you call 
 
 ## How the app fits together
 
-- **Adding a card:** use the `add-dashboard-card` skill. A card is a row in `cards`, an entry in `CARD_REGISTRY` (`frontend/src/components/Card.jsx`) and, for live data, an entry in `SERVICES` (`backend/app/routes/data.py`). The two registries agree only through the card's `source` string (ADR-008): change one, check the other.
+- **Adding a card:** use the `add-dashboard-card` skill. A card is a row in `cards`, an entry in `CARD_REGISTRY` (`frontend/src/components/Card.jsx`) and, for live data, an entry in `SERVICES` (`backend/app/routes/data.py`). The two registries agree only through the card's `source` string (ADR-008): change one, check the other. A seeded card's place goes in `DEFAULT_BOARD` (`backend/seed.py`).
 - **Network:** `frontend/src/api.js` is the only module that calls the backend; components never call `fetch`.
 - **Requests:** routes check bodies and ids with `backend/app/routes/helpers.py` and fail with `abort(status, message)`; the app factory turns every error into `{"error": message}`.
 - **External APIs:** each service in `backend/app/services/` returns a flat dict and never raises; on failure it returns the same keys plus `"fallback": true` (ADR-009).
-- **Data:** models subclass the typed `Base`; query through `db.session`, never `Model.query`. Deleting a card deletes its todos (foreign keys are on). `python seed.py` adds missing default cards; `python seed.py --reset` deletes every card and todo (ADR-017).
+- **Data:** models subclass the typed `Base`; query through `db.session`, never `Model.query`. A profile is a named board: `profile_cards` holds each card's `x`, `y`, `w`, `h` and `hidden` on it, and `cards` has no layout (ADR-019). Deleting a card deletes its todos and its board entries; deleting a profile deletes its entries (foreign keys are on). `python seed.py` adds missing default cards (placed via `DEFAULT_BOARD`, on "Default" only) and creates "Default" if no profile exists; `python seed.py --reset` deletes every card, profile and todo (ADR-017).
 - **Tests:** both suites refuse unmocked network calls, so a test that needs HTTP mocks it (`http_mock` in the backend, a stubbed `fetch` in the frontend).
 
 ## Conventions and decisions
