@@ -5,6 +5,9 @@
       "Read(./secrets/**)"
     ]
   },
+  "worktree": {
+    "baseRef": "head"
+  },
   "hooks": {
     "PreToolUse": [
       {
