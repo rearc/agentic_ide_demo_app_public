@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Try it 1: one change, reviewed, restored</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>:root{--bg:#f7f6f2;--panel:#fff;--panel2:#fbfaf6;--ink:#1d1f23;--muted:#5d6470;--line:#e4e1d8;--line2:#d6d2c6;
+--gold:#d9a800;--gold-ink:#7a5d00;--gold-soft:#fbf1cc;--accent:#1f6f93;--accent-soft:#e3f1f7;--green:#2f7a2f;--green-soft:#e5f3e1;
+--pink:#a3315a;--pink-soft:#f9e4ec;--code:#f1efe8}
+:root[data-theme="dark"]{--bg:#0b0c0e;--panel:#131518;--panel2:#181b1f;--ink:#e8eaee;--muted:#8b93a1;--line:#24272d;--line2:#2e323a;
+--gold:#F2C729;--gold-ink:#F2C729;--gold-soft:#2a2410;--accent:#7cc6e6;--accent-soft:#16242c;--green:#9ad48a;--green-soft:#18261a;
+--pink:#e46a93;--pink-soft:#2a1520;--code:#1b1e22}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0b0c0e;--panel:#131518;--panel2:#181b1f;--ink:#e8eaee;--muted:#8b93a1;--line:#24272d;--line2:#2e323a;
+--gold:#F2C729;--gold-ink:#F2C729;--gold-soft:#2a2410;--accent:#7cc6e6;--accent-soft:#16242c;--green:#9ad48a;--green-soft:#18261a;
+--pink:#e46a93;--pink-soft:#2a1520;--code:#1b1e22}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 'IBM Plex Sans',ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased}
+code,kbd,pre{font-family:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace}
+code{font-size:.88em;background:var(--code);border:1px solid var(--line);border-radius:4px;padding:0 .3em;overflow-wrap:anywhere}
+kbd{font-size:.8em;border:1px solid var(--line2);border-bottom-width:2px;border-radius:4px;padding:0 5px}
+a{color:var(--accent)}
+
+/* read view */
+main.read{max-width:820px;margin:0 auto;padding:36px 20px 80px;overflow-wrap:break-word}
+.top{margin-bottom:22px}
+.eyebrow{font:600 12.5px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-ink)}
+h1{font-size:32px;line-height:1.2;margin:6px 0 14px;font-weight:600}
+.lede{color:var(--muted)}
+.tools{display:flex;gap:8px;flex-wrap:wrap}
+.btn{font:500 14px 'IBM Plex Sans',sans-serif;padding:7px 13px;border-radius:8px;border:1px solid var(--line2);background:var(--panel);color:var(--ink);cursor:pointer}
+.btn:hover{border-color:var(--gold)}.btn.primary{background:var(--gold);border-color:var(--gold);color:#1a1500;font-weight:600}
+.box{border-radius:12px;padding:12px 16px;margin:12px 0;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--line2)}
+.box p{margin:0}.box-h{font:600 12px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;color:var(--muted)}
+.box.info{border-left-color:var(--accent)}.box.info .box-h{color:var(--accent)}
+.box.warn{border-left-color:var(--pink);background:var(--pink-soft)}.box.warn .box-h{color:var(--pink)}
+.box.done{border-left-color:var(--green);background:var(--green-soft)}.box.done .box-h{color:var(--green)}
+ol.steps{list-style:none;padding:0;margin:22px 0}
+.step{display:grid;grid-template-columns:40px minmax(0,1fr);gap:14px;padding:16px 0;border-top:1px solid var(--line)}
+.step:first-child{border-top:0}
+.tick{width:34px;height:34px;border-radius:50%;border:2px solid var(--gold);background:transparent;color:var(--gold-ink);font:700 15px 'IBM Plex Mono',monospace;cursor:pointer}
+.step.done .tick{background:var(--gold);color:#1a1500;font-size:0}.step.done .tick::before{content:"✓";font-size:16px}
+.step.done .step-b{opacity:.5}
+.step-b p{margin:4px 0 8px}.step-b>p:first-child{margin-top:5px}
+.code{border:1px solid var(--line2);border-left:4px solid var(--accent);border-radius:8px;background:var(--code);margin:8px 0 10px;overflow:hidden}
+.code-h{display:flex;justify-content:space-between;align-items:center;padding:4px 6px 4px 12px;border-bottom:1px solid var(--line);font:600 11.5px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.copy{font:500 13px 'IBM Plex Sans',sans-serif;padding:4px 12px;border-radius:6px;border:1px solid var(--line2);background:var(--panel);color:var(--ink);cursor:pointer}
+.copy.ok{border-color:var(--green);color:var(--green)}
+.code pre{margin:0;padding:11px 14px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:15px;line-height:1.5}
+.code pre code{background:none;border:0;padding:0;font-size:inherit}
+.foot{margin-top:40px;color:var(--muted);font-size:13px;border-top:1px solid var(--line);padding-top:12px}
+ol.index{list-style:none;padding:0}ol.index li a{display:block;padding:14px 16px;margin:10px 0;border:1px solid var(--line);border-radius:12px;background:var(--panel);text-decoration:none;color:var(--ink);font-size:19px;font-weight:600}
+ol.index li a:hover{border-color:var(--gold)}ol.index .eyebrow{display:block;margin-bottom:2px}
+
+/* present view */
+body.presenting{background:#000;overflow:hidden}
+body.presenting main.read{display:none}
+.present{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#000;color:#e8eaee}
+.present[hidden]{display:none}
+.stage{container-type:size;position:relative;width:min(100vw,177.78vh);height:min(56.25vw,100vh);
+  background:radial-gradient(120% 90% at 85% 0%,#1a1c21 0%,#0b0c0e 60%);padding:4.2cqw 5cqw 3.6cqw;overflow:hidden;
+  --ink:#e8eaee;--muted:#8b93a1;--line:#24272d;--line2:#2e323a;--gold:#F2C729;--gold-ink:#F2C729;--gold-soft:#2a2410;--accent:#7cc6e6;--accent-soft:#16242c;
+  --green:#9ad48a;--green-soft:#18261a;--pink:#e46a93;--pink-soft:#2a1520;--code:#1b1e22;--panel:#131518}
+.slide{display:none;height:calc(100% - 3.4cqw);overflow:hidden}.slide.on{display:block}.fit{transform-origin:0 0}
+.slide .eyebrow{font-size:1.05cqw;color:#F2C729}
+.slide h1{font-size:3.6cqw;margin:1cqw 0 2.2cqw}
+.pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.6cqw;align-items:start}
+.pgrid.end{grid-template-columns:1fr;max-width:70cqw;margin-top:3cqw}
+.pbox{border-radius:1cqw;padding:1.3cqw 1.5cqw;background:#131518;border:1px solid #24272d;border-left:.35cqw solid #2e323a;font-size:1.35cqw;line-height:1.45}
+.pbox p{margin:0}.pbox .box-h{font-size:.95cqw;margin-bottom:.5cqw}
+.pbox.info{border-left-color:#7cc6e6}.pbox.info .box-h{color:#7cc6e6}
+.pbox.warn{border-left-color:#e46a93;background:#2a1520}.pbox.warn .box-h{color:#e46a93}
+.pbox.done{border-left-color:#9ad48a;background:#18261a;font-size:1.9cqw}.pbox.done .box-h{color:#9ad48a}
+.pbox.note{font-size:1.6cqw}
+.pbox code,.pstep code{background:#1b1e22;border-color:#2e323a}
+.pstep{display:grid;grid-template-columns:7cqw minmax(0,1fr);gap:2cqw;margin-top:2.4cqw;align-items:start}
+.pnum{width:6cqw;height:6cqw;border-radius:50%;border:.3cqw solid #F2C729;color:#F2C729;display:flex;align-items:center;justify-content:center;font:700 2.8cqw 'IBM Plex Mono',monospace}
+.pstep-b{font-size:1.85cqw;line-height:1.5}.pstep-b p{margin:0 0 1.2cqw}.pstep-b>p:first-child strong{font-size:2.5cqw;display:inline}
+.pstep-b ul{margin:0 0 1cqw;padding-left:2cqw}
+.pstep-b .code{border-left-width:.35cqw;margin:1.2cqw 0 1.4cqw;border-radius:.8cqw}
+.pstep-b .code-h{font-size:.95cqw;padding:.5cqw 1cqw}.pstep-b .code-h button{display:none}
+.pstep-b .code pre{font-size:2.05cqw;padding:1.2cqw 1.5cqw;color:#fff}
+.pfoot{position:absolute;left:5cqw;right:5cqw;bottom:2.4cqw;display:flex;justify-content:space-between;font:600 1cqw 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#8b93a1}
+.pfoot .brand b{color:#F2C729;font-weight:600}
+@media print{.tools,.tick{display:none}}
+.pgrid .pbox .code{margin:.8cqw 0}.pgrid .pbox .code pre{font-size:1.3cqw;padding:.8cqw 1cqw}.pgrid .pbox .code-h{font-size:.85cqw;padding:.4cqw .8cqw}.pgrid .pbox .code-h button{display:none}.pbox p+p{margin-top:.8cqw}
+.psub{font:600 1.1cqw 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#8b93a1;margin:0 0 1cqw}
+.pnum{font-size:2.4cqw}
+.step-b code:not(pre code){cursor:copy}.step-b code.copied{outline:2px solid var(--green)}
+</style>
+</head>
+<body>
+<main class="read"><header class="top"><div class="eyebrow">Workshop · Block 4</div><h1>Try it 1: one change, reviewed, restored</h1><div class="tools"><button class="btn primary" id="to-present" type="button">Present</button><button class="btn" id="reset" type="button">Clear ticks</button><button class="btn" id="theme" type="button">Theme</button></div></header><section class="box info"><div class="box-h">Where</div><p>Run everything in the CLI, in VS Code's integrated terminal (<code>claude</code> in the repo folder). The trainer shows the extension; the steps here are written for the CLI.</p></section><section class="box info"><div class="box-h">Before you start</div><p>The workshop repo is cloned and opens in VS Code, and Claude Code starts in it (the prerequisite). Check <code>jq --version</code> prints a version: the repo's safety hook blocks every shell command without <code>jq</code>. No Python or Node setup is needed for this exercise. If this is your first launch in this repo, Claude Code asks three things: trust the folder (choose Yes; the cursor starts on "No, exit"), approve the project's MCP servers (approve), and possibly install an LSP plugin (choose Yes only if your setup installed Pyright; otherwise "No, not now"). If Claude Code does not start, tell the trainer.</p></section><section class="box warn"><div class="box-h">Do not</div><p>Add a card, create a migration, change the seed data, or accept an offer to do more than the step asks. If Claude offers extra work, say no.</p></section><ol class="steps"><li class="step" data-key="s1"><button aria-label="Mark step 1 done" class="tick" type="button">1</button><div class="step-b"><strong>Make a branch.</strong> In a terminal in the repo:<div class="code"><div class="code-h"><span>Copy and paste</span><button class="copy" type="button">Copy</button></div><pre><code>git switch -c tryit1
+</code></pre></div>
+Keep this branch.</div></li><li class="step" data-key="s2"><button aria-label="Mark step 2 done" class="tick" type="button">2</button><div class="step-b"><strong>Switch to Manual.</strong> Shift+Tab until the mode reads Manual (in the CLI: <code>⏸ manual mode on</code>). Every edit and most shell commands now ask first.</div></li><li class="step" data-key="s3"><button aria-label="Mark step 3 done" class="tick" type="button">3</button><div class="step-b"><strong>Ask before you touch anything.</strong> Send:<div class="code"><div class="code-h"><span>Copy and paste</span><button class="copy" type="button">Copy</button></div><pre><code>Explain what backend/app/services/weather.py does and where the app uses it. Don't change anything.
+</code></pre></div>
+Watch the rows before the answer: what did it search, what did it read? Reads and searches run without asking. Note one file it read that you did not name.</div></li><li class="step" data-key="s4"><button aria-label="Mark step 4 done" class="tick" type="button">4</button><div class="step-b"><strong>One small change.</strong> Send:<div class="code"><div class="code-h"><span>Copy and paste</span><button class="copy" type="button">Copy</button></div><pre><code>In backend/app/services/weather.py, add weather code 85 ("Slight snow showers") to both tables. Change nothing else.
+</code></pre></div>
+Two approval cards come up, one per table. Read each diff before you choose Yes. Do not pick the option that switches to accept edits.</div></li><li class="step" data-key="s5"><button aria-label="Mark step 5 done" class="tick" type="button">5</button><div class="step-b"><strong>Check it yourself.</strong> In the terminal:<div class="code"><div class="code-h"><span>Copy and paste</span><button class="copy" type="button">Copy</button></div><pre><code>git status
+git diff
+</code></pre></div>
+Two added lines in one file, and nothing else.</div></li><li class="step" data-key="s6"><button aria-label="Mark step 6 done" class="tick" type="button">6</button><div class="step-b"><strong>Rewind.</strong> In the CLI: <code>/rewind</code> (or Esc twice on an empty prompt), pick the message that made the change, then "Restore code and conversation". In the extension: hover that message and choose "Rewind code to here". Run <code>git status</code> again: the change is gone.</div></li><li class="step" data-key="s7"><button aria-label="Mark step 7 done" class="tick" type="button">7</button><div class="step-b"><strong>Redo it and commit.</strong> Send the step 4 prompt again (after a CLI rewind it is already back in the input box; press Enter), approve both edits, then send:<div class="code"><div class="code-h"><span>Copy and paste</span><button class="copy" type="button">Copy</button></div><pre><code>commit my changes with a descriptive message
+</code></pre></div>
+Approve the git commands it asks about. Or commit yourself: <code>git commit -am "Add weather code 85"</code>.</div></li></ol><section class="box done"><div class="box-h">Done looks like</div><p>You can say what the agent read before it edited, you restored once, and <code>tryit1</code> has one commit.</p><p><strong>Rewind or git?</strong> Rewind works, but only for edits made through Claude's file tools; anything changed through a shell command is not tracked ("The safety net"). A commit at a point you choose is the safer net and the better habit.</p></section><footer class="foot">Rearc AI Labs · press <kbd>P</kbd> to present</footer></main>
+<div class="present" hidden=""><div class="stage"><section class="slide"><div class="fit"><div class="eyebrow">Workshop · Block 4</div><h1>Try it 1: one change, reviewed, restored</h1><div class="pgrid"><div class="pbox info"><div class="box-h">Where</div><p>Run everything in the CLI, in VS Code's integrated terminal (<code>claude</code> in the repo folder). The trainer shows the extension; the steps here are written for the CLI.</p></div><div class="pbox info"><div class="box-h">Before you start</div><p>The workshop repo is cloned and opens in VS Code, and Claude Code starts in it (the prerequisite). Check <code>jq --version</code> prints a version: the repo's safety hook blocks every shell command without <code>jq</code>. No Python or Node setup is needed for this exercise. If this is your first launch in this repo, Claude Code asks three things: trust the folder (choose Yes; the cursor starts on "No, exit"), approve the project's MCP servers (approve), and possibly install an LSP plugin (choose Yes only if your setup installed Pyright; otherwise "No, not now"). If Claude Code does not start, tell the trainer.</p></div><div class="pbox warn"><div class="box-h">Do not</div><p>Add a card, create a migration, change the seed data, or accept an offer to do more than the step asks. If Claude offers extra work, say no.</p></div></div></div></section><section class="slide"><div class="fit"><div class="eyebrow">Try it 1: one change, reviewed, restored · step 1 of 7</div><div class="pstep"><span class="pnum">1</span><div class="pstep-b"><strong>Make a branch.</strong> In a terminal in the repo:<div class="code"><div class="code-h"><span>Copy and paste</span></div><pre><code>git switch -c tryit1
+</code></pre></div>
+Keep this branch.</div></div></div></section><section class="slide"><div class="fit"><div class="eyebrow">Try it 1: one change, reviewed, restored · step 2 of 7</div><div class="pstep"><span class="pnum">2</span><div class="pstep-b"><strong>Switch to Manual.</strong> Shift+Tab until the mode reads Manual (in the CLI: <code>⏸ manual mode on</code>). Every edit and most shell commands now ask first.</div></div></div></section><section class="slide"><div class="fit"><div class="eyebrow">Try it 1: one change, reviewed, restored · step 3 of 7</div><div class="pstep"><span class="pnum">3</span><div class="pstep-b"><strong>Ask before you touch anything.</strong> Send:<div class="code"><div class="code-h"><span>Copy and paste</span></div><pre><code>Explain what backend/app/services/weather.py does and where the app uses it. Don't change anything.
+</code></pre></div>
+Watch the rows before the answer: what did it search, what did it read? Reads and searches run without asking. Note one file it read that you did not name.</div></div></div></section><section class="slide"><div class="fit"><div class="eyebrow">Try it 1: one change, reviewed, restored · step 4 of 7</div><div class="pstep"><span class="pnum">4</span><div class="pstep-b"><strong>One small change.</strong> Send:<div class="code"><div class="code-h"><span>Copy and paste</span></div><pre><code>In backend/app/services/weather.py, add weather code 85 ("Slight snow showers") to both tables. Change nothing else.
+</code></pre></div>
+Two approval cards come up, one per table. Read each diff before you choose Yes. Do not pick the option that switches to accept edits.</div></div></div></section><section class="slide"><div class="fit"><div class="eyebrow">Try it 1: one change, reviewed, restored · step 5 of 7</div><div class="pstep"><span class="pnum">5</span><div class="pstep-b"><strong>Check it yourself.</strong> In the terminal:<div class="code"><div class="code-h"><span>Copy and paste</span></div><pre><code>git status
+git diff
+</code></pre></div>
+Two added lines in one file, and nothing else.</div></div></div></section><section class="slide"><div class="fit"><div class="eyebrow">Try it 1: one change, reviewed, restored · step 6 of 7</div><div class="pstep"><span class="pnum">6</span><div class="pstep-b"><strong>Rewind.</strong> In the CLI: <code>/rewind</code> (or Esc twice on an empty prompt), pick the message that made the change, then "Restore code and conversation". In the extension: hover that message and choose "Rewind code to here". Run <code>git status</code> again: the change is gone.</div></div></div></section><section class="slide"><div class="fit"><div class="eyebrow">Try it 1: one change, reviewed, restored · step 7 of 7</div><div class="pstep"><span class="pnum">7</span><div class="pstep-b"><strong>Redo it and commit.</strong> Send the step 4 prompt again (after a CLI rewind it is already back in the input box; press Enter), approve both edits, then send:<div class="code"><div class="code-h"><span>Copy and paste</span></div><pre><code>commit my changes with a descriptive message
+</code></pre></div>
+Approve the git commands it asks about. Or commit yourself: <code>git commit -am "Add weather code 85"</code>.</div></div></div></section><section class="slide"><div class="fit"><div class="eyebrow">Try it 1: one change, reviewed, restored · done</div><div class="pgrid end"><div class="pbox done"><div class="box-h">Done looks like</div><p>You can say what the agent read before it edited, you restored once, and <code>tryit1</code> has one commit.</p><p><strong>Rewind or git?</strong> Rewind works, but only for edits made through Claude's file tools; anything changed through a shell command is not tracked ("The safety net"). A commit at a point you choose is the safer net and the better habit.</p></div></div></div></section><div class="pfoot"><span class="brand"><b>Rearc</b> AI Labs</span><span class="pcount"></span></div></div></div>
+<script>// Exercise page: copy buttons, step ticks (remembered in this browser), theme, and the Present view.
+(function () {
+  var NS = "ex:try_it_1.html:";
+  function get(k) { try { return localStorage.getItem(NS + k); } catch (e) { return null; } }
+  function set(k, v) { try { if (v === null) localStorage.removeItem(NS + k); else localStorage.setItem(NS + k, v); } catch (e) {} }
+  var root = document.documentElement, body = document.body;
+
+  var theme = get("theme"); if (theme) root.setAttribute("data-theme", theme);
+  var tb = document.getElementById("theme");
+  if (tb) tb.addEventListener("click", function () {
+    var cur = root.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    var next = cur === "dark" ? "light" : "dark"; root.setAttribute("data-theme", next); set("theme", next);
+  });
+
+  document.querySelectorAll(".read .code").forEach(function (box) {
+    var btn = box.querySelector(".copy"), pre = box.querySelector("pre");
+    btn.addEventListener("click", function () {
+      var text = pre.innerText.replace(/\n$/, "");
+      function ok() { btn.classList.add("ok"); btn.textContent = "Copied"; setTimeout(function () { btn.classList.remove("ok"); btn.textContent = "Copy"; }, 1400); }
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(ok, fallback); else fallback();
+      function fallback() {
+        var r = document.createRange(); r.selectNodeContents(pre);
+        var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+        try { document.execCommand("copy"); ok(); } catch (e) {}
+      }
+    });
+  });
+
+  // Inline commands (`/btw ...`, `git switch ...`) copy on a click too.
+  document.addEventListener("click", function (e) {
+    var c = e.target.closest(".read .step-b code, .read .box code");
+    if (!c || c.closest("pre")) return;
+    var sel = window.getSelection(); if (sel && String(sel)) return;
+    if (navigator.clipboard) navigator.clipboard.writeText(c.innerText).then(function () {
+      c.classList.add("copied"); setTimeout(function () { c.classList.remove("copied"); }, 700);
+    }, function () {});
+  });
+  document.querySelectorAll(".read .step-b code, .read .box code").forEach(function (c) { if (!c.closest("pre")) c.title = "Click to copy"; });
+
+  document.querySelectorAll(".step[data-key]").forEach(function (st) {
+    if (get(st.dataset.key) === "1") st.classList.add("done");
+    st.querySelector(".tick").addEventListener("click", function () { var on = st.classList.toggle("done"); set(st.dataset.key, on ? "1" : null); });
+  });
+  var reset = document.getElementById("reset");
+  if (reset) reset.addEventListener("click", function () {
+    document.querySelectorAll(".step.done").forEach(function (st) { st.classList.remove("done"); set(st.dataset.key, null); });
+  });
+
+  // Present view: one slide per click, Space or the right arrow; left goes back; Escape or P leaves.
+  var pres = document.querySelector(".present");
+  if (!pres) return;
+  var slides = Array.prototype.slice.call(pres.querySelectorAll(".slide")), idx = 0, count = pres.querySelector(".pcount");
+  function show(i) {
+    idx = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach(function (s, n) { s.classList.toggle("on", n === idx); });
+    var cur = slides[idx], fit = cur.querySelector(".fit");
+    if (fit) {   // shrink a long step to fit the stage rather than cut it off
+      fit.style.transform = ""; fit.style.width = "";
+      var need = fit.scrollHeight, avail = cur.clientHeight;
+      if (need > avail) { var k = avail / need; fit.style.transform = "scale(" + k + ")"; fit.style.width = (100 / k) + "%"; }
+    }
+    if (count) count.textContent = (idx + 1) + " / " + slides.length;
+  }
+  function present(on) {
+    pres.hidden = !on; body.classList.toggle("presenting", on);
+    if (on) show(idx);
+    var u = new URL(location.href);
+    if (on) u.searchParams.set("present", ""); else u.searchParams.delete("present");
+    history.replaceState(null, "", u.toString().replace("present=", "present"));
+  }
+  var go = document.getElementById("to-present");
+  if (go) go.addEventListener("click", function () { present(true); });
+  pres.addEventListener("click", function (e) { if (!e.target.closest("a")) show(idx + 1); });
+  document.addEventListener("keydown", function (e) {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    var on = !pres.hidden;
+    if ((e.key === "p" || e.key === "P") && !/input|textarea/i.test(e.target.tagName)) { present(!on); return; }
+    if (!on) return;
+    if (["ArrowRight", " ", "Enter", "PageDown"].indexOf(e.key) >= 0) { e.preventDefault(); show(idx + 1); }
+    else if (["ArrowLeft", "PageUp", "Backspace"].indexOf(e.key) >= 0) { e.preventDefault(); show(idx - 1); }
+    else if (e.key === "Home") show(0);
+    else if (e.key === "End") show(slides.length - 1);
+    else if (e.key === "Escape") present(false);
+  });
+  var m = /[?&]present\b/.test(location.search); if (m) present(true);
+  var s = /[?&]slide=(\d+)/.exec(location.search); if (s) show(+s[1] - 1);
+})();
+</script>
+</body>
+</html>
