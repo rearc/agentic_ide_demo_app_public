@@ -20,19 +20,6 @@ main  ──●──────────────●──────�
 - **Parallel or unattended work during a run** (a worktree session, a sandbox) is cut from the throwaway branch and comes back as its own branch. Review it before merging it into the throwaway branch, never into `main`.
 - **Sections with parallel or unattended demos add their own branch layout here** when they are built.
 
-## Defect branches (ADR-018)
-
-`main` carries no known defects. An exercise that needs one (a failing test to flip, a bug to reproduce, a fallback that hides a failure) gets a long-lived branch cut from `main` with that one defect planted on purpose.
-
-- **Name:** `defect/<exercise>`, one defect per branch.
-- **Kept current:** when `main` moves, rebase each defect branch onto it and rerun its check.
-- **Written down:** each branch is listed here with what was planted, where, and how to tell it is fixed.
-- **A demo run on a defect** cuts its throwaway branch from the defect branch instead of `main`; the rest of the model is unchanged.
-
-| Branch | Exercise | What is planted | Fixed when |
-|---|---|---|---|
-| (none yet) | | | |
-
 ## Runbook
 
 ### Start a run

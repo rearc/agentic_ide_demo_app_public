@@ -42,7 +42,7 @@ Run the ones that cover what you changed, and show their output before you call 
 
 ## Workshop tooling in this repo
 
-- Demo runs and teaching defects use branches described in `docs/DEMO_BRANCHING.md`; `main` carries no known defects (ADR-018).
+- Demo runs use branches described in `docs/DEMO_BRANCHING.md`; `main` carries no known defects (ADR-018).
 - The GitHub Projects board: `docs/board_interaction.md`. Team policy (the Definition of Ready): `docs/standards/`.
 - The engineering skills (`to-spec`, `to-tickets`, `triage`, `code-review`, `implement`, `domain-modeling`) read their settings from `docs/agents/`: issues on `rearc/agentic_ide_demo_app` through `gh`, five triage labels, and domain docs in a root `CONTEXT.md` (created when first needed) plus `docs/adr/`.
 - MCP servers are configured in `.mcp.json`: Context7 (documentation) and `random-tools` (a demo server with `coin_flip` and `roll_die`, run by `uv`).

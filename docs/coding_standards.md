@@ -240,10 +240,9 @@ same standard as the code it covers.
   whose environment the test cannot provide; do not mock the code under test.
 - **TEST-9 — Pin known defects rather than deleting the test.** Assert the
   current behavior with a docstring naming it a defect, or mark the desired
-  behavior `xfail(strict=True)` so it flips to a failure when fixed. This
-  applies to a defect on a `defect/<exercise>` branch; `main` carries no known
-  defects (ADR-018), so a defect found on `main` is fixed there with a test that
-  fails without the fix, not pinned.
+  behavior `xfail(strict=True)` so it flips to a failure when fixed. `main`
+  carries no known defects (ADR-018), so a defect found on `main` is fixed there
+  with a test that fails without the fix, not pinned.
 - **TEST-10 - Both suites, the linters and the type check must be green before
   commit.** Backend `pytest`, `ruff check .` (from `backend/`) and `pyright` (from
   the repo root); frontend `npm run test:run` and `npm run lint` (from
