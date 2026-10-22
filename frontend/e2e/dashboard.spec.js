@@ -381,10 +381,17 @@ test('a profile saved from the board keeps its own cards', async ({ page }) => {
   await expect(quote).toBeVisible()
 })
 
-for (const width of [1280, 760, 390]) {
+// 768 and 1024 are where the header gains the clock's date and more room.
+for (const width of [1280, 1024, 768, 760, 390]) {
   test(`the board fits a ${width} px window without scrolling sideways`, async ({
     page,
+    request,
   }) => {
+    // A second profile, so the header carries the profile arrows too.
+    await request.post('/api/profiles', { data: { name: 'Focus' } })
+    // The longest date the clock shows ("Wednesday, September 23"): the
+    // header's width depends on it.
+    await page.clock.setFixedTime(new Date('2026-09-23T12:00:00'))
     await page.setViewportSize({ width, height: 900 })
     await page.reload()
     for (const card of seededCards) {

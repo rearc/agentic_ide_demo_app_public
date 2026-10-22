@@ -29,13 +29,14 @@ function Clock() {
 
   return (
     // nowrap: a wrapped date would make the header taller while editing,
-    // when the Library button takes room, and move the board. Below `md`
-    // there is room for the time only.
+    // when the Library button takes room, and move the board. Below `lg`
+    // there is room for the time only: at `md` the Library button and the
+    // profile arrows leave no room for a long date.
     <div className="text-right whitespace-nowrap hidden sm:block">
       <p className="font-mono text-lg font-medium leading-none tabular-nums">
         {time}
       </p>
-      <p className="hidden md:block text-text-secondary text-xs mt-1.5">
+      <p className="hidden lg:block text-text-secondary text-xs mt-1.5">
         {date}
       </p>
     </div>
