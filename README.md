@@ -108,6 +108,8 @@ docs/
   coding_standards.md   # the review standard, with rule IDs
   app_walkthrough.md    # a guided tour of the code
   DEMO_BRANCHING.md     # how demo runs and teaching defects are branched
+
+specs/                  # one spec per change, written before the build
 ```
 
 ## API

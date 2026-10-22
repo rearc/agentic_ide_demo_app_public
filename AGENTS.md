@@ -21,6 +21,7 @@ Run the ones that cover what you changed, and show their output before you call 
 ## How the app fits together
 
 - **Adding a card:** use the `add-dashboard-card` skill. A card is a row in `cards`, an entry in `CARD_REGISTRY` (`frontend/src/components/Card.jsx`) and, for live data, an entry in `SERVICES` (`backend/app/routes/data.py`). The two registries agree only through the card's `source` string (ADR-008): change one, check the other. A seeded card's place goes in `DEFAULT_BOARD` (`backend/seed.py`).
+- **Specs:** a spec for a change goes in `specs/<short-name>.md`; `specs/README.md` says what one holds. Write a GitHub issue instead (`to-spec`) only when asked.
 - **Checking a UI change:** use the `check-ui` skill: layout facts as text at every width, one contact sheet for design questions. Page states live in `frontend/e2e/ui-states.js`.
 - **Network:** `frontend/src/api.js` is the only module that calls the backend; components never call `fetch`.
 - **Requests:** routes check bodies and ids with `backend/app/routes/helpers.py` and fail with `abort(status, message)`; the app factory turns every error into `{"error": message}`.
