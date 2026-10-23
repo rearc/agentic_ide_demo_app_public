@@ -109,7 +109,7 @@ docs/
   app_walkthrough.md    # a guided tour of the code
   DEMO_BRANCHING.md     # how demo runs are branched
 
-specs/                  # one spec per change, written before the build
+specs/                  # one folder per change: spec.md, and plan.md when the build spans sessions
 ```
 
 ## API
