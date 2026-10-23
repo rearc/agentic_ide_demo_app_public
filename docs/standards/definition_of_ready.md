@@ -1,6 +1,6 @@
 # Definition of Ready
 
-A ticket is Ready when a developer can start working on it without needing to ask clarifying questions. Every ticket must satisfy all of the following criteria before it moves from Backlog to Ready.
+A ticket is Ready when a developer can start working on it without needing to ask clarifying questions. Every ticket must satisfy all of the following criteria before it moves from Backlog to Ready. A feature's spec has its own, shorter list: "A feature spec", below.
 
 ## Required fields
 
@@ -21,8 +21,23 @@ A ticket is Ready when a developer can start working on it without needing to as
 - [ ] **Priority set**: Urgent, High, Normal, or Low. Helps sprint planning but does not block readiness.
 - [ ] **Sprint assigned**: The ticket should be placed in a sprint or explicitly marked as Backlog (uncommitted).
 
+## A feature spec
+
+A feature's spec (`specs/<slug>/spec.md`; `specs/README.md` says what it holds) is Ready when a fresh session could plan and build it without asking you anything. Check it before planning the build:
+
+- [ ] **Problem in the user's terms**: what is wrong or missing, not the solution.
+- [ ] **Acceptance criteria**: at least three, each testable and naming the check that proves it (a test file and its command, or a named check such as `check-ui`).
+- [ ] **Decisions with reasons**: every decision the build depends on is made, each with why, including the design chosen if there is one.
+- [ ] **Scope boundaries**: what is in scope and what is out of scope, both stated.
+- [ ] **Dependencies declared**: external services, keys, and other changes it waits on.
+- [ ] **Parts of the app named**: the areas it touches, and what must not change.
+- [ ] **Current with the codebase**: checked against the code, not written from memory.
+- [ ] **No open question the build would have to guess**: any still open are listed, and none blocks the build.
+
+A spec needs no assignee, story points or sprint: those belong to a ticket on the board.
+
 ## How this document is used
 
-This Definition of Ready is read by both humans and AI assistants. When an AI agent is asked to check whether a ticket is ready, it reads this file and evaluates the ticket against each criterion. If any required criterion is not met, the agent flags the gap and refuses to advance the ticket.
+This Definition of Ready is read by both humans and AI assistants. When an AI agent is asked to check whether a ticket or a spec is ready, it reads this file and evaluates the ticket against each criterion. If any required criterion is not met, the agent flags the gap and refuses to advance the ticket.
 
 When the team's standards change, update this file and commit it. The AI will pick up the new standards on the next run.
