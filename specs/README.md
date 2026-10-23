@@ -22,7 +22,7 @@ Added when the build runs over more than one session. It is the approved Plan Mo
 `plan.md` has a `## Status` section near the top, so a fresh session or a compaction can pick the work up from this folder and `git log` alone:
 
 - **Resume here:** where the work stands, what comes next and how (for example test-first, from the first unticked box), and what not to reopen without asking
-- **A checklist** of the build's steps, each naming its check. Tick a box only after its check has passed, with the output shown.
+- **A checklist** of the build's steps, each naming its check. Tick a box only after its check has passed, with the output shown. Saving the plan here is not one of the steps, so it gets no box.
 
 Below the Status: the files that change, the order of the work, the risks, and what proves it done. When the build departs from the plan, update `plan.md` in the same commit.
 
