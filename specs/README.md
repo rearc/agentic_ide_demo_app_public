@@ -19,7 +19,7 @@ The person decides what goes in it; changing it is a decision, not a build step.
 
 Added when the build runs over more than one session. It is the approved Plan Mode plan, planned from the spec, saved beside it. Plan Mode's own copy in `plans/` is a draft; `plan.md` is the record.
 
-`plan.md` opens with a `## Status` section, so a fresh session or a compaction can pick the work up from this folder and `git log` alone:
+`plan.md` has a `## Status` section near the top, so a fresh session or a compaction can pick the work up from this folder and `git log` alone:
 
 - **Resume here:** where the work stands, what comes next and how (for example test-first, from the first unticked box), and what not to reopen without asking
 - **A checklist** of the build's steps, each naming its check. Tick a box only after its check has passed, with the output shown.
