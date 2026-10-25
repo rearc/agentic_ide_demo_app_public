@@ -37,11 +37,11 @@ Whenever a piece changes state (starts, is delegated, comes back ready, is merge
 
 1. Commit everything first: the worktree branches from the last commit, and uncommitted work would not be in it.
 2. Mark the piece `delegated: running` with its worktree name (the piece's slug) in `plan.md`; commit (`State:`).
-3. Write out how to start it in your message, in full, with this piece's real names filled in (the person sees your message, not this skill), to copy into a new terminal opened in this checkout:
+3. End your turn on how to start it, written out in full with this piece's real names filled in (the person sees your message, not this skill), to copy into a new terminal opened in this checkout:
    - `claude -n <piece>`
    - then, in that session, `/delegated specs/<slug>/pieces/<file>`
 
-   The `delegated` skill moves that thread into its own worktree before it changes anything.
+   The `delegated` skill moves that thread into its own worktree before it changes anything. This step is done when those two lines are the last thing in your message and the person has said the thread is started.
 4. Carry on with the together piece while the delegated piece runs beside it.
 
 If the person chooses to run it in the background from this thread instead, that is `/delegate-in-background specs/<slug>/pieces/<file>`: its report arrives in this conversation, so keep this conversation (no `/clear`) until it has.
