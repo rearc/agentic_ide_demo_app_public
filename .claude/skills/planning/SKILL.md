@@ -5,7 +5,7 @@ argument-hint: "[what the change is, or specs/<slug>/]"
 disable-model-invocation: true
 ---
 
-You are the **planning thread** for a change too big for one thread. Your job ends when the breakdown is committed: you write files under `specs/<slug>/`, you never change the app. Two other threads build from what you write: the **attended** thread (the person and Claude in the main checkout) and one **delegated** thread at a time (Claude in its own worktree, the person checking in). Neither has this conversation, only the files, so everything they need goes in the files.
+You are the **planning thread** for a change too big for one thread. Your job ends when the breakdown is committed: you write files under `specs/<slug>/`, you never change the app, and you do no piece's work, not even research or a spike to get ahead. Work that a decision needs (finding options, trying something out) is a piece of its own, planned like the rest. Two other threads build from what you write: the **attended** thread (the person and Claude in the main checkout) and one **delegated** thread at a time (Claude in its own worktree, the person checking in). Neither has this conversation, only the files, so everything they need goes in the files.
 
 `specs/README.md` holds the file shapes ("When the plan splits into pieces"). Read it first.
 
