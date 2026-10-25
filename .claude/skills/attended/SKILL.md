@@ -28,14 +28,14 @@ The way you build any spec with the person: plan it (Plan Mode when it has more 
 Whenever a piece changes state (starts, is delegated, comes back ready, is merged, is done) or the plan changes:
 
 1. Update `plan.md` (the piece's state, **Resume here**).
-2. Show the person the diff of `plan.md` and wait for them to agree. They review every state change: that is how they stay on top of the work without watching every step.
+2. Show the person the diff of `plan.md` and wait for them to agree, every time, even when the change follows from what they just decided. They review every state change: that is how they stay on top of the work without watching every step.
 3. Commit `plan.md` on its own, message `State: <what changed>`.
 
 ## Starting a delegated piece
 
 1. Commit everything first: the worktree branches from the last commit, and uncommitted work would not be in it.
 2. Mark the piece `delegated: running` with its worktree name (the piece's slug) in `plan.md`; commit (`State:`).
-3. Give the person the ways to start it, as commands to copy into a new terminal opened in this checkout; they choose:
+3. Write out the ways to start it in your message, in full, with this piece's real names filled in (the person sees your message, not this skill), as commands to copy into a new terminal opened in this checkout; they choose:
    - **A worktree from the start:** `claude -w <piece> -n <piece>`, then `/delegated specs/<slug>/pieces/<file>`
    - **A plain session:** `claude -n <piece>`, then `/delegated specs/<slug>/pieces/<file>` (the skill moves it into a worktree first)
    - **In the background, from this thread:** `/delegate-in-background specs/<slug>/pieces/<file>`; its report comes back here.
