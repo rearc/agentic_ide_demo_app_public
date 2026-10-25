@@ -5,9 +5,16 @@
 
 const STACKED = 768 // below this the board stacks its cards (Dashboard.jsx)
 
+// A worktree's own ports (scripts/worktree-setup.mjs).
+try {
+  process.loadEnvFile(new URL('../../.dev-ports', import.meta.url))
+} catch {
+  // no .dev-ports: the default port
+}
+
 export default {
   // `npm run dev`; pass --url for another server.
-  url: 'http://localhost:5173',
+  url: `http://localhost:${process.env.FRONTEND_PORT ?? 5173}`,
   widths: [390, 768, 1280],
   height: 800,
 
