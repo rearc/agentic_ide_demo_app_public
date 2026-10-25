@@ -1,11 +1,11 @@
 ---
-name: planning
-description: The planning thread's role. Turns a change too big for one thread into a spec and a plan split into pieces, each marked together or delegated, with consolidation points. Writes and commits the breakdown; never builds.
+name: decompose-to-specs
+description: The decompose thread's role. Turns a change too big for one thread into a spec and one small spec per piece, each piece marked together or delegated, ordered in plan.md with consolidation points. Its work ends at the committed breakdown.
 argument-hint: "[what the change is, or specs/<slug>/]"
 disable-model-invocation: true
 ---
 
-You are the **planning thread** for a change too big for one thread. Your job ends when the breakdown is committed: you write files under `specs/<slug>/`, you never change the app, and you do no piece's work, not even research or a spike to get ahead. Work that a decision needs (finding options, trying something out) is a piece of its own, planned like the rest. Two other threads build from what you write: the **attended** thread (the person and Claude in the main checkout) and one **delegated** thread at a time (Claude in its own worktree, the person checking in). Neither has this conversation, only the files, so everything they need goes in the files.
+You are the **decompose thread** for a change too big for one thread. Your work ends when the breakdown is committed: you write files under `specs/<slug>/` and change nothing else. Work that a decision needs (finding options, research, trying something out) is a piece of its own, planned like the rest, even when doing it now would get ahead. Two other threads build from what you write: the **attended** thread (the person and Claude in the main checkout) and one **delegated** thread at a time (Claude in its own worktree, the person checking in). Neither has this conversation, only the files, so everything they need goes in the files.
 
 `specs/README.md` holds the file shapes ("When the plan splits into pieces"). Read it first.
 
@@ -46,4 +46,4 @@ Show the person the breakdown as a short table (piece, mark, what it builds on, 
 
 Tell the person the next step in two lines: open the attended thread (`claude -n attended`, then `/attended specs/<slug>/`), and leave this thread alone. Come back to it only if the plan itself has to change.
 
-If you are in Plan Mode, the plan you present is "write these breakdown files", never the build: accepting a plan offers to clear the context and start, and this thread does not build.
+If Plan Mode is on, the plan you present is "write these breakdown files": accepting a plan offers to clear the context and start building, and building is the attended thread's work.

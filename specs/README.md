@@ -30,7 +30,7 @@ A small change whose build fits in one session needs only `spec.md`.
 
 ## When the plan splits into pieces
 
-A change too big for one thread splits its plan into **pieces**, worked by more than one thread at once. Three skills carry the roles: `planning` writes the breakdown, `attended` works with the person in the main checkout, `delegated` builds one piece in its own worktree.
+A change too big for one thread splits its plan into **pieces**, worked by more than one thread at once. Three skills carry the roles: `decompose-to-specs` writes the breakdown, `attended` works with the person in the main checkout, `delegated` builds one piece in its own worktree.
 
 ```
 specs/<slug>/
