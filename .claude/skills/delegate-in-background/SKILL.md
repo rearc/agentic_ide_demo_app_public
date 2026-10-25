@@ -7,9 +7,9 @@ disable-model-invocation: true
 
 Start the delegated piece `$ARGUMENTS` in the background, in its own worktree, and carry on with the person.
 
-1. **Launch it** with the Agent tool: `subagent_type: "piece-builder"`, `isolation: "worktree"`, in the background, with the task below as its prompt (fill in the piece's path). Set `isolation` on the call itself: a skill that forks into `piece-builder` (`context: fork`) runs in this checkout whatever the agent file says, so this skill does not fork.
+1. **Launch it** with the Agent tool: `subagent_type: "piece-builder"`, in the background, with the task below as its prompt (fill in the piece's path). `piece-builder`'s own file gives it a worktree.
 2. **Record where it runs.** Its worktree gets a generated name, not the piece's: find it with `git worktree list` (`.claude/worktrees/agent-<id>`, branch `worktree-agent-<id>`). Put that in `plan.md` as the piece's worktree, through the usual state change.
-3. **Carry on** with the together piece. Its report arrives in this conversation when it finishes: treat it as the report a delegated thread would have pasted, and take it at the next consolidation point.
+3. **Carry on** with the together piece. Its report arrives in this conversation when it finishes, so keep this conversation (no `/clear`) until it has. Treat it as the report a delegated thread would have pasted, and take it at the next consolidation point.
 
 The task to give it:
 
