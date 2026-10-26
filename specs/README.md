@@ -28,4 +28,30 @@ Below the Status: the files that change, the order of the work, the risks, and w
 
 A small change whose build fits in one session needs only `spec.md`.
 
+## When the plan splits into pieces
+
+A change too big for one thread splits its plan into **pieces**, worked by more than one thread at once. Three skills carry the roles: `decompose-to-specs` writes the breakdown, `attended` works with the person in the main checkout, `delegated` builds one piece in its own worktree.
+
+```
+specs/<slug>/
+  spec.md                 the whole change, as above
+  plan.md                 the state of the whole: Status, pieces, consolidation points
+  pieces/
+    01-<piece>.md         one small spec per piece
+    02-<piece>.md
+```
+
+**A piece spec** has the spec shape above (problem, decisions, acceptance criteria that each name their check, scope, parts touched), plus:
+
+- **Mark:** `together` (built in the attended thread, with the person) or `delegated` (built in its own thread and worktree, the person checking in)
+- **Seams:** what it shares with other pieces (names, data shapes, files), each fixed in `spec.md` so both sides build to the same thing
+- **A `## Status` section**, written only by the thread building the piece: where it stands, its checklist (ticked only after the check passed), and for a delegated piece its worktree, branch and base commit
+
+**`plan.md`** keeps its `## Status` section and **Resume here**, and adds:
+
+- **Pieces:** one line each: number, name, mark, state (`not started`, `in progress`, `delegated: running`, `ready for review`, `merged`, `done`), and for a delegated piece its worktree
+- **Consolidation points:** where delegated work comes back ("after pieces 1 and 2: review 2, merge it, run every check")
+
+Only the attended thread writes `plan.md`, and it commits state changes on their own, with messages that start `State:`, so `git log -p -- specs/<slug>/plan.md` shows how the work moved. A delegated thread never edits `plan.md`, not even its own copy: its state lives in its piece spec, and a copy edited on two branches is a merge conflict.
+
 A spec that needs tracking on the board becomes a GitHub issue instead (the `to-spec` skill).

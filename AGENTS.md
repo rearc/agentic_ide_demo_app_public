@@ -8,7 +8,7 @@ Run the ones that cover what you changed, and show their output before you call 
 
 | Check | From | Command |
 |---|---|---|
-| Backend tests | `backend/`, venv active (`source venv/bin/activate`) | `pytest` |
+| Backend tests | `backend/`, venv active (`source venv/bin/activate`; Windows `venv\Scripts\activate`) | `pytest` |
 | Backend lint | `backend/`, venv active | `ruff check .` |
 | Type check | repo root, venv active | `pyright` (must report 0 errors) |
 | Frontend tests | `frontend/` | `npm run test:run` |
@@ -17,11 +17,12 @@ Run the ones that cover what you changed, and show their output before you call 
 
 - Your shell may not have the right versions: the backend needs the venv's Python (3.11+), the frontend Node 22 (`nvm use` in `frontend/`). If the frontend suite stops on its Node check, switch Node; it is not a test failure.
 - Dev servers: `python run.py` (port 5001) and `npm run dev` (port 5173, proxies `/api` to 5001). The end-to-end suite starts its own on other ports, with its own database.
+- **In a git worktree** (`.claude/worktrees/<name>/`), run `node scripts/worktree-setup.mjs` from its root before anything else: it links the main checkout's venv and `node_modules`, builds the worktree's own database, and writes the worktree's own four ports to `.dev-ports`. The dev servers, the end-to-end suite and `check-ui` read that file, so the commands above run unchanged and never collide with the main checkout's servers.
 
 ## How the app fits together
 
 - **Adding a card:** use the `add-dashboard-card` skill. A card is a row in `cards`, an entry in `CARD_REGISTRY` (`frontend/src/components/Card.jsx`) and, for live data, an entry in `SERVICES` (`backend/app/routes/data.py`). The two registries agree only through the card's `source` string (ADR-008): change one, check the other. A seeded card's place goes in `DEFAULT_BOARD` (`backend/seed.py`).
-- **Specs:** a spec for a change goes in `specs/<slug>/spec.md`, with `plan.md` beside it when the build runs over more than one session; `specs/README.md` says what each holds. Write a GitHub issue instead (`to-spec`) only when asked. Plan Mode's drafts in `plans/` are never committed; the plan is `specs/<slug>/plan.md`.
+- **Specs:** a spec for a change goes in `specs/<slug>/spec.md`, with `plan.md` beside it when the build runs over more than one session; when the plan splits into pieces worked by several threads, each piece gets its own spec in `specs/<slug>/pieces/`. `specs/README.md` says what each holds. Write a GitHub issue instead (`to-spec`) only when asked. Plan Mode's drafts in `plans/` are never committed; the plan is `specs/<slug>/plan.md`.
 - **Checking a UI change:** use the `check-ui` skill: layout facts as text at every width, one contact sheet for design questions. Page states live in `frontend/e2e/ui-states.js`.
 - **Network:** `frontend/src/api.js` is the only module that calls the backend; components never call `fetch`.
 - **Requests:** routes check bodies and ids with `backend/app/routes/helpers.py` and fail with `abort(status, message)`; the app factory turns every error into `{"error": message}`.
@@ -38,7 +39,7 @@ Run the ones that cover what you changed, and show their output before you call 
 
 - **Always:** keep the change to what the task asks; new behaviour arrives with tests (TEST-1); run the checks above.
 - **Ask first:** a model or schema change (it needs an Alembic migration), a new dependency, reversing an accepted ADR, adding CI.
-- **Never:** read or print `.env` or anything in `secrets/`; edit a migration under `backend/migrations/versions/` that already exists; run `seed.py --reset` or delete `backend/instance/app.db` without being asked (it destroys the user's data); commit secrets.
+- **Never:** push to a remote (the person pushes); read or print `.env` or anything in `secrets/`; edit a migration under `backend/migrations/versions/` that already exists; run `seed.py --reset` or delete `backend/instance/app.db` without being asked (it destroys the user's data); commit secrets.
 
 ## Workshop tooling in this repo
 

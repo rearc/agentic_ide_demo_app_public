@@ -1,11 +1,11 @@
-// Starts the backend for the Playwright suite on port 5011, on a throwaway
+// Starts the backend for the Playwright suite on port 5011 (or E2E_BACKEND_PORT), on a throwaway
 // database (backend/instance/e2e.db) that is rebuilt and seeded on every run.
 // Plain Node so it behaves the same on macOS, Linux and Windows.
 import { execFileSync, spawn } from 'node:child_process'
 import { existsSync, rmSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 
-const PORT = 5011
+const PORT = Number(process.env.E2E_BACKEND_PORT ?? 5011)
 const backend = fileURLToPath(new URL('../../backend/', import.meta.url))
 const python =
   process.platform === 'win32' ? 'venv/Scripts/python.exe' : 'venv/bin/python'

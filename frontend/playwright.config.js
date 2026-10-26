@@ -1,7 +1,15 @@
 import { defineConfig, devices } from '@playwright/test'
 
-const BACKEND_PORT = 5011
-const FRONTEND_PORT = 5183
+// E2E_BACKEND_PORT and E2E_FRONTEND_PORT move them, so two checkouts (the main
+// one and a worktree) can run the suite at once. A worktree's are in .dev-ports
+// (scripts/worktree-setup.mjs).
+try {
+  process.loadEnvFile(new URL('../.dev-ports', import.meta.url))
+} catch {
+  // no .dev-ports: the default ports
+}
+const BACKEND_PORT = Number(process.env.E2E_BACKEND_PORT ?? 5011)
+const FRONTEND_PORT = Number(process.env.E2E_FRONTEND_PORT ?? 5183)
 
 // Ports and database differ from `npm run dev` on purpose, and nothing is
 // reused, so the suite never touches a dev server or the presenter's app.db.
