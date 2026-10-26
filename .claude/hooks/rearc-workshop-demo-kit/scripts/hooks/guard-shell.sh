@@ -1,29 +1,36 @@
 #!/usr/bin/env bash
 # =============================================================================
-# guard-shell.sh - Claude Code PreToolUse hook on the Bash tool
+# guard-shell.sh - Claude Code PreToolUse hook on the Bash and PowerShell tools
 #
 # Blocks a short list of shell commands that destroy work with no undo:
 #   rm with both recursive and force flags     (rm -rf, rm -r -f, rm --recursive --force)
+#   PowerShell's and cmd's forms of the same   (Remove-Item -Recurse -Force and its
+#                                               aliases ri, del, erase, rd, rmdir;
+#                                               rd /s /q and del /s /q)
 #   git push that forces                       (-f, --force, a +refspec; --force-with-lease is allowed)
 #   git reset --hard
 #   DROP TABLE / DROP DATABASE
 #
 # Wired in .claude/settings.json:
-#   "PreToolUse": [{ "matcher": "Bash", "hooks": [{ "type": "command",
+#   "PreToolUse": [{ "matcher": "Bash|PowerShell", "hooks": [{ "type": "command",
 #     "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/.../guard-shell.sh\"" }] }]
 #
 # How it reads a command: it splits the command line into separate commands
 # (at ; & | && || newlines, ( ) and $( ), keeping quoted text together, then
 # looks past wrappers (sudo, env, nohup, timeout, xargs, VAR=value) to the real
-# command. It also checks the command inside bash -c / sh -c and find -exec.
+# command. It also checks the command inside bash -c / sh -c, powershell or
+# pwsh -c / -Command, cmd /c, and find -exec. On Windows, Claude Code runs shell
+# commands through its PowerShell tool by default; that tool sends the same
+# tool_input.command, so one guard covers both.
 # So `sudo rm -r -f /` is caught, while `echo "git reset --hard"` and
 # `git commit -m "rm -rf old build"` are not.
 #
 # How it blocks: it prints a PreToolUse decision as JSON and exits 0. Claude
 # sees the reason, which says what to do instead.
 #
-# Limits, on purpose: commands assembled at runtime (variables, eval, a script
-# that deletes files, $( ) inside double quotes) are not inspected. This hook is
+# Limits, on purpose: commands assembled at runtime (variables, eval,
+# Invoke-Expression, -EncodedCommand, a script that deletes files, $( ) inside
+# double quotes) are not inspected. This hook is
 # one layer; the others are permission deny rules in .claude/settings.json (which
 # also keep Claude's file tools and cat/head/tail away from .env) and /sandbox.
 #
@@ -173,6 +180,39 @@ check_command() {
         shift
       done ;;
 
+    powershell|powershell.exe|pwsh|pwsh.exe)
+      # powershell -Command "<string>" (or -c): the rest of the line is the command.
+      while [ $# -gt 0 ]; do
+        case "$1" in
+          -c|-co|-com|-comm|-comma|-comman|-command)
+            shift; [ $# -gt 0 ] && PENDING+=("$*"); return ;;
+        esac
+        shift
+      done ;;
+
+    cmd|cmd.exe)
+      # cmd /c "<string>" (or /k): the rest of the line is the command.
+      while [ $# -gt 0 ]; do
+        case "$1" in
+          /c|/k) shift; [ $# -gt 0 ] && PENDING+=("$*"); return ;;
+        esac
+        shift
+      done ;;
+
+    remove-item|ri|del|erase|rd|rmdir)
+      # PowerShell's Remove-Item and its aliases take -Recurse and -Force, which may
+      # be shortened (-r, -fo); cmd's rd and del take /s and /q.
+      local recurse=0 forced=0
+      for arg in "$@"; do
+        case "$arg" in
+          -r|-re|-rec|-recu|-recur|-recurs|-recurse|-recurse:*|/s) recurse=1 ;;
+          -fo|-for|-forc|-force|-force:*|/q) forced=1 ;;
+        esac
+      done
+      if [ "$recurse" = 1 ] && [ "$forced" = 1 ]; then
+        deny "Blocked by the repo's guard hook: Remove-Item with -Recurse and -Force (or rd /s /q, del /s /q) deletes a whole tree without asking, and it cannot be undone. Delete the specific files by name, or ask the user to run the recursive delete themselves."
+      fi ;;
+
     find)
       # find ... -exec rm -rf {} + : check the command after -exec.
       while [ $# -gt 0 ]; do
@@ -231,6 +271,7 @@ check_command() {
       esac ;;
 
     echo|printf|grep|egrep|rg|cat|less|head|tail) ;;   # text in, text out: SQL in an argument is just text
+    write-output|write-host|select-string|sls|get-content|gc|type|findstr) ;;   # the same, in PowerShell and cmd
 
     *)
       # A SQL client (or any other command) carrying DROP TABLE / DROP DATABASE.
