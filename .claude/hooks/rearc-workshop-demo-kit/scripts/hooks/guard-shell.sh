@@ -10,6 +10,9 @@
 #   git push that forces                       (-f, --force, a +refspec; --force-with-lease is allowed)
 #   git reset --hard
 #   DROP TABLE / DROP DATABASE
+#   seed.py --reset, and deleting app.db       (both wipe the user's cards, profiles
+#                                               and todos; python, py, a venv's
+#                                               python.exe or uv run, from any folder)
 #
 # Wired in .claude/settings.json:
 #   "PreToolUse": [{ "matcher": "Bash|PowerShell", "hooks": [{ "type": "command",
@@ -135,6 +138,23 @@ split_commands() {
   _end_segment
 }
 
+# A SQL client (or any other command) carrying DROP TABLE / DROP DATABASE.
+deny_drop() {
+  if printf '%s ' "$@" | grep -qE 'drop[[:space:]]+(table|database)\b'; then
+    deny "Blocked by the repo's guard hook: DROP TABLE and DROP DATABASE destroy data permanently. Change the schema through an Alembic migration (see .claude/rules/migrations.md), or ask the user."
+  fi
+}
+
+# Deleting the database file wipes the same data as seed.py --reset.
+deny_app_db() {
+  local arg
+  for arg in "$@"; do
+    case "$arg" in
+      *app.db) deny "Blocked by the repo's guard hook: deleting app.db destroys every card, profile and todo, and it cannot be undone. Ask the user; they can delete it themselves." ;;
+    esac
+  done
+}
+
 # --- Check one command, given as words ----------------------------------------
 # Nested command strings (bash -c "...") are queued in PENDING for another pass.
 
@@ -204,6 +224,7 @@ check_command() {
     remove-item|ri|del|erase|rd|rmdir)
       # PowerShell's Remove-Item and its aliases take -Recurse and -Force, which may
       # be shortened (-r, -fo); cmd's rd and del take /s and /q.
+      deny_app_db "$@"
       local recurse=0 forced=0
       for arg in "$@"; do
         case "$arg" in
@@ -229,6 +250,7 @@ check_command() {
       done ;;
 
     rm)
+      deny_app_db "$@"
       local recursive=0 force=0
       for arg in "$@"; do
         case "$arg" in
@@ -275,11 +297,30 @@ check_command() {
     echo|printf|grep|egrep|rg|cat|less|head|tail) ;;   # text in, text out: SQL in an argument is just text
     write-output|write-host|select-string|sls|get-content|gc|type|findstr) ;;   # the same, in PowerShell and cmd
 
+    uv|uv.exe)
+      # uv run [options] <command>: check the command it runs.
+      [ "${1:-}" = run ] || return
+      shift
+      while [ $# -gt 0 ] && [ "${1#-}" != "$1" ]; do shift; done
+      [ $# -gt 0 ] && check_command "$@" ;;
+
+    py|py.exe|*python|*python3|*python3.[0-9]*|*python.exe|*python3.exe|seed.py)
+      # Any python running seed.py with --reset (argparse also takes --res, --re, --r).
+      # A Windows path such as .\venv\Scripts\python.exe arrives without its
+      # backslashes, so the patterns match on the end of the name.
+      local script=0
+      [ "$cmd" = seed.py ] && script=1
+      for arg in "$@"; do
+        case "$arg" in
+          *seed.py) script=1 ;;
+          --r|--re|--res|--rese|--reset)
+            [ "$script" = 1 ] && deny "Blocked by the repo's guard hook: seed.py --reset deletes every card, profile and todo, and it cannot be undone. Ask the user; they can run it themselves if they want the default board back." ;;
+        esac
+      done
+      deny_drop "$@" ;;              # python -c "... DROP TABLE ..." is still SQL
+
     *)
-      # A SQL client (or any other command) carrying DROP TABLE / DROP DATABASE.
-      if printf '%s ' "$@" | grep -qE 'drop[[:space:]]+(table|database)\b'; then
-        deny "Blocked by the repo's guard hook: DROP TABLE and DROP DATABASE destroy data permanently. Change the schema through an Alembic migration (see .claude/rules/migrations.md), or ask the user."
-      fi ;;
+      deny_drop "$@" ;;
   esac
 }
 
@@ -294,8 +335,9 @@ if [ ${#LOWER} -gt 10000 ] && ! printf '%s' "$LOWER" | grep -q '<<'; then
   if printf '%s' "$LOWER" | grep -qE '(^|[^a-z0-9_.-])rm[[:space:]]+(-[a-z]*r[a-z]*f|-[a-z]*f[a-z]*r|-r[[:space:]]+-f|-f[[:space:]]+-r|--recursive[[:space:]]+--force|--force[[:space:]]+--recursive)' \
      || printf '%s' "$LOWER" | grep -qE 'git[[:space:]].*push[[:space:]].*(-f([[:space:]]|$)|--force([[:space:]]|$)|[[:space:]]\+[a-z0-9_./-]+)' \
      || printf '%s' "$LOWER" | grep -qE 'git[[:space:]].*reset[[:space:]].*--hard' \
-     || printf '%s' "$LOWER" | grep -qE 'drop[[:space:]]+(table|database)'; then
-    deny "Blocked by the repo's guard hook: this very long command contains rm -rf, a force push, git reset --hard or DROP TABLE. Split it into smaller commands so each can be checked, or ask the user."
+     || printf '%s' "$LOWER" | grep -qE 'drop[[:space:]]+(table|database)' \
+     || printf '%s' "$LOWER" | grep -qE 'seed\.py[^;&|]*[[:space:]]--r(e|es|ese|eset)?([[:space:]]|$)'; then
+    deny "Blocked by the repo's guard hook: this very long command contains rm -rf, a force push, git reset --hard, DROP TABLE or seed.py --reset. Split it into smaller commands so each can be checked, or ask the user."
   fi
   exit 0
 fi

@@ -116,6 +116,30 @@ BLOCK	echo hi\r\ngit reset --hard\r\necho done
 BLOCK	cat <<EOF > x.txt\r\nhello\r\nEOF\r\nrm -rf build
 ALLOW	Write-Output "DROP TABLE cards is in the old migration"
 ALLOW	Select-String -Pattern "drop table" -Path docs\\*.md
+BLOCK	python seed.py --reset
+BLOCK	python backend/seed.py --reset
+BLOCK	cd backend && python seed.py --reset
+BLOCK	python3 seed.py --reset
+BLOCK	.\\venv\\Scripts\\python.exe seed.py --reset
+BLOCK	& .\\venv\\Scripts\\python.exe backend\\seed.py --reset
+BLOCK	venv/bin/python seed.py --reset
+BLOCK	py -3 seed.py --reset
+BLOCK	uv run python seed.py --reset
+BLOCK	python seed.py --res
+BLOCK	./seed.py --reset
+BLOCK	powershell -Command "python seed.py --reset"
+BLOCK	rm backend/instance/app.db
+BLOCK	rm -f instance/app.db
+BLOCK	Remove-Item backend\\instance\\app.db
+BLOCK	del instance\\app.db
+ALLOW	python seed.py
+ALLOW	python backend/seed.py
+ALLOW	.\\venv\\Scripts\\python.exe seed.py
+ALLOW	echo "python seed.py --reset"
+ALLOW	git commit -m "never run seed.py --reset without asking"
+ALLOW	python run.py --reset
+ALLOW	ls instance/app.db
+ALLOW	rm instance/old.txt
 CASES
 
 echo "passed $pass, failed $fail"

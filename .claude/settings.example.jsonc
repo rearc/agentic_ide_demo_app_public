@@ -110,7 +110,7 @@
     // One event can carry MULTIPLE handlers of DIFFERENT types — here: command (x2, real) + http + prompt (illustrative).
     "PreToolUse": [
       { "matcher": "Bash|PowerShell",
-        "hooks": [ { "type": "command", "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/rearc-workshop-demo-kit/scripts/hooks/guard-shell.sh\"" } ] },  // ✅REAL — blocks rm -rf / force push / git reset --hard / DROP TABLE with permissionDecision: deny
+        "hooks": [ { "type": "command", "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/rearc-workshop-demo-kit/scripts/hooks/guard-shell.sh\"" } ] },  // ✅REAL — blocks rm -rf / force push / git reset --hard / DROP TABLE / seed.py --reset / deleting app.db with permissionDecision: deny
       { "matcher": "*",
         "hooks": [ { "type": "command", "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/rearc-workshop-demo-kit/scripts/hooks/audit.sh\"" } ] },        // ✅REAL — logs EVERY tool call to .claude/audit.log (observe); exit 0
       { "matcher": "Bash|PowerShell",                                                                                                       // ILLUSTRATIVE — "http" type: POST payload to a local policy service; its 2xx JSON is the decision
