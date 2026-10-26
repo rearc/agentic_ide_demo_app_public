@@ -21,7 +21,9 @@ pass=0; fail=0
 while IFS=$'\t' read -r want cmd; do
   [ -z "$want" ] && continue
   cmd=$(printf '%b' "$cmd")
-  out=$(jq -n --arg c "$cmd" '{tool_name: "Bash", tool_input: {command: $c}}' | bash "$GUARD")
+  # MSYS_NO_PATHCONV: Git Bash would otherwise rewrite "/bin/rm" into a Windows path
+  # on its way to jq.exe; Claude Code hands the guard the command untouched.
+  out=$(MSYS_NO_PATHCONV=1 jq -n --arg c "$cmd" '{tool_name: "Bash", tool_input: {command: $c}}' | bash "$GUARD")
   if printf '%s' "$out" | grep -q '"deny"'; then got=BLOCK; else got=ALLOW; fi
   if [ "$got" = "$want" ]; then
     pass=$((pass + 1))
@@ -110,6 +112,8 @@ ALLOW	cmd /c "rd /s build"
 ALLOW	Write-Output "Remove-Item -Recurse -Force build"
 ALLOW	Get-ChildItem -Recurse -Force
 ALLOW	powershell -Command "Get-ChildItem"
+BLOCK	echo hi\r\ngit reset --hard\r\necho done
+BLOCK	cat <<EOF > x.txt\r\nhello\r\nEOF\r\nrm -rf build
 ALLOW	Write-Output "DROP TABLE cards is in the old migration"
 ALLOW	Select-String -Pattern "drop table" -Path docs\\*.md
 CASES

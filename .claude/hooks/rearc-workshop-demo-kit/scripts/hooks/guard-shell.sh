@@ -46,7 +46,9 @@ if ! command -v jq >/dev/null 2>&1; then
   exit 2
 fi
 
-COMMAND=$(jq -r '.tool_input.command // ""')
+# tr: jq.exe on Windows ends every line with CRLF, and a stray \r would hide a flag
+# at the end of a line (git reset --hard\r) or a heredoc's end marker.
+COMMAND=$(jq -r '.tool_input.command // ""' | tr -d '\r')
 [ -z "$COMMAND" ] && exit 0
 
 deny() {
