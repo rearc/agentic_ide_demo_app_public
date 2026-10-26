@@ -7,10 +7,18 @@ A personal dashboard of cards: a React frontend over a Flask API, with SQLite. S
 ## Prerequisites
 
 - **Python 3.11+.** The backend uses `datetime.UTC`, added in 3.11. A bare `python3` on macOS is often the system 3.9 or a conda `base` 3.10, which fails only later, at `db upgrade`, so build the venv with an explicit interpreter (below).
-- **Node.js 22**, pinned in `frontend/.nvmrc`. Use [nvm](https://github.com/nvm-sh/nvm) to match it.
+- **Node.js 22 or later** (`frontend/package.json` requires `>=22`; `frontend/.nvmrc` pins 22 for [nvm](https://github.com/nvm-sh/nvm)). On Windows, nvm-windows ignores `.nvmrc`: run `nvm install 22` then `nvm use 22`, or use any installed Node 22 or later (24 works).
 - **[uv](https://github.com/astral-sh/uv)**, only for the random-tools MCP server, not for running the app.
 - **[jq](https://jqlang.org)**, needed by the repo's Claude Code hooks: the safety hook blocks every shell command when `jq` is missing. macOS 15 and later include it; earlier macOS: `brew install jq`; Windows: `winget install jqlang.jq`.
-- **Windows: Git Bash.** The hooks and the status line in `.claude/` are bash scripts. Claude Code on native Windows runs them through Git Bash when it is installed ([Git for Windows](https://git-scm.com/downloads/win)); without it they run in PowerShell, fail, and the safety hook can block tool calls.
+- **Windows: Git Bash, from a current Git for Windows.** The hooks and the status line in `.claude/` are bash scripts. Claude Code on native Windows runs them through Git Bash when it is installed ([Git for Windows](https://git-scm.com/downloads/win)); without it they run in PowerShell, fail, and the safety hook can block tool calls. An old Git for Windows (2.24 and earlier) ships a credential manager whose GitHub sign-in window fails, so `git clone` cannot sign in: update Git for Windows, or clone once through the GitHub CLI after `gh auth login`: `git -c credential.helper= -c "credential.helper=!gh auth git-credential" clone <url>`. Where these steps say Git Bash, they mean Git Bash: in PowerShell, `bash` may start WSL's bash instead.
+
+### On Windows
+
+Nothing here needs admin rights, except installing or upgrading Git for Windows or Node when they are missing or old (their installers default to machine-wide installs).
+
+- **Install what is missing, per user:** `winget install --id Python.Python.3.12 --scope user`, `winget install --id astral-sh.uv`, `winget install --id jqlang.jq`. Open a new terminal afterwards, so it sees the updated PATH.
+- **Claude Code's native installer** (`irm https://claude.ai/install.ps1 | iex` in PowerShell) puts `claude.exe` in `%USERPROFILE%\.local\bin` but does not add that folder to your PATH: add it to your user PATH (no admin needed), then open a new terminal. If your machine blocks the script, `winget install Anthropic.ClaudeCode` installs it instead. The VS Code extension brings its own copy and does not need this.
+- **Claude Code runs shell commands through PowerShell** on Windows by default (its PowerShell tool). The repo's safety hook covers both the Bash and the PowerShell tools.
 
 ## Environment variables
 
@@ -27,7 +35,7 @@ Weather comes from Open-Meteo and quotes from ZenQuotes; neither needs a key. Wh
 
 ```bash
 cd backend
-python3.11 -m venv venv        # or any 3.11+ interpreter, named explicitly
+python3.11 -m venv venv        # or any 3.11+ interpreter, named explicitly; Windows: py -3.12 -m venv venv
 source venv/bin/activate       # Windows (Git Bash): source venv/Scripts/activate
 pip install -r requirements-dev.txt   # the app's dependencies plus the test and lint tools
 flask --app run.py db upgrade
@@ -41,7 +49,7 @@ python run.py                  # http://127.0.0.1:5001
 
 ```bash
 cd frontend
-nvm use                        # Node 22; `nvm install` the first time
+nvm use                        # Node 22; `nvm install` the first time (Windows: see "On Windows")
 npm install                    # installs exactly what package-lock.json pins
 npm run dev                    # http://localhost:5173, proxies /api to the backend
 ```
@@ -62,7 +70,7 @@ Every suite runs offline. The backend and frontend tests fail on any request the
 | End-to-end (Playwright) | `frontend/` | `npm run test:e2e` |
 | UI check (layout at several widths) | repo root, app running | `node .claude/skills/check-ui/scripts/check-ui.mjs` |
 
-- **The frontend needs Node 22.** On an older Node the suite stops with a message instead of reporting zero tests.
+- **The frontend needs Node 22 or later.** On an older Node the suite stops with a message instead of reporting zero tests.
 - **The end-to-end suite** runs the real app on its own ports (5011 and 5183) against a throwaway database (`backend/instance/e2e.db`), so it never touches your dev servers or your data. It needs the backend venv, and Chromium once: `npx playwright install chromium`.
 - **The UI check** is the `check-ui` skill's script: every page state in `frontend/e2e/ui-states.js` at several widths, reported as text (sideways overflow, element positions), accessibility trees and one contact-sheet image in `frontend/test-results/check-ui/`. It reads from the running app and refuses every write, so your data is safe.
 - Why the suites exist and what they are held to: [ADR-016](docs/adr/ADR-016-test-seam-for-agentic-workflows.md) and [`docs/coding_standards.md`](docs/coding_standards.md).
