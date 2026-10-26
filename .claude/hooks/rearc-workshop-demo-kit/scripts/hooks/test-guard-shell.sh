@@ -2,7 +2,8 @@
 # =============================================================================
 # test-guard-shell.sh - checks guard-shell.sh against commands it must block
 # or allow. Run it after changing the guard, and once on each platform
-# (macOS /bin/bash 3.2, Git Bash on Windows):
+# (macOS /bin/bash 3.2, Git Bash on Windows). The PowerShell cases are the forms
+# Claude sends through its PowerShell tool on Windows:
 #
 #   bash .claude/hooks/rearc-workshop-demo-kit/scripts/hooks/test-guard-shell.sh
 #
@@ -20,7 +21,9 @@ pass=0; fail=0
 while IFS=$'\t' read -r want cmd; do
   [ -z "$want" ] && continue
   cmd=$(printf '%b' "$cmd")
-  out=$(jq -n --arg c "$cmd" '{tool_name: "Bash", tool_input: {command: $c}}' | bash "$GUARD")
+  # MSYS_NO_PATHCONV: Git Bash would otherwise rewrite "/bin/rm" into a Windows path
+  # on its way to jq.exe; Claude Code hands the guard the command untouched.
+  out=$(MSYS_NO_PATHCONV=1 jq -n --arg c "$cmd" '{tool_name: "Bash", tool_input: {command: $c}}' | bash "$GUARD")
   if printf '%s' "$out" | grep -q '"deny"'; then got=BLOCK; else got=ALLOW; fi
   if [ "$got" = "$want" ]; then
     pass=$((pass + 1))
@@ -80,6 +83,39 @@ BLOCK	cat <<'EOF' | sh -c 'rm -rf x'\nbody\nEOF
 ALLOW	git commit -m "$(cat <<'EOF'\nFix: remove rm -rf from docs\n\ngit reset --hard was wrong\nEOF\n)"
 BLOCK	git commit -m "msg" && git push --force
 ALLOW	sort < input.txt > out.txt
+BLOCK	Remove-Item -Recurse -Force build
+BLOCK	Remove-Item build -Recurse -Force
+BLOCK	Remove-Item -Path .\\build -Recurse -Force
+BLOCK	remove-item -r -fo build
+BLOCK	ri -Recurse -Force build
+BLOCK	del -Recurse -Force build
+BLOCK	erase -r -force build
+BLOCK	rmdir -Recurse -Force build
+BLOCK	rm -Recurse -Force build
+BLOCK	rm -r -fo build
+BLOCK	Get-ChildItem build | Remove-Item -Recurse -Force
+BLOCK	cd backend; Remove-Item -Recurse -Force venv
+BLOCK	Remove-Item -Recurse -Force:$true build
+BLOCK	powershell -Command "Remove-Item -Recurse -Force build"
+BLOCK	pwsh -c "rm -r -fo build"
+BLOCK	cmd /c "rd /s /q build"
+BLOCK	cmd /c rd /s /q build
+BLOCK	cmd /c "del /s /q build"
+BLOCK	powershell -Command "git reset --hard"
+BLOCK	git push --force; Write-Output done
+ALLOW	Remove-Item build.txt
+ALLOW	Remove-Item -Recurse build
+ALLOW	Remove-Item -Force file.txt
+ALLOW	del file.txt
+ALLOW	rd build
+ALLOW	cmd /c "rd /s build"
+ALLOW	Write-Output "Remove-Item -Recurse -Force build"
+ALLOW	Get-ChildItem -Recurse -Force
+ALLOW	powershell -Command "Get-ChildItem"
+BLOCK	echo hi\r\ngit reset --hard\r\necho done
+BLOCK	cat <<EOF > x.txt\r\nhello\r\nEOF\r\nrm -rf build
+ALLOW	Write-Output "DROP TABLE cards is in the old migration"
+ALLOW	Select-String -Pattern "drop table" -Path docs\\*.md
 CASES
 
 echo "passed $pass, failed $fail"

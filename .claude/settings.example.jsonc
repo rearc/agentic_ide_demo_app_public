@@ -105,18 +105,18 @@
 
     // === WORKHORSES — the events you'll actually write 90% of the time =======
 
-    // matcher: tool name (Bash, Edit, mcp__server__tool) | exit2: BLOCKS the tool call | ctrl: permissionDecision(allow|deny|ask|defer), updatedInput, additionalContext
+    // matcher: tool name (Bash, Edit, mcp__server__tool); shell hooks match Bash|PowerShell (Windows uses the PowerShell tool) | exit2: BLOCKS the tool call | ctrl: permissionDecision(allow|deny|ask|defer), updatedInput, additionalContext
     // use: guardrails (block dangerous commands), rewrite tool inputs, escalate to a human
     // One event can carry MULTIPLE handlers of DIFFERENT types — here: command (x2, real) + http + prompt (illustrative).
     "PreToolUse": [
-      { "matcher": "Bash",
+      { "matcher": "Bash|PowerShell",
         "hooks": [ { "type": "command", "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/rearc-workshop-demo-kit/scripts/hooks/guard-shell.sh\"" } ] },  // ✅REAL — blocks rm -rf / force push / git reset --hard / DROP TABLE with permissionDecision: deny
       { "matcher": "*",
         "hooks": [ { "type": "command", "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/rearc-workshop-demo-kit/scripts/hooks/audit.sh\"" } ] },        // ✅REAL — logs EVERY tool call to .claude/audit.log (observe); exit 0
-      { "matcher": "Bash",                                                                                                       // ILLUSTRATIVE — "http" type: POST payload to a local policy service; its 2xx JSON is the decision
+      { "matcher": "Bash|PowerShell",                                                                                                       // ILLUSTRATIVE — "http" type: POST payload to a local policy service; its 2xx JSON is the decision
         "hooks": [ { "type": "http", "url": "http://localhost:8080/hooks/pre-tool-use", "timeout": 30,
                      "headers": { "Authorization": "Bearer $POLICY_TOKEN" }, "allowedEnvVars": ["POLICY_TOKEN"] } ] },
-      { "matcher": "Bash",                                                                                                       // ILLUSTRATIVE — "prompt" type: a fast model judges the command; $ARGUMENTS = the payload JSON
+      { "matcher": "Bash|PowerShell",                                                                                                       // ILLUSTRATIVE — "prompt" type: a fast model judges the command; $ARGUMENTS = the payload JSON
         "hooks": [ { "type": "prompt", "timeout": 30,
                      "prompt": "You are a shell-safety gate. Given this PreToolUse payload, decide if the command is destructive or touches production. $ARGUMENTS" } ] }
     ],
@@ -151,7 +151,7 @@
 
     // matcher: tool name | exit2: DENIES the permission | ctrl: decision.behavior, updatedInput | use: auto-approve/deny in the permission dialog by context
     "PermissionRequest": [
-      { "matcher": "Bash", "hooks": [ { "type": "command", "command": "echo '(illustrative) auto-approve safe reads'" } ] }
+      { "matcher": "Bash|PowerShell", "hooks": [ { "type": "command", "command": "echo '(illustrative) auto-approve safe reads'" } ] }
     ],
     // matcher: tool name | exit2: ignored | ctrl: retry:true | use: log auto-mode denials, notify an admin, retry with an explanation
     "PermissionDenied": [
