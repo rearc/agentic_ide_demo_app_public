@@ -51,8 +51,11 @@ python run.py                  # http://127.0.0.1:5001
 cd frontend
 nvm use                        # Node 22; `nvm install` the first time (Windows: see "On Windows")
 npm install                    # installs exactly what package-lock.json pins
+npx playwright install chromium   # the browser the end-to-end tests and check-ui use
 npm run dev                    # http://localhost:5173, proxies /api to the backend
 ```
+
+Make Node 22 your default (`nvm alias default 22`), not just the version you switched to once: Claude Code runs commands in its own shell, and the frontend's checks stop on an older Node.
 
 One dependency is held back on purpose, an exception to ADR-012's latest versions: `satellite.js` stays on 6.x (the ISS card's orbit maths). Version 7 adds WebAssembly builds that `vite build` cannot bundle.
 
