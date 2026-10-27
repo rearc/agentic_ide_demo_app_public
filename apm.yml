@@ -26,8 +26,8 @@ dependencies:
     # Repoint to the host-qualified form once those land in ai-toolkit-private.
     - ../ai-toolkit/packages/rearc-workshop-demo-kit
 
-    # rearc/pocock-kit (Matt Pocock's v1.1 skills, 19) - powers the Day-4 /
-    # Section-4 demo: grilling -> to-spec -> to-tickets -> implement -> code-review.
+    # rearc/pocock-kit (4 of Matt Pocock's v1.1 skills): grilling and its alias
+    # grill-me, prototype, diagnosing-bugs. Review is the built-in /code-review.
     # TEMPORARY local-path ref: the kit currently lives on the unmerged
     # `kit/pocock-v1.1` branch in ai-toolkit, so it is not yet resolvable from
     # ai-toolkit-private. Repoint this to the host-qualified form
