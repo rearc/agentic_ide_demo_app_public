@@ -29,7 +29,7 @@ Every main session starts here, the first and any later one; the files hold ever
 ### Starting worker sessions
 
 1. Commit everything first: a worktree branches from the last commit, and uncommitted work would not be in it.
-2. For each unblocked delegated task the person wants started, write out the two commands with the real names filled in, one new terminal (or VS Code tab) per task:
+2. For each unblocked delegated task the person wants started, write out the two commands with the real names filled in, one new terminal (or VS Code tab) per task, opened in the main checkout (`/worker-session` makes the worktree from there):
    - `claude -n <task-slug>`
    - then, in that session, `/worker-session specs/<slug>/tasks/<file>`
 
@@ -48,7 +48,7 @@ The person brings a worker's handoff when they are at a good stopping point, nor
    - **Request changes:** write the message to paste into its worker session (what is accepted and must not change, what to change and why, what to rerun). Mark it `changes requested` in `plan.md`; the worker marks its own Status when it picks the request up.
    - **Blocked:** give it what it needs and request changes, take the task on as human-in-the-loop, or drop it.
    - **Merge.**
-5. **Merge, once the person agrees:** `git merge --no-ff <branch>`. Merge conflicts are normal when tasks run in parallel: resolve them yourself, check any that touch an interface against `spec.md`, and say in a line how you resolved each.
+5. **Merge, once the person agrees:** commit the human-in-the-loop work so far first (git will not merge into uncommitted changes), then `git merge --no-ff <branch>`. Merge conflicts are normal when tasks run in parallel: resolve them yourself, check any that touch an interface against `spec.md`, and say in a line how you resolved each.
 6. **Run what `plan.md` says runs when this task is integrated**, including what the worker could not check, and show the output.
 7. Mark it `merged`, update **Resume here**, commit (`State:`). Then say which tasks are unblocked now.
 
