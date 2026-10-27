@@ -4,6 +4,8 @@ A personal dashboard of cards: a React frontend over a Flask API, with SQLite. S
 
 ![Architecture](docs/architecture.drawio.png)
 
+**Workshop participants:** start with [SETUP.md](SETUP.md), which sets up your machine for Day 1.
+
 ## Prerequisites
 
 - **Python 3.11+.** The backend uses `datetime.UTC`, added in 3.11. A bare `python3` on macOS is often the system 3.9 or a conda `base` 3.10, which fails only later, at `db upgrade`, so build the venv with an explicit interpreter (below).
