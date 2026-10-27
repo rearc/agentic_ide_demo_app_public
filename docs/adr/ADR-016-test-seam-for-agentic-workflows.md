@@ -7,20 +7,16 @@
 
 ADR-010 recorded that this codebase had no automated tests. It described the
 absence as acknowledged debt rather than a principle: tests had originally been
-left out for simplicity, a different codebase was chosen for the workshop's TDD
-demo, and the gap was simply never closed. It explicitly noted that adding a test
+left out for simplicity, and the gap was simply never closed. It explicitly noted that adding a test
 suite "would be a valuable future contribution."
 
 Two things then made that gap load-bearing rather than merely untidy.
 
-**The demo flow needs somewhere to land.** The Section 4 workflow drives this app
-through a chain of skills. `/implement` runs `/tdd` at seams and runs the suite as
-it works; with no harness, test-driven development has nowhere to go and the step
-degrades into a narrated intention. `/code-review` runs two axes, one of which
-checks a change against the repo's documented coding standards; with no standards
-document, only the spec axis functioned. An agent working unattended has nothing
-to verify its own work against, which undercuts the argument that autonomy is
-safe once the controls exist.
+**Agents need something to verify against.** An agent that writes code needs a
+suite to run as it works and a standards document to review a change against. With
+neither, test-driven work has nowhere to go, and a review has no citable standard.
+An agent working unattended has nothing to verify its own work against, which
+undercuts the argument that autonomy is safe once the controls exist.
 
 **The suite is itself a teaching artifact.** Agents extending this app read the
 existing tests and write new ones in their image. That makes the suite's idiom -
@@ -72,8 +68,8 @@ work at, not to prepare the app for deployment.
 
 ### Consequences
 
-- `/implement` and `/tdd` have a real harness; `/code-review`'s standards axis has
-  a document with citable rule IDs.
+- Test-driven work has a real harness, and a review can cite the standards
+  document's rule IDs.
 - An agent working unattended can prove its own work with a single command per
   side, and the branch it produces can be judged on whether the suite still passes.
 - Refactoring is safer, and the registry patterns in ADR-008 now have executable

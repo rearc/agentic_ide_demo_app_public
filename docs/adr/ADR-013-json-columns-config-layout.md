@@ -22,4 +22,3 @@ Both `config` and `layout` are stored as JSON columns on the Card model. This pr
 - The config structure is implicit (defined by convention in each service) rather than explicit (defined by a schema). This trades type safety for flexibility.
 - JSON columns in SQLite have limited query capabilities — you can't efficiently filter or index on fields within the JSON. This is acceptable because the app never needs to query cards by their config contents.
 - Layout persistence is simple: the frontend sends the full layout object, and the backend stores it as-is.
-</content>

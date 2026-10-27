@@ -21,4 +21,3 @@ The approach is consistent with the broader philosophy of the project: introduce
 - No compile-time type checking means certain categories of bugs (wrong prop types, missing fields) won't be caught until runtime.
 - IDE autocomplete is less precise without type definitions.
 - If the project grows in complexity, the lack of TypeScript could make refactoring harder. This is an acceptable tradeoff for the current scope.
-</content>
