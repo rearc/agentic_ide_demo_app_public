@@ -28,30 +28,29 @@ Below the Status: the files that change, the order of the work, the risks, and w
 
 A small change whose build fits in one session needs only `spec.md`.
 
-## When the plan splits into pieces
+## When a change splits into tasks
 
-A change too big for one thread splits its plan into **pieces**, worked by more than one thread at once. Three skills carry the roles: `decompose-to-specs` writes the breakdown, `attended` works with the person in the main checkout, `delegated` builds one piece in its own worktree.
+A change too big for one session splits into **tasks**, worked by more than one session at once. Three skills carry the roles: `decompose-to-specs` writes the breakdown, `main-session` coordinates the work and builds the human-in-the-loop tasks with the person in the main checkout, and `worker-session` builds one delegated task in its own worktree.
 
 ```
 specs/<slug>/
-  spec.md                 the whole change, as above
-  plan.md                 the state of the whole: Status, pieces, consolidation points
-  pieces/
-    01-<piece>.md         one small spec per piece
-    02-<piece>.md
+  spec.md                 the whole change, as above, with an Interfaces section
+  plan.md                 the state of the whole: Status, tasks, what runs at each integration
+  tasks/
+    01-<task>.md          one small spec per task
+    02-<task>.md
 ```
 
-**A piece spec** has the spec shape above (problem, decisions, acceptance criteria that each name their check, scope, parts touched), plus:
+**A task spec** has the spec shape above (problem, decisions, acceptance criteria that each name their check, scope, parts touched), plus:
 
-- **Mark:** `together` (built in the attended thread, with the person) or `delegated` (built in its own thread and worktree, the person checking in)
-- **Seams:** what it shares with other pieces (names, data shapes, files), each fixed in `spec.md` so both sides build to the same thing
-- **A `## Status` section**, written only by the thread building the piece: where it stands, its checklist (ticked only after the check passed), and for a delegated piece its worktree, branch and base commit
+- **Mode:** `human-in-the-loop` (built in the main session, with the person) or `delegated` (built in its own worker session and worktree, the person checking in)
+- **Depends on:** the tasks that must be done or merged before it can start; it is **unblocked** once they are
+- **Interfaces:** what it shares with other tasks (names, data shapes, behaviour), each fixed in `spec.md` so both sides build to the same thing
+- **A `## Status` section**, written only by the session building the task: its state (`not started`, `in progress`, `ready for review`, `blocked`, `changes requested`), its checklist (ticked only after the check passed), and for a delegated task its worktree, branch and base commit
 
 **`plan.md`** keeps its `## Status` section and **Resume here**, and adds:
 
-- **Pieces:** one line each: number, name, mark, state (`not started`, `in progress`, `delegated: running`, `ready for review`, `merged`, `done`), and for a delegated piece its worktree
-- **Consolidation points:** where delegated work comes back ("after pieces 1 and 2: review 2, merge it, run every check")
+- **Tasks:** one line each: number, name, mode, depends on, state (`not started`, `in progress`, `worker running`, `changes requested`, `merged`, `done`, `dropped`), and for a delegated task its worktree
+- **Integration:** for each delegated task, what is reviewed, merged and run when it is integrated; the last runs every check
 
-Only the attended thread writes `plan.md`, and it commits state changes on their own, with messages that start `State:`, so `git log -p -- specs/<slug>/plan.md` shows how the work moved. A delegated thread never edits `plan.md`, not even its own copy: its state lives in its piece spec, and a copy edited on two branches is a merge conflict.
-
-A spec that needs tracking on the board becomes a GitHub issue instead (the `to-spec` skill).
+When changes are requested, the main session marks it in `plan.md` and the worker marks its own Status as it picks the request up. Only the main session writes `plan.md`, and it commits state changes on their own, with messages that start `State:`, so `git log -p -- specs/<slug>/plan.md` shows how the work moved. A worker session never edits `plan.md`, not even its own copy: its state lives in its task spec, and a copy edited on two branches is a merge conflict. Tasks running in parallel may touch the same files; merge conflicts are normal and resolved when a task is integrated.

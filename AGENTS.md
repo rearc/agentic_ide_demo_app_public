@@ -22,7 +22,7 @@ Run the ones that cover what you changed, and show their output before you call 
 ## How the app fits together
 
 - **Adding a card:** use the `add-dashboard-card` skill. A card is a row in `cards`, an entry in `CARD_REGISTRY` (`frontend/src/components/Card.jsx`) and, for live data, an entry in `SERVICES` (`backend/app/routes/data.py`). The two registries agree only through the card's `source` string (ADR-008): change one, check the other. A seeded card's place goes in `DEFAULT_BOARD` (`backend/seed.py`).
-- **Specs:** a spec for a change goes in `specs/<slug>/spec.md`, with `plan.md` beside it when the build runs over more than one session; when the plan splits into pieces worked by several threads, each piece gets its own spec in `specs/<slug>/pieces/`. `specs/README.md` says what each holds. Write a GitHub issue instead (`to-spec`) only when asked. Plan Mode's drafts in `plans/` are never committed; the plan is `specs/<slug>/plan.md`.
+- **Specs:** a spec for a change goes in `specs/<slug>/spec.md`, with `plan.md` beside it when the build runs over more than one session; when a change splits into tasks worked by several sessions, each task gets its own spec in `specs/<slug>/tasks/`. `specs/README.md` says what each holds. Plan Mode's drafts in `plans/` are never committed; the plan is `specs/<slug>/plan.md`.
 - **Checking a UI change:** use the `check-ui` skill: layout facts as text at every width, one contact sheet for design questions. Page states live in `frontend/e2e/ui-states.js`.
 - **Network:** `frontend/src/api.js` is the only module that calls the backend; components never call `fetch`.
 - **Requests:** routes check bodies and ids with `backend/app/routes/helpers.py` and fail with `abort(status, message)`; the app factory turns every error into `{"error": message}`.
@@ -44,6 +44,4 @@ Run the ones that cover what you changed, and show their output before you call 
 ## Workshop tooling in this repo
 
 - Demo runs use branches described in `docs/DEMO_BRANCHING.md`; `main` carries no known defects (ADR-018).
-- The GitHub Projects board: `docs/board_interaction.md`. Team policy (the Definition of Ready): `docs/standards/`.
-- The engineering skills (`to-spec`, `to-tickets`, `triage`, `code-review`, `implement`, `domain-modeling`) read their settings from `docs/agents/`: issues on `rearc/agentic_ide_demo_app` through `gh`, five triage labels, and domain docs in a root `CONTEXT.md` (created when first needed) plus `docs/adr/`.
 - MCP servers are configured in `.mcp.json`: Context7 (documentation) and `random-tools` (a demo server with `coin_flip` and `roll_die`, run by `uv`).
