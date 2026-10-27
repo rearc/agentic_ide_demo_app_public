@@ -37,7 +37,7 @@ Split the two intentions apart and make the safe one the default.
   layouts, renamed titles, and deactivated cards all survive. It is idempotent:
   running it twice changes nothing the second time.
 - **`python seed.py --reset` is the destructive path.** It wipes `cards` and
-  `todos` first and restores the pristine five-card board. This is what workshop
+  `todos` first and restores the pristine default board. This is what workshop
   reset and demo restore now call, and it says what it does at the call site.
 - **Existing rows are never overwritten.** A default card that is already present
   is left exactly as the user has it, rather than being reset to its seed values.

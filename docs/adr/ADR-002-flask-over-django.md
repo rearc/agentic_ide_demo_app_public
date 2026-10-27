@@ -21,4 +21,3 @@ We acknowledge that Django would provide a richer feature set (particularly its 
 - The plugin ecosystem (Flask-SQLAlchemy, Flask-Migrate, Flask-CORS) provides what's needed without Django's overhead.
 - There is no admin panel for managing data — the seed script and API endpoints serve that purpose.
 - If the application's scope grew significantly (e.g., multi-user with roles and permissions), the lack of Django's built-in features would become a real cost.
-</content>

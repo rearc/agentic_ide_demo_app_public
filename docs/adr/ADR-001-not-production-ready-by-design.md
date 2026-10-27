@@ -25,4 +25,3 @@ The following production features were intentionally omitted:
 - The app cannot be deployed to a shared environment without significant additions.
 - Contributors must understand that "production-quality code" refers to code structure, clarity, and correctness — not deployment readiness.
 - The absence of Docker means environment parity between contributors is not guaranteed (different Python versions, OS-level differences, etc.).
-</content>

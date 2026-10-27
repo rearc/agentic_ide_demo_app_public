@@ -22,4 +22,3 @@ SQLite's known limitations — single-writer concurrency, no network access, lim
 - Attendees do not need PostgreSQL, MySQL, or any database tooling installed.
 - Migration scripts use Alembic's batch mode for SQLite compatibility (SQLite doesn't support all ALTER TABLE operations natively).
 - If the app were ever deployed as a multi-user service, SQLite would need to be replaced with a client-server database.
-</content>

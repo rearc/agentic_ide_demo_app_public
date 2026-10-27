@@ -23,4 +23,3 @@ The seed script deletes all existing cards and todos before inserting fresh seed
 - This is fine for workshop use where reproducibility matters — every attendee gets the same starting state.
 - It is problematic for the "personal dashboard" use case where someone has customized their cards and layout over time. Running the seed script would destroy their customizations.
 - A future improvement would be an upsert-based seed that only adds missing default cards without destroying existing data.
-</content>

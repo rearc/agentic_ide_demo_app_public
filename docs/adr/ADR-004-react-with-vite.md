@@ -26,4 +26,3 @@ Vite was chosen as the build tool because it is the modern default for new React
 - Two processes must be running during development (Vite dev server + Flask), which adds slight setup complexity compared to a monolithic approach.
 - Attendees without React experience get exposure to it in a simple context.
 - The app is tied to the React ecosystem for its frontend.
-</content>
