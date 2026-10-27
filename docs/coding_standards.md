@@ -216,8 +216,8 @@ talks to an external API.
 
 ## 10. Testing (`TEST`)
 
-The suite is the seam that `/implement` and `/tdd` work at, so it is held to the
-same standard as the code it covers.
+The suite is the seam an agent works at, so it is held to the same standard as
+the code it covers.
 
 - **TEST-1 — New behavior ships with tests.** A new service, route, model, or
   component is not done until it is covered.
