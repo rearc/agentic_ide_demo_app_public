@@ -54,3 +54,13 @@ specs/<slug>/
 - **Integration:** for each delegated task, what is reviewed, merged and run when it is integrated; the last runs every check
 
 When changes are requested, the main session marks it in `plan.md` and the worker marks its own Status as it picks the request up. Only the main session writes `plan.md`, and it commits state changes on their own, with messages that start `State:`, so `git log -p -- specs/<slug>/plan.md` shows how the work moved. A worker session never edits `plan.md`, not even its own copy: its state lives in its task spec, and a copy edited on two branches is a merge conflict. Tasks running in parallel may touch the same files; merge conflicts are normal and resolved when a task is integrated.
+
+**Words the skills use**, beyond those above:
+
+- **Main session:** the long-running session in the main checkout, started with `/main-session`. It coordinates (starting workers, integrating their handoffs, keeping `plan.md`) and builds the human-in-the-loop tasks with the person. Named after its task with `-main`, for example `theme-tokens-main`.
+- **Worker session** (a **worker**): started with `/worker-session`, it builds one delegated task in its own worktree, on its own ports and database. Named after its task.
+- **Handoff:** a worker's last message: its branch, commits, checks, what it could not check, and what to look at. The person brings it to the main session.
+- **Review summary:** what the main session writes after reading a worker's branch: what it did, the decisions it made alone, where it disagrees with the handoff, anything beyond its scope, what could not be checked, and what to look at.
+- **Integrate:** review a worker's branch, merge it and run the checks, one handoff at a time.
+- **Request changes:** send a worker back with what to fix and why; the task becomes `changes requested`.
+- **Iteration:** one human-in-the-loop task worked to done, with the handoffs that arrived meanwhile integrated. Running workers carry over to the next.
