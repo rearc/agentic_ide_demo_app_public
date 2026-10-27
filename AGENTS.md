@@ -44,4 +44,5 @@ Run the ones that cover what you changed, and show their output before you call 
 ## Workshop tooling in this repo
 
 - `main` carries no known defects (ADR-018).
+- Team policy, the Definition of Ready: `docs/standards/definition_of_ready.md`. Read it when checking whether a ticket or a spec is ready.
 - MCP servers are configured in `.mcp.json`: Context7 (documentation) and `random-tools` (a demo server with `coin_flip` and `roll_die`, run by `uv`).
