@@ -90,4 +90,4 @@ _Avoid_: send back, sent back
 The `plan.md` state of a delegated task whose worker session has started and not yet been integrated.
 _Avoid_: delegated: running
 
-Words that look alike keep their usual sense: attended and unattended runs (automation), a seam in Feathers' sense (`codebase-design`), code folding, and "piece" or "round" in plain English.
+Words that look alike keep their usual sense: attended and unattended runs (automation), a seam in Feathers' sense, code folding, and "piece" or "round" in plain English.

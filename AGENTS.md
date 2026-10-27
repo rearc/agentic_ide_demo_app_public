@@ -43,5 +43,5 @@ Run the ones that cover what you changed, and show their output before you call 
 
 ## Workshop tooling in this repo
 
-- Demo runs use branches described in `docs/DEMO_BRANCHING.md`; `main` carries no known defects (ADR-018).
+- `main` carries no known defects (ADR-018).
 - MCP servers are configured in `.mcp.json`: Context7 (documentation) and `random-tools` (a demo server with `coin_flip` and `roll_die`, run by `uv`).

@@ -5,7 +5,7 @@
 
 ### Context
 
-The dashboard integrates with three external APIs: Open-Meteo for weather data, Zen Quotes for inspirational quotes, and NASA APOD for space imagery. All three are free-tier APIs with rate limits. During the workshop, 30+ attendees might be running the app simultaneously, all hitting the same APIs from the same network. The risk of hitting rate limits, encountering network issues on conference wifi, or having an API go down during a live demo was significant.
+The dashboard integrates with free external APIs, among them Open-Meteo for weather data, Zen Quotes for inspirational quotes and NASA APOD for space imagery, all with rate limits. During the workshop, 30+ attendees might be running the app simultaneously, all hitting the same APIs from the same network. The risk of hitting rate limits, encountering network issues on conference wifi, or having an API go down during a live demo was significant.
 
 If a service raised an exception on failure, the API route would return a 500 error, and the corresponding card would display an error state. One flaky API could degrade the experience for every attendee during a live demo.
 
@@ -25,4 +25,3 @@ This was primarily a pragmatic decision to prevent workshop disruption. The risk
 - Workshop demos are resilient to network issues, rate limits, and API outages.
 - Silent failures could mask bugs during development — a service could be misconfigured and still appear to "work" because it silently falls back.
 - The fallback pattern adds a small amount of complexity to each service function, but the pattern is consistent and easy to follow.
-</content>

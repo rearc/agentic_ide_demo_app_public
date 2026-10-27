@@ -19,4 +19,3 @@ This means the project uses Tailwind CSS v4's new CSS-native configuration appro
 - Workshop attendees see contemporary patterns they can apply to new projects.
 - Documentation and Stack Overflow answers for the latest versions may be less abundant than for older, more established versions.
 - Future dependency updates should be less painful since the project starts from a recent baseline.
-</content>

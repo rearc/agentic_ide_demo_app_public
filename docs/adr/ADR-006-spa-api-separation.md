@@ -26,4 +26,3 @@ The application uses a separated architecture: a React SPA (port 5173) communica
 - Development requires two terminal processes (Vite + Flask), which adds setup complexity.
 - The Vite dev proxy (`/api` -> `http://127.0.0.1:5001`) bridges the two during development.
 - The pattern is immediately recognizable to developers familiar with modern web architecture.
-</content>

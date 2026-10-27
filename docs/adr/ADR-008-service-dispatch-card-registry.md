@@ -22,4 +22,3 @@ This pattern was designed from the beginning of the project. It was not somethin
 - Unknown sources fall back gracefully — the backend returns a 404, and the frontend renders a placeholder widget.
 - The pattern is easy to understand: one dictionary lookup on each side.
 - There is a loose coupling between backend sources and frontend components via the source name string — if these drift out of sync, the failure mode is a placeholder card rather than a crash.
-</content>

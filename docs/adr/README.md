@@ -25,21 +25,16 @@ grill and plan phases of the SDLC flow read these; keep them focused.
 | [012](ADR-012-latest-dependency-versions.md) | Latest Dependency Versions Across the Stack | Accepted |
 | [013](ADR-013-json-columns-config-layout.md) | JSON Columns for Card Configuration and Layout | Accepted (layout half superseded by ADR-019) |
 | [014](ADR-014-destructive-seed-script.md) | Destructive Seed Script | Superseded by ADR-017 |
-| [015](ADR-015-repo-rename-agentic-ide-demo-app.md) | Repo Rename to agentic_ide_demo_app | Accepted |
 | [016](ADR-016-test-seam-for-agentic-workflows.md) | A Test Seam for Agentic Workflows | Accepted (supersedes ADR-010) |
 | [017](ADR-017-additive-seed-with-explicit-reset.md) | Additive Seed with an Explicit Reset | Accepted (supersedes ADR-014) |
-| [018](ADR-018-clean-main-planted-defects-on-branches.md) | A Clean `main`, with Teaching Defects on Branches | Accepted |
+| [018](ADR-018-clean-main.md) | A Clean `main` | Accepted |
 | [019](ADR-019-profiles-own-the-board.md) | Profiles Own the Board; Cards Are a Library | Accepted (supersedes ADR-013's layout half) |
 
 ## Adding a new ADR
 
 1. Copy the format of any existing ADR: H1 `# ADR-NNN: Title`, then `**Date:**` /
-   `**Status:**`, then `## Context`, `## Decision`, `## Consequences`.
-2. Number sequentially (`ADR-016-...`) with a short kebab-case slug in the filename.
+   `**Status:**`, then `### Context`, `### Decision`, `### Consequences`.
+2. Number sequentially (the next is `ADR-020-...`) with a short kebab-case slug in the filename.
 3. Add a row to the index table above.
 4. Never edit the substance of an accepted ADR after the fact. If a decision is
    reversed or replaced, add a new ADR and mark the old one `Superseded by ADR-NNN`.
-
-See [`ADR_CREATION_PROMPT.md`](../../ADR_CREATION_PROMPT.md) at the repo root for the
-interactive drafting prompt.
-</content>

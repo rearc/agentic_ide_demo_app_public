@@ -19,4 +19,3 @@ The grid layout serves a purpose beyond functionality — it makes the app feel 
 - Layout state (x, y, width, height) is persisted per card via the API, so arrangements survive page reloads.
 - The library is a dependency that could be replaced if a more performant or feature-rich alternative emerges — there is no strong commitment to this specific package.
 - The lock/unlock UX pattern adds a small amount of complexity to the Dashboard component but keeps the default experience clean (locked = no accidental drags).
-</content>
