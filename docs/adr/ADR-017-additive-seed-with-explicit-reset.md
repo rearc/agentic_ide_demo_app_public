@@ -22,8 +22,8 @@ Two things did depend on the destructive behavior and had to survive:
 
 - **Workshop reproducibility.** Every attendee needs the same starting board, and
   a presenter needs to get back to it between runs.
-- **Demo restore.** `docs/DEMO_BRANCHING.md` treats re-seeding as part of
-  returning to a clean starting state.
+- **Demo restore.** Re-seeding is part of returning a demo run to a clean
+  starting state.
 
 Both of those want "restore the pristine state" *on purpose*. Neither wants it as
 the silent default of the only command that installs a new card.

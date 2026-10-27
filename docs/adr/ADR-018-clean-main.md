@@ -19,9 +19,6 @@ That arrangement had two costs:
   `layout`) as strict `xfail` tests, and a seed test that asserted exactly five
   cards broke whenever a card was added.
 
-`docs/DEMO_BRANCHING.md` already treats `main` as the clean starting state and
-runs each demo on a throwaway branch cut from it.
-
 ### Decision
 
 - **`main` holds no known defects.** A defect found on `main` is fixed there,

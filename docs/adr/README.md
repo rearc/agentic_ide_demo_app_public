@@ -40,6 +40,4 @@ grill and plan phases of the SDLC flow read these; keep them focused.
 4. Never edit the substance of an accepted ADR after the fact. If a decision is
    reversed or replaced, add a new ADR and mark the old one `Superseded by ADR-NNN`.
 
-See [`ADR_CREATION_PROMPT.md`](../../ADR_CREATION_PROMPT.md) at the repo root for the
-interactive drafting prompt.
 </content>
