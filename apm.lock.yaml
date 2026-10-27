@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-10-19T02:30:29.553023+00:00'
+generated_at: '2026-10-27T02:47:27.513374+00:00'
 apm_version: 0.33.0
 dependencies:
 - repo_url: _local/rearc-pocock-kit
@@ -87,8 +87,8 @@ dependencies:
     .claude/agents/research-assistant.md: sha256:f9c2de8e5462f4507c836500c87736ffb3401b3b1680ecd962a9b03ba1fa3593
     .claude/hooks/rearc-workshop-demo-kit/scripts/hooks/audit.sh: sha256:0eb044bb28f58756cea7438c210552e60488063263010e34eab5cea76233e53e
     .claude/hooks/rearc-workshop-demo-kit/scripts/hooks/auto-lint.sh: sha256:3b5823acfac3e07752a4526bb3700c25004b8200a615ca0f1384cf32b577ae49
-    .claude/hooks/rearc-workshop-demo-kit/scripts/hooks/guard-shell.sh: sha256:0f16f8599832ab3320694edbb721d33d7dc40cc9e6c6359da651daa4aba4ad8f
-    .claude/hooks/rearc-workshop-demo-kit/scripts/hooks/test-guard-shell.sh: sha256:e7d34b6b73968b710aaba5cbb38387596ab0546edc7e843751c57b569c618020
+    .claude/hooks/rearc-workshop-demo-kit/scripts/hooks/guard-shell.sh: sha256:713598ca3fa13b15ee4350924860ded6ba257de1029bef7689cfc47b29ca75e2
+    .claude/hooks/rearc-workshop-demo-kit/scripts/hooks/test-guard-shell.sh: sha256:8888cc53fc8a50155833633b6cab3ec8f3cc70b524160d8cea1018d65cb13947
     .claude/rules/api-conventions.md: sha256:1723ed8589d884bbd17a31f78147fdce9e686177e48543f8329769b15f869633
     .claude/rules/migrations.md: sha256:a900316604e0e2f9189d3881abab052e8c6b248cb9ffd56606d03e44c952dc4b
     .claude/rules/tailwind.md: sha256:d2192dd3f2d12cf493f56a42152a605c5991bd88a744a0d7c4a0250cf1fd34cd
@@ -96,9 +96,9 @@ dependencies:
     .claude/skills/add-dashboard-card/references/weather-card-example.md: sha256:11f4e5997120c0975f1380f455fc0a474324f61706cd82177c1a4e414d52b954
     .claude/skills/check-ui/SKILL.md: sha256:ec68f37f6b5f39ff345bef36cdf9d52b66a40aa240ba7c66b088c0a3602af080
     .claude/skills/check-ui/scripts/check-ui.mjs: sha256:52dcc5fcab0b9c30eecd302ef13cd83b0a9c1a2cd300606e5746cfd38bb4eee8
-    .claude/skills/coin-flip-code/SKILL.md: sha256:77ced8c51b49c4d24a0201ab9ec3286514cbffa6c665a1f5b3d667f33f4a48da
+    .claude/skills/coin-flip-code/SKILL.md: sha256:327786a8d7efcc1e424a6e7055c7c751f5393771b86128ad934fe43e7d502a4e
     .claude/skills/coin-flip-code/scripts/flip.py: sha256:76180c7779923387eaa813624ae91e97d7549226f292c783f794dc0992c11f5a
-    .claude/skills/coin-flip-true-random/SKILL.md: sha256:a1e4c6c2158a79e25206b02924be0156ce934c8363146b3b2741051b74798124
+    .claude/skills/coin-flip-true-random/SKILL.md: sha256:3e95f43b23485ea3fda8fb354fc05f250157101a2e947df351d10abed5c1356d
     .claude/skills/coin-flip-true-random/scripts/flip.py: sha256:67c9d6a27b3a83447e329d08b55b5a9c0441d942199e1165a63a2563e64c25e1
     .claude/skills/coin-flip/SKILL.md: sha256:b4e7834fc4f070d8e88a0203636e835e3ee67b5fb761a5457e155660e472ed3e
     .claude/skills/commit-message/SKILL.md: sha256:dbd6d778bda1a897ca6d4f07fba6ea1c77d2451587c4f7ff49639f5380c06ebd
@@ -133,46 +133,6 @@ dependencies:
     .claude/skills/frontend-design/LICENSE.txt: sha256:0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594
     .claude/skills/frontend-design/SKILL.md: sha256:1608ea77fbb6fc30d13a97d12cfa8ebf31358d40f0dd97beed24829d6b3f45dd
   content_hash: sha256:4eabc66183767153e404b39d1b839b1c37f2d82d86f0a0d7e880a579d8d62336
-- repo_url: mattpocock/skills
-  name: code-review
-  host: github.com
-  resolved_commit: 49dd158d1076134a641b33efb035946536778336
-  version: unknown
-  virtual_path: skills/engineering/code-review
-  is_virtual: true
-  depth: 2
-  resolved_by: _local/rearc-pocock-kit
-  package_type: claude_skill
-  deployed_files:
-  - .claude/skills/code-review
-  - .claude/skills/code-review/SKILL.md
-  - .claude/skills/code-review/agents/openai.yaml
-  deployed_file_hashes:
-    .claude/skills/code-review/SKILL.md: sha256:09eb147f793e4647949edd32dbad278f0554dfb56e0d46b699cd4c2c55bf0357
-    .claude/skills/code-review/agents/openai.yaml: sha256:8229ca854e11dc8e6aef2131ee03f31fb1561cf905fab9ccc325180cf3331352
-  content_hash: sha256:bb3048304e5c783c09783326a9e8f8ba55a31e810f511a792238bb8ad45a0978
-- repo_url: mattpocock/skills
-  name: codebase-design
-  host: github.com
-  resolved_commit: 49dd158d1076134a641b33efb035946536778336
-  version: unknown
-  virtual_path: skills/engineering/codebase-design
-  is_virtual: true
-  depth: 2
-  resolved_by: _local/rearc-pocock-kit
-  package_type: claude_skill
-  deployed_files:
-  - .claude/skills/codebase-design
-  - .claude/skills/codebase-design/DEEPENING.md
-  - .claude/skills/codebase-design/DESIGN-IT-TWICE.md
-  - .claude/skills/codebase-design/SKILL.md
-  - .claude/skills/codebase-design/agents/openai.yaml
-  deployed_file_hashes:
-    .claude/skills/codebase-design/DEEPENING.md: sha256:f3dd099ce99289bd213914d8ee3e2429b78309c3957ca4583f7659551b1d53c1
-    .claude/skills/codebase-design/DESIGN-IT-TWICE.md: sha256:52b52e75655a27aea59c6966b410bac82448968ad46ef1ebb9f07c274e3ae010
-    .claude/skills/codebase-design/SKILL.md: sha256:2c20617f87ec8af6a434859f381b2f061a69b530444e74eb39e78bb016a6d1e2
-    .claude/skills/codebase-design/agents/openai.yaml: sha256:edebc9e4fcfe102114012575eaa9600b9b5fd08c311664f389c36e7bc717740f
-  content_hash: sha256:07246bd43eadfb50ac686aee5297d2cb808bf5ad00fb2ed289416b4b79e7850c
 - repo_url: mattpocock/skills
   name: diagnosing-bugs
   host: github.com
@@ -233,44 +193,6 @@ dependencies:
     .claude/skills/grill-with-docs/SKILL.md: sha256:7de372c13488f1ee96cc11cd8907b56b6809cc93eef776eeddd37de6b6cbe3fe
     .claude/skills/grill-with-docs/agents/openai.yaml: sha256:94cd0ab161fb468a836349f5ed482ba58ce8e709a05c57ce533d739dbd35cca9
   content_hash: sha256:9e8f732b806727978f1ad8d2fb9ce4467da68f7482d63c4bb5a73f2b1a0c797c
-- repo_url: mattpocock/skills
-  name: implement
-  host: github.com
-  resolved_commit: 49dd158d1076134a641b33efb035946536778336
-  version: unknown
-  virtual_path: skills/engineering/implement
-  is_virtual: true
-  depth: 2
-  resolved_by: _local/rearc-pocock-kit
-  package_type: claude_skill
-  deployed_files:
-  - .claude/skills/implement
-  - .claude/skills/implement/SKILL.md
-  - .claude/skills/implement/agents/openai.yaml
-  deployed_file_hashes:
-    .claude/skills/implement/SKILL.md: sha256:483bdc4ccf4ac31d86ac7beeaa0d0db80313e71e120bb8c59b3196ae5decd53d
-    .claude/skills/implement/agents/openai.yaml: sha256:8970a8596ade0c28ab427f41a4ea242d6bdf6186c59ebf55e1238dbecaab79dc
-  content_hash: sha256:c7c4d38c8dd9a05fcad046f79aeb275c7f31a87d7bceb4f3a133f125e6f4bfbb
-- repo_url: mattpocock/skills
-  name: improve-codebase-architecture
-  host: github.com
-  resolved_commit: 49dd158d1076134a641b33efb035946536778336
-  version: unknown
-  virtual_path: skills/engineering/improve-codebase-architecture
-  is_virtual: true
-  depth: 2
-  resolved_by: _local/rearc-pocock-kit
-  package_type: claude_skill
-  deployed_files:
-  - .claude/skills/improve-codebase-architecture
-  - .claude/skills/improve-codebase-architecture/HTML-REPORT.md
-  - .claude/skills/improve-codebase-architecture/SKILL.md
-  - .claude/skills/improve-codebase-architecture/agents/openai.yaml
-  deployed_file_hashes:
-    .claude/skills/improve-codebase-architecture/HTML-REPORT.md: sha256:581e8bb5a521e46bbda8ca7e19b15948bed882187108092ebb90c62513b77528
-    .claude/skills/improve-codebase-architecture/SKILL.md: sha256:552240a5ab5cec6b67c15dd1ad6e9f6962b1bca6ce870059a8c2713760c20392
-    .claude/skills/improve-codebase-architecture/agents/openai.yaml: sha256:c8cb20f68ebf0edb4e497bc11ae5fcaa196004e661cd189015b04f4109ced7f1
-  content_hash: sha256:741b4015c0edbcd5ffb9c926abab6cd52946bd296af2792c4694c759f4bd2554
 - repo_url: mattpocock/skills
   name: prototype
   host: github.com
@@ -339,28 +261,6 @@ dependencies:
     .claude/skills/setup-matt-pocock-skills/issue-tracker-local.md: sha256:7dcda20a2eb4bdc89b95d1143423c0691309921cadae3132e6424f371030506e
     .claude/skills/setup-matt-pocock-skills/triage-labels.md: sha256:ae512af838c78b8750471c42cd2b20fa32319553e61d84c9a23d171b40ce14aa
   content_hash: sha256:f1442885e269d489b91b2a289e4619a0385eb3503121ea1f92769268bf08c123
-- repo_url: mattpocock/skills
-  name: tdd
-  host: github.com
-  resolved_commit: 49dd158d1076134a641b33efb035946536778336
-  version: unknown
-  virtual_path: skills/engineering/tdd
-  is_virtual: true
-  depth: 2
-  resolved_by: _local/rearc-pocock-kit
-  package_type: claude_skill
-  deployed_files:
-  - .claude/skills/tdd
-  - .claude/skills/tdd/SKILL.md
-  - .claude/skills/tdd/agents/openai.yaml
-  - .claude/skills/tdd/mocking.md
-  - .claude/skills/tdd/tests.md
-  deployed_file_hashes:
-    .claude/skills/tdd/SKILL.md: sha256:5505d25bbaa8fc14a79e4d20163936958992a2995b7f1dd1d6197edc9ed722e0
-    .claude/skills/tdd/agents/openai.yaml: sha256:ea6f01cf1b8c06a4b0f5b649d74b1b8ce8685e72af1b38d70d877693e092af0b
-    .claude/skills/tdd/mocking.md: sha256:3ceb807fdf4a47d6a93d4d9a891e5ba6d362a6247bd08adc451feebfc17361ef
-    .claude/skills/tdd/tests.md: sha256:859f9e592c188fda4fc7277dd180e4ce9c7a2e13f6efe1f6f29eccc9d28c106a
-  content_hash: sha256:ef3cbb31aa8b1f8a3f9b6a042c230dc9312019e84cdc6337f60890f177fd5764
 - repo_url: mattpocock/skills
   name: to-spec
   host: github.com
@@ -846,7 +746,7 @@ deployments:
   owners:
   - ../ai-toolkit/packages/rearc-workshop-demo-kit
   active_owner: ../ai-toolkit/packages/rearc-workshop-demo-kit
-  content_hash: sha256:0f16f8599832ab3320694edbb721d33d7dc40cc9e6c6359da651daa4aba4ad8f
+  content_hash: sha256:713598ca3fa13b15ee4350924860ded6ba257de1029bef7689cfc47b29ca75e2
 - kind: project-relative
   target: claude
   value: .claude/hooks/rearc-workshop-demo-kit/scripts/hooks/test-guard-shell.sh
@@ -855,7 +755,7 @@ deployments:
   owners:
   - ../ai-toolkit/packages/rearc-workshop-demo-kit
   active_owner: ../ai-toolkit/packages/rearc-workshop-demo-kit
-  content_hash: sha256:e7d34b6b73968b710aaba5cbb38387596ab0546edc7e843751c57b569c618020
+  content_hash: sha256:8888cc53fc8a50155833633b6cab3ec8f3cc70b524160d8cea1018d65cb13947
 - kind: project-relative
   target: claude
   value: .claude/rules/api-conventions.md
@@ -939,78 +839,6 @@ deployments:
   content_hash: sha256:52dcc5fcab0b9c30eecd302ef13cd83b0a9c1a2cd300606e5746cfd38bb4eee8
 - kind: project-relative
   target: claude
-  value: .claude/skills/code-review
-  runtime: null
-  scope: project
-  owners:
-  - mattpocock/skills/skills/engineering/code-review
-  active_owner: mattpocock/skills/skills/engineering/code-review
-  content_hash: null
-- kind: project-relative
-  target: claude
-  value: .claude/skills/code-review/SKILL.md
-  runtime: null
-  scope: project
-  owners:
-  - mattpocock/skills/skills/engineering/code-review
-  active_owner: mattpocock/skills/skills/engineering/code-review
-  content_hash: sha256:09eb147f793e4647949edd32dbad278f0554dfb56e0d46b699cd4c2c55bf0357
-- kind: project-relative
-  target: claude
-  value: .claude/skills/code-review/agents/openai.yaml
-  runtime: null
-  scope: project
-  owners:
-  - mattpocock/skills/skills/engineering/code-review
-  active_owner: mattpocock/skills/skills/engineering/code-review
-  content_hash: sha256:8229ca854e11dc8e6aef2131ee03f31fb1561cf905fab9ccc325180cf3331352
-- kind: project-relative
-  target: claude
-  value: .claude/skills/codebase-design
-  runtime: null
-  scope: project
-  owners:
-  - mattpocock/skills/skills/engineering/codebase-design
-  active_owner: mattpocock/skills/skills/engineering/codebase-design
-  content_hash: null
-- kind: project-relative
-  target: claude
-  value: .claude/skills/codebase-design/DEEPENING.md
-  runtime: null
-  scope: project
-  owners:
-  - mattpocock/skills/skills/engineering/codebase-design
-  active_owner: mattpocock/skills/skills/engineering/codebase-design
-  content_hash: sha256:f3dd099ce99289bd213914d8ee3e2429b78309c3957ca4583f7659551b1d53c1
-- kind: project-relative
-  target: claude
-  value: .claude/skills/codebase-design/DESIGN-IT-TWICE.md
-  runtime: null
-  scope: project
-  owners:
-  - mattpocock/skills/skills/engineering/codebase-design
-  active_owner: mattpocock/skills/skills/engineering/codebase-design
-  content_hash: sha256:52b52e75655a27aea59c6966b410bac82448968ad46ef1ebb9f07c274e3ae010
-- kind: project-relative
-  target: claude
-  value: .claude/skills/codebase-design/SKILL.md
-  runtime: null
-  scope: project
-  owners:
-  - mattpocock/skills/skills/engineering/codebase-design
-  active_owner: mattpocock/skills/skills/engineering/codebase-design
-  content_hash: sha256:2c20617f87ec8af6a434859f381b2f061a69b530444e74eb39e78bb016a6d1e2
-- kind: project-relative
-  target: claude
-  value: .claude/skills/codebase-design/agents/openai.yaml
-  runtime: null
-  scope: project
-  owners:
-  - mattpocock/skills/skills/engineering/codebase-design
-  active_owner: mattpocock/skills/skills/engineering/codebase-design
-  content_hash: sha256:edebc9e4fcfe102114012575eaa9600b9b5fd08c311664f389c36e7bc717740f
-- kind: project-relative
-  target: claude
   value: .claude/skills/coin-flip
   runtime: null
   scope: project
@@ -1035,7 +863,7 @@ deployments:
   owners:
   - ../ai-toolkit/packages/rearc-workshop-demo-kit
   active_owner: ../ai-toolkit/packages/rearc-workshop-demo-kit
-  content_hash: sha256:77ced8c51b49c4d24a0201ab9ec3286514cbffa6c665a1f5b3d667f33f4a48da
+  content_hash: sha256:327786a8d7efcc1e424a6e7055c7c751f5393771b86128ad934fe43e7d502a4e
 - kind: project-relative
   target: claude
   value: .claude/skills/coin-flip-code/scripts/flip.py
@@ -1062,7 +890,7 @@ deployments:
   owners:
   - ../ai-toolkit/packages/rearc-workshop-demo-kit
   active_owner: ../ai-toolkit/packages/rearc-workshop-demo-kit
-  content_hash: sha256:a1e4c6c2158a79e25206b02924be0156ce934c8363146b3b2741051b74798124
+  content_hash: sha256:3e95f43b23485ea3fda8fb354fc05f250157101a2e947df351d10abed5c1356d
 - kind: project-relative
   target: claude
   value: .claude/skills/coin-flip-true-random/scripts/flip.py
@@ -1351,69 +1179,6 @@ deployments:
   - mattpocock/skills/skills/productivity/grilling
   active_owner: mattpocock/skills/skills/productivity/grilling
   content_hash: sha256:1411d7df7d99b7e621a1ff8283c8133cc2464be63d064e52d8ce169c6800ee9b
-- kind: project-relative
-  target: claude
-  value: .claude/skills/implement
-  runtime: null
-  scope: project
-  owners:
-  - mattpocock/skills/skills/engineering/implement
-  active_owner: mattpocock/skills/skills/engineering/implement
-  content_hash: null
-- kind: project-relative
-  target: claude
-  value: .claude/skills/implement/SKILL.md
-  runtime: null
-  scope: project
-  owners:
-  - mattpocock/skills/skills/engineering/implement
-  active_owner: mattpocock/skills/skills/engineering/implement
-  content_hash: sha256:483bdc4ccf4ac31d86ac7beeaa0d0db80313e71e120bb8c59b3196ae5decd53d
-- kind: project-relative
-  target: claude
-  value: .claude/skills/implement/agents/openai.yaml
-  runtime: null
-  scope: project
-  owners:
-  - mattpocock/skills/skills/engineering/implement
-  active_owner: mattpocock/skills/skills/engineering/implement
-  content_hash: sha256:8970a8596ade0c28ab427f41a4ea242d6bdf6186c59ebf55e1238dbecaab79dc
-- kind: project-relative
-  target: claude
-  value: .claude/skills/improve-codebase-architecture
-  runtime: null
-  scope: project
-  owners:
-  - mattpocock/skills/skills/engineering/improve-codebase-architecture
-  active_owner: mattpocock/skills/skills/engineering/improve-codebase-architecture
-  content_hash: null
-- kind: project-relative
-  target: claude
-  value: .claude/skills/improve-codebase-architecture/HTML-REPORT.md
-  runtime: null
-  scope: project
-  owners:
-  - mattpocock/skills/skills/engineering/improve-codebase-architecture
-  active_owner: mattpocock/skills/skills/engineering/improve-codebase-architecture
-  content_hash: sha256:581e8bb5a521e46bbda8ca7e19b15948bed882187108092ebb90c62513b77528
-- kind: project-relative
-  target: claude
-  value: .claude/skills/improve-codebase-architecture/SKILL.md
-  runtime: null
-  scope: project
-  owners:
-  - mattpocock/skills/skills/engineering/improve-codebase-architecture
-  active_owner: mattpocock/skills/skills/engineering/improve-codebase-architecture
-  content_hash: sha256:552240a5ab5cec6b67c15dd1ad6e9f6962b1bca6ce870059a8c2713760c20392
-- kind: project-relative
-  target: claude
-  value: .claude/skills/improve-codebase-architecture/agents/openai.yaml
-  runtime: null
-  scope: project
-  owners:
-  - mattpocock/skills/skills/engineering/improve-codebase-architecture
-  active_owner: mattpocock/skills/skills/engineering/improve-codebase-architecture
-  content_hash: sha256:c8cb20f68ebf0edb4e497bc11ae5fcaa196004e661cd189015b04f4109ced7f1
 - kind: project-relative
   target: claude
   value: .claude/skills/prototype
@@ -2269,51 +2034,6 @@ deployments:
   - mattpocock/skills/skills/engineering/setup-matt-pocock-skills
   active_owner: mattpocock/skills/skills/engineering/setup-matt-pocock-skills
   content_hash: sha256:ae512af838c78b8750471c42cd2b20fa32319553e61d84c9a23d171b40ce14aa
-- kind: project-relative
-  target: claude
-  value: .claude/skills/tdd
-  runtime: null
-  scope: project
-  owners:
-  - mattpocock/skills/skills/engineering/tdd
-  active_owner: mattpocock/skills/skills/engineering/tdd
-  content_hash: null
-- kind: project-relative
-  target: claude
-  value: .claude/skills/tdd/SKILL.md
-  runtime: null
-  scope: project
-  owners:
-  - mattpocock/skills/skills/engineering/tdd
-  active_owner: mattpocock/skills/skills/engineering/tdd
-  content_hash: sha256:5505d25bbaa8fc14a79e4d20163936958992a2995b7f1dd1d6197edc9ed722e0
-- kind: project-relative
-  target: claude
-  value: .claude/skills/tdd/agents/openai.yaml
-  runtime: null
-  scope: project
-  owners:
-  - mattpocock/skills/skills/engineering/tdd
-  active_owner: mattpocock/skills/skills/engineering/tdd
-  content_hash: sha256:ea6f01cf1b8c06a4b0f5b649d74b1b8ce8685e72af1b38d70d877693e092af0b
-- kind: project-relative
-  target: claude
-  value: .claude/skills/tdd/mocking.md
-  runtime: null
-  scope: project
-  owners:
-  - mattpocock/skills/skills/engineering/tdd
-  active_owner: mattpocock/skills/skills/engineering/tdd
-  content_hash: sha256:3ceb807fdf4a47d6a93d4d9a891e5ba6d362a6247bd08adc451feebfc17361ef
-- kind: project-relative
-  target: claude
-  value: .claude/skills/tdd/tests.md
-  runtime: null
-  scope: project
-  owners:
-  - mattpocock/skills/skills/engineering/tdd
-  active_owner: mattpocock/skills/skills/engineering/tdd
-  content_hash: sha256:859f9e592c188fda4fc7277dd180e4ce9c7a2e13f6efe1f6f29eccc9d28c106a
 - kind: project-relative
   target: claude
   value: .claude/skills/to-spec
