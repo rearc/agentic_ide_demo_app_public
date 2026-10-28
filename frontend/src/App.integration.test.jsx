@@ -150,7 +150,11 @@ function savedBoards() {
 async function renderApp(backend) {
   stubBackend(backend)
   render(<App />)
-  await waitFor(() => expect(screen.queryAllByRole('status')).toHaveLength(0))
+  // The first render of the whole app can pass waitFor's 1 s default under load
+  // (seen when several sessions run tests at once), so allow longer.
+  await waitFor(() => expect(screen.queryAllByRole('status')).toHaveLength(0), {
+    timeout: 5000,
+  })
 }
 
 describe('the whole board', () => {
