@@ -76,6 +76,6 @@ Any main session can stop and another pick up from the files. A natural time is 
 When every task is merged or done:
 
 1. Run every check in `AGENTS.md`, the end-to-end suite and `check-ui`, and show the output.
-2. Review the whole change: run Claude Code's `/code-review` on everything since the branch left `main` (`/code-review main...HEAD`), and check `spec.md`'s acceptance criteria one by one against the branch, each by the check it names. Group what you find by how much it matters; the person picks which to fix. Each fix becomes a task in `plan.md`, human-in-the-loop or delegated, worked like the others.
+2. Review the whole change: run Claude Code's `/code-review` on everything since the branch left the branch it started from (in the workshop, `lab/start`: `/code-review lab/start...HEAD`), and check `spec.md`'s acceptance criteria one by one against the branch, each by the check it names. Group what you find by how much it matters; the person picks which to fix. Each fix becomes a task in `plan.md`, human-in-the-loop or delegated, worked like the others.
 3. When nothing is left: list the worktrees (`git worktree list`), confirm each branch is merged (`git branch --merged`), and with the person's OK remove each (`git worktree remove <path>`, then `git branch -d <branch>`). A dropped task's branch is not merged, so `-d` refuses it: delete it with `git branch -D` once the person confirms.
 4. Tell the person the branch is ready; a pull request is the next step if they want one.

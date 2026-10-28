@@ -33,6 +33,7 @@ Write one task spec per task in `specs/<slug>/tasks/NN-<task>.md` (a delegated t
 Then `specs/<slug>/plan.md`: the `## Status` section (**Resume here**, the tasks with their states, all `not started`) and, for each delegated task, what runs when it is integrated. Order the tasks so that:
 
 - delegated tasks run in parallel with human-in-the-loop tasks, not after them;
+- the first iteration has a human-in-the-loop task, so the person builds while the first workers run;
 - a task is unblocked once everything it depends on is done or merged, and tasks that do not depend on each other can run in parallel;
 - the last integration runs every check in `AGENTS.md`, the end-to-end suite and `check-ui`.
 
