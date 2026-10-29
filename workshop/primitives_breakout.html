@@ -50,6 +50,10 @@ ol.steps{list-style:none;padding:0;margin:22px 0}
 .copy.ok{border-color:var(--green);color:var(--green)}
 .code pre{margin:0;padding:11px 14px;white-space:pre-wrap;overflow-wrap:break-word;font-size:15px;line-height:1.5}
 .code pre code{background:none;border:0;padding:0;font-size:inherit}
+/* An example prompt: a sample of what to write, not one to send, so no Copy button. */
+.code.example{border-style:dashed;border-left:4px dashed var(--muted);background:transparent}
+.code.example .code-h{color:var(--muted);padding:6px 12px}
+.code.example pre{font-style:italic;color:var(--muted)}
 .foot{margin-top:40px;color:var(--muted);font-size:13px;border-top:1px solid var(--line);padding-top:12px}
 ol.index{list-style:none;padding:0}ol.index li a{display:block;padding:14px 16px;margin:10px 0;border:1px solid var(--line);border-radius:12px;background:var(--panel);text-decoration:none;color:var(--ink);font-size:19px;font-weight:600}
 ol.index li a:hover{border-color:var(--gold)}ol.index .eyebrow{display:block;margin-bottom:2px}
@@ -188,6 +192,7 @@ def pick_one(options: list[str]) -&gt; str:
 
   document.querySelectorAll(".read .code").forEach(function (box) {
     var btn = box.querySelector(".copy"), pre = box.querySelector("pre");
+    if (!btn) return;
     btn.addEventListener("click", function () {
       var text = pre.innerText.replace(/\n$/, "");
       function ok() { btn.classList.add("ok"); btn.textContent = "Copied"; setTimeout(function () { btn.classList.remove("ok"); btn.textContent = "Copy"; }, 1400); }
