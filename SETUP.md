@@ -260,7 +260,7 @@ Copy-Item .env.example .env
 
 ## 6. The check
 
-A short check that your machine works; each item says what success looks like. Claude Code runs the tools check; the last part is the person's. The app's test suites run later, in the labs that use them.
+A short check that your machine works; each item says what success looks like. Claude Code runs the tools check and starts the app; the last part is the person's. The app's test suites run later, in the labs that use them.
 
 ### Tools
 
@@ -282,29 +282,31 @@ uv --version
 | `node --version` | `v22` or later |
 | `uv --version` | prints a version |
 
-### Your part
+### The app, running
 
-Do these yourself: they check what you see, which Claude Code can't.
+Start both servers in the background (they keep running while you work), then check them.
 
-#### The app, running
-
-Use two terminals.
-
-1. Terminal 1, in `backend/`, with the venv active:
+1. The backend, in `backend/`, with the venv active:
 
    ```bash
    python run.py
    ```
 
-2. Terminal 2, in `frontend/`:
+2. The frontend, in `frontend/`:
 
    ```bash
    npm run dev
    ```
 
-3. Open http://localhost:5173.
+3. Success: http://localhost:5001/api/cards answers with JSON, and http://localhost:5173 serves the page. Then tell the person to open http://localhost:5173: the dashboard shows its cards, and the weather card shows real data. Leave both servers running.
 
-   Success: the dashboard shows its cards, and the weather card shows real data.
+### Your part
+
+Do these yourself: they check what you see, which Claude Code can't.
+
+#### The app in your browser
+
+Open http://localhost:5173 (Claude Code started the servers). Success: the dashboard shows its cards, and the weather card shows real data.
 
 #### The CLI
 
