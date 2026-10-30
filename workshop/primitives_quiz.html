@@ -227,7 +227,7 @@ const CARDS = [
     why: "A hook is a command Claude Code runs at that moment, every time, whether Claude thinks of it or not. Formatting needs no judgment, so don’t spend Claude’s attention on it. Rules guide; hooks enforce.",
     tell: "“must, every time”",
     wrong: "An instruction in CLAUDE.md is followed most of the time, not every time.",
-    repo: "<code>auto-lint.sh</code> runs Ruff or Prettier after each edit. <code>protect-lockfile.sh</code> from the breakout is the blocking kind." },
+    repo: "<code>auto-lint.sh</code> runs Ruff or Prettier after each edit. A <code>PreToolUse</code> hook that exits 2 is the blocking kind." },
   { id: "3", spot: "prompt", title: "Just this once",
     scenario: "“For this one bug fix, you want Claude to tell you which files it plans to change and wait for your OK before it edits anything.”",
     ask: "What do you reach for?",
