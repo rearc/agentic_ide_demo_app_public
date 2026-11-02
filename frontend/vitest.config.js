@@ -9,6 +9,10 @@ export default defineConfig({
     // e2e/ holds Playwright specs, which run under `npm run test:e2e`.
     exclude: [...configDefaults.exclude, 'e2e/**'],
     environment: 'jsdom',
+    // Node 25 and later have their own localStorage global, which Vitest leaves in
+    // place of jsdom's, so tests that use localStorage fail. Turning Node's off
+    // lets them use jsdom's; Node 22 and 24 accept the flag too.
+    execArgv: ['--no-experimental-webstorage'],
     globals: true,
     setupFiles: './src/test/setup.js',
     // Component styling is asserted through class names, never compiled CSS.
